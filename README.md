@@ -37,6 +37,24 @@ class App extends CI_Controller
 		return;
     }
 
+    public function rollback() {
+		$this->load->library('migration');
+
+		$resOld = $this->db->select('version')->from('migrations')->get()->row();
+		$version = $resOld->version;
+
+		if (!$this->migration->version($version - 1)) {
+			show_error($this->migration->error_string());
+			return;
+		}
+
+		$res = $this->db->select('version')->from('migrations')->get()->row();
+		$msg = $this->seed->emoticon('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS');
+
+		print($msg);
+		return;
+    }
+
     public function seed() {
 		// Get all arguments passed to this function
 		$result = $this->seed->parseParam(func_get_args());

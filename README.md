@@ -61,7 +61,7 @@ class App extends CI_Controller
 		$name = $result->name;
 		// $args = $result->args; // Seeder doesn't have arguments.
 
-        // You can set which database connection you want to use.
+		// You can set which database connection you want to use.
 		// $this->seed->setConn('default2');
 		// $this->seed->setPath(APPPATH);
 		$this->seed->seed($name);
@@ -73,7 +73,7 @@ class App extends CI_Controller
 		$name = $result->name;
 		$args = $result->args;
 
-        // You can set which database connection you want to use.
+		// You can set which database connection you want to use.
 		// $this->seed->setConn('default2');
 		// $this->seed->setPath(APPPATH);
 		$this->seed->migration($name, $args);

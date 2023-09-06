@@ -81,8 +81,6 @@ class App extends CI_Controller
 
     public function controller() {
 		// Get all arguments passed to this function
-
-		// Get all arguments passed to this function
 		$result = $this->seed->parseParam(func_get_args());
 		$name = $result->name;
 		$args = $result->args;
@@ -93,8 +91,6 @@ class App extends CI_Controller
     }
 
     public function model() {
-		// Get all arguments passed to this function
-
 		// Get all arguments passed to this function
 		$result = $this->seed->parseParam(func_get_args());
 		$name = $result->name;

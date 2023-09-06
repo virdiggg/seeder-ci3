@@ -1,0 +1,20 @@
+{
+    "name": "virdiggg/seeder-ci3",
+    "description": "Library Seeder for CodeIgniter 3",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Virdiggg\\SeederCi3\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Virdi Gunawan",
+            "email": "virdigunawann@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0"
+    }
+}

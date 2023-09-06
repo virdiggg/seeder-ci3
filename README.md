@@ -1,7 +1,7 @@
 # Library Seeder from Existing Database for CodeIgniter 3
 
 ## First of all, create a controller to host all the function from this library. Example is `application/App.php`
-``
+```
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 use Virdiggg\SeederCi3\Seeder;
@@ -80,7 +80,7 @@ class App extends CI_Controller
 		return;
     }
 }
-``
+```
 
 ### How to run migration: `php index.php <your controller name> <your function name>`.
 ```

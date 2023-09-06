@@ -1,7 +1,4 @@
-# Library Seeder from Existing Database for CodeIgniter 3
 
-## First of all, create a controller to host all the function from this library. Example is `application/App.php`
-``
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 use Virdiggg\SeederCi3\Seeder;
@@ -80,30 +77,3 @@ class App extends CI_Controller
 		return;
     }
 }
-``
-
-### How to run migration: `php index.php <your controller name> <your function name>`.
-```
-cd c:/xampp/htdocs/codeigniter && php index.php app migrate
-```
-### How to create Seeder file: `php index.php <your controller name> <your function name> <table_name>`.
-```
-cd c:/xampp/htdocs/codeigniter && php index.php app seed users
-```
-### How to create Migration file: `php index.php <your controller name> <your function name> <table_name> [--args]`.
-- Add `--soft-delete` to add soft delete parameter. Optional.
-```
-cd c:/xampp/htdocs/codeigniter && php index.php app migration users --soft-delete
-```
-### How to create Controller file: `php index.php <your controller name> <your function name> <filename> [--args]`.
-- Add `--r` to generate resources. Optional.
-```
-cd c:/xampp/htdocs/codeigniter && php index.php app controller Admin/Dashboard/Table --r
-```
-### How to create Model file: `php index.php <your controller name> <your function name> <filename> [--args]`.
-- Add `--r` to generate resources. Optional.
-- Add `--c` to generate its controller file as well. Optional.
-- Add `--soft-delete` if your model using soft delete. Optional.
-```
-cd c:/xampp/htdocs/codeigniter && php index.php app model Admin/Users --r --c --soft-delete
-```

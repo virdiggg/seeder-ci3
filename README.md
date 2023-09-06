@@ -1,6 +1,13 @@
 # Library Seeder from Existing Database for CodeIgniter 3
 
-## First of all, create a controller to host all the function from this library. Example is `application/App.php`
+<img src="https://img.shields.io/packagist/php-v/virdiggg/seeder-ci3" /> <img src="https://img.shields.io/badge/codeigniter--version-3-green" /> <img src="https://img.shields.io/github/license/virdiggg/seeder-ci3" />
+
+## HOW TO USE
+- Install this library with composer
+```
+composer require virdiggg/seeder-ci3
+```
+- Create a controller to host all the function from this library. Example is `application/App.php`
 ```
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 

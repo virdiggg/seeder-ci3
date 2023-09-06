@@ -26,7 +26,7 @@ class App extends CI_Controller
 		$res = $this->db->select('version')->from('migrations')->get()->row();
 		$msg = $this->seed->emoticon('MIGRATE NUMBER ' . $res->version . ' SUCCESS');
 
-		print("\033[92m" . $msg . "\033[0m \n");
+		print($msg);
 		return;
     }
 

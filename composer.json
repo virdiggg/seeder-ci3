@@ -1,6 +1,6 @@
 {
     "name": "virdiggg/seeder-ci3",
-    "description": "Library Seeder for CodeIgniter 3",
+    "description": "Library Seeder from Existing Database for CodeIgniter 3",
     "type": "library",
     "license": "MIT",
     "autoload": {

@@ -1,8 +1,10 @@
-# Library Seeder from Existing Database for CodeIgniter 3
+# A Simple Library Seeder from Existing Database for CodeIgniter 3
 
 <img src="https://img.shields.io/packagist/php-v/virdiggg/seeder-ci3" /> <img src="https://img.shields.io/badge/codeigniter--version-3-green" /> <img src="https://img.shields.io/github/license/virdiggg/seeder-ci3" />
 
-## HOW TO USE
+## Inspired from [orangehill/iseed](https://github.com/orangehill/iseed) for laravel.
+
+### HOW TO USE
 - Install this library with composer
 ```
 composer require virdiggg/seeder-ci3
@@ -103,25 +105,25 @@ class App extends CI_Controller
 }
 ```
 
-### How to run migration: `php index.php <your controller name> <your function name>`.
+#### How to run migration: `php index.php <your controller name> <your function name>`.
 ```
 cd c:/xampp/htdocs/codeigniter && php index.php app migrate
 ```
-### How to create Seeder file: `php index.php <your controller name> <your function name> <table_name>`.
+#### How to create Seeder file: `php index.php <your controller name> <your function name> <table_name>`.
 ```
 cd c:/xampp/htdocs/codeigniter && php index.php app seed users
 ```
-### How to create Migration file: `php index.php <your controller name> <your function name> <table_name> [--args]`.
+#### How to create Migration file: `php index.php <your controller name> <your function name> <table_name> [--args]`.
 - Add `--soft-delete` to add soft delete parameter. Optional.
 ```
 cd c:/xampp/htdocs/codeigniter && php index.php app migration users --soft-delete
 ```
-### How to create Controller file: `php index.php <your controller name> <your function name> <filename> [--args]`.
+#### How to create Controller file: `php index.php <your controller name> <your function name> <filename> [--args]`.
 - Add `--r` to generate resources. Optional.
 ```
 cd c:/xampp/htdocs/codeigniter && php index.php app controller Admin/Dashboard/Table --r
 ```
-### How to create Model file: `php index.php <your controller name> <your function name> <filename> [--args]`.
+#### How to create Model file: `php index.php <your controller name> <your function name> <filename> [--args]`.
 - Add `--r` to generate resources. Optional.
 - Add `--c` to generate its controller file as well. Optional.
 - Add `--soft-delete` if your model using soft delete. Optional.

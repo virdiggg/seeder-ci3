@@ -2,8 +2,6 @@
 
 namespace Virdiggg\SeederCi3;
 
-defined('BASEPATH') or exit('No direct script access allowed');
-
 defined('APPPATH') or define('APPPATH', '..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR);
 defined('SEEDER_PATH') or define('SEEDER_PATH', APPPATH.'migrations');
 

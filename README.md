@@ -121,7 +121,7 @@ class App extends CI_Controller
 cd c:/xampp/htdocs/codeigniter && php index.php app migrate
 ```
 #### How to run rollback migration: `php index.php <your controller name> <your function name> [--args]`.
-- Add `--to=1` to run migration number <args>. Optional. Default is the latest number in your database.
+- Add `--to=1` to run migration number <args>. Optional. Default is the latest number in your database min 1.
 ```
 cd c:/xampp/htdocs/codeigniter && php index.php app rollback --to=1
 ```

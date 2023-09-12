@@ -29,10 +29,25 @@ class App extends CI_Controller
     public function rollback() {
 		$this->load->library('migration');
 
-		$resOld = $this->db->select('version')->from('migrations')->get()->row();
-		$version = $resOld->version;
+		// Get all arguments passed to this function
+		$result = $this->seeder->parseParam(func_get_args());
+		$args = $result->args;
 
-		if (!$this->migration->version($version - 1)) {
+		$resOld = $this->db->select('version')->from('migrations')->get()->row();
+		if (!isset($resOld->version)) {
+			return;
+		}
+
+		// Default to current number
+		$version = $resOld->version === 1 ? 1 : $resOld->version - 1;
+
+		foreach ($args as $arg) {
+			if (strpos($arg, '--to=') !== false) {
+				$version = substr($arg, strpos($arg, '--to=') + 5);
+			}
+		}
+
+		if (!$this->migration->version((int) $version)) {
 			show_error($this->migration->error_string());
 			return;
 		}

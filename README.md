@@ -42,10 +42,21 @@ class App extends CI_Controller
     public function rollback() {
 		$this->load->library('migration');
 
+		// Get all arguments passed to this function
+		$result = $this->seeder->parseParam(func_get_args());
+		$args = $result->args;
+
 		$resOld = $this->db->select('version')->from('migrations')->get()->row();
+		// Default to current number
 		$version = $resOld->version;
 
-		if (!$this->migration->version($version - 1)) {
+		foreach ($args as $arg) {
+			if (strpos($arg, '--to=') !== false) {
+				$version = substr($arg, strpos($arg, '--to=') + 5);
+			}
+		}
+
+		if (!$this->migration->version((int) $version)) {
 			show_error($this->migration->error_string());
 			return;
 		}
@@ -108,6 +119,11 @@ class App extends CI_Controller
 #### How to run migration: `php index.php <your controller name> <your function name>`.
 ```
 cd c:/xampp/htdocs/codeigniter && php index.php app migrate
+```
+#### How to run rollback migration: `php index.php <your controller name> <your function name> [--args]`.
+- Add `--to=1` to run migration number <args>. Optional. Default is the latest number in your database.
+```
+cd c:/xampp/htdocs/codeigniter && php index.php app rollback --to=1
 ```
 #### How to create Seeder file: `php index.php <your controller name> <your function name> <table_name>`.
 ```

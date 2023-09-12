@@ -35,6 +35,7 @@ class App extends CI_Controller
 
 		$resOld = $this->db->select('version')->from('migrations')->get()->row();
 		if (!isset($resOld->version)) {
+			print('No Migration Found');
 			return;
 		}
 

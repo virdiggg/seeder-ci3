@@ -9,7 +9,7 @@
 ```
 composer require virdiggg/seeder-ci3
 ```
-- Create a controller to host all the function from this library. Example is `application/App.php`
+- Create a controller to host all the function from this library. Example is `application/controller/App.php`
 ```
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 

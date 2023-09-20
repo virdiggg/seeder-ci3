@@ -1280,7 +1280,7 @@ class Seeder
      */
     private function getPath()
     {
-        return $this->path ?? SEEDER_PATH . DIRECTORY_SEPARATOR;
+        return $this->path ?: SEEDER_PATH . DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -1290,6 +1290,6 @@ class Seeder
      */
     private function getConn()
     {
-        return $this->conn ?? 'default';
+        return $this->conn ?: 'default';
     }
 }

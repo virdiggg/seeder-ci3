@@ -69,6 +69,8 @@ class App extends CI_Controller
     }
 
     public function seed() {
+		// To add date time fields, the only date time fields we covers are 'created_at', 'updated_at', 'approved_at', 'deleted_at'
+		// $this->seed->addDateTime(['create_date', 'change_date', 'last_access']);
 		// Get all arguments passed to this function
 		$result = $this->seed->parseParam(func_get_args());
 		$name = $result->name;

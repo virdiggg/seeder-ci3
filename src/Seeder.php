@@ -29,6 +29,13 @@ class Seeder
     public $conn;
 
     /**
+     * Date time fields.
+     *
+     * @param array
+     */
+    public $dateTime = ['created_at', 'updated_at', 'approved_at', 'deleted_at'];
+
+    /**
      * Folder to save seeder file.
      *
      * @param string
@@ -96,13 +103,15 @@ class Seeder
             return;
         }
 
+        $rand = $this->rand(4);
+
         // Parse input as printable string.
-        $print = $this->parseInputSeeder($name, $results);
+        $print = $this->parseInputSeeder($name, $rand, $results);
 
         // Get the latest migration file order.
         $count = $this->latest($this->getPath());
 
-        $name = $this->parseFileName($count . '_seeder_' . $name);
+        $name = $this->parseFileName($count . '_seeder_' . $name . '_' . $rand);
         // Create seeder file.
         $this->createFile($this->getPath(), $name);
 
@@ -137,13 +146,15 @@ class Seeder
             $prefix = 'alter';
         }
 
+        $rand = $this->rand(4);
+
         // Parse input as printable string.
-        $print = $this->parseInputMigration($name, $prefix, $param);
+        $print = $this->parseInputMigration($name . '_' . $rand, $prefix, $param);
 
         // Get the latest migration file order.
         $count = $this->latest($this->getPath());
 
-        $name = $this->parseFileName($count . '_' . $prefix . '_' . $name);
+        $name = $this->parseFileName($count . '_' . $prefix . '_' . $name . '_' . $rand);
         // Create migration file.
         $this->createFile($this->getPath(), $name);
 
@@ -235,8 +246,7 @@ class Seeder
         // Ucfirst for file and class name
         $name = ucfirst(strtolower(trim($name)));
 
-        $withResources = FALSE;
-        $withController = FALSE;
+        $withResources = $withController = $withSoftDelete = FALSE;
         if (count($param) > 0) {
             if (in_array('--r', $param)) {
                 $withResources = TRUE;
@@ -275,11 +285,12 @@ class Seeder
      * Parse input as printable string for seeder file.
      *
      * @param string $name
+     * @param string $rand    Random string
      * @param array  $results
      *
      * @return string
      */
-    private function parseInputSeeder($name, $results)
+    private function parseInputSeeder($name, $rand, $results)
     {
         // Array keys for column name.
         $keys = array_keys($results[0]);
@@ -292,17 +303,17 @@ class Seeder
         $results = array_values($results);
 
         $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-        $print .= 'Class Migration_Seeder_' . $name . ' extends CI_Migration {' . PHP_EOL;
+        $print .= 'Class Migration_Seeder_' . $name . '_'.$rand.' extends CI_Migration {' . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
-        $print .= '     * Private function db connection.' . PHP_EOL;
+        $print .= '     * DB Connection name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param object' . PHP_EOL;
+        $print .= '     * @param object $' . $this->getConn() . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $' . $this->getConn() . ';' . PHP_EOL . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Table name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string' . PHP_EOL;
+        $print .= '     * @param string $name' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $name;' . PHP_EOL . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;
@@ -311,7 +322,7 @@ class Seeder
         $print .= '        $this->name = \'' . $name . '\';' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         $print .= '    /**' . PHP_EOL;
-        $print .= '     * Migration.' . PHP_EOL;
+        $print .= '     * Run migration.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @return void' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
@@ -321,9 +332,10 @@ class Seeder
             $print .= '        $param[] = [' . PHP_EOL;
             foreach ($keys as $k) {
                 $r = is_null($res[$k]) ? 'NULL' : '\'' . $res[$k] . '\'';
-                // For SQL Server
-                if (in_array($k, ['created_at', 'updated_at', 'approved_at', 'deleted_at'])) {
-                    $r = 'date(\'Y-m-d H:i:s\', strtotime('.$r.'))';
+
+                // For DateTime value
+                if (in_array($k, $this->getDateTime()) && $r !== 'NULL') {
+                    $r = 'date(\'Y-m-d H:i:s.\', strtotime('.$r.')).gettimeofday()[\'usec\']';
                 }
                 // Trim values
                 $r = htmlspecialchars(trim(strip_tags($r)));
@@ -333,7 +345,11 @@ class Seeder
             }
             $print .= '        ];' . PHP_EOL; // end $param[]
         }
-        $print .= PHP_EOL . '        $this->' . $this->getConn() . '->insert_batch($this->name, $param);' . PHP_EOL;
+        $print .= PHP_EOL;
+        $print .= '        $chunk = array_chunk($param, 10000);' . PHP_EOL;
+        $print .= '        foreach ($chunk as $c) {' . PHP_EOL;
+        $print .= '            $this->' . $this->getConn() . '->insert_batch($this->name, $c);' . PHP_EOL;
+        $print .= '        }' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Rollback migration.' . PHP_EOL;
@@ -376,28 +392,28 @@ class Seeder
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Array table fields.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param array' . PHP_EOL;
+        $print .= '     * @param array $fields' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $fields;' . PHP_EOL . PHP_EOL;
         if ($prefix === 'alter') {
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Array table old fields.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param array' . PHP_EOL;
+            $print .= '     * @param array $oldFields' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    private $oldFields;' . PHP_EOL . PHP_EOL;
         } else {
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Primary key.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param array' . PHP_EOL;
+            $print .= '     * @param array $primary' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    private $primary;' . PHP_EOL . PHP_EOL;
         }
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Table name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string' . PHP_EOL;
+        $print .= '     * @param string $name' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $name;' . PHP_EOL . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;
@@ -409,13 +425,13 @@ class Seeder
         $print .= '        $this->fields = [' . PHP_EOL;
         if ($prefix === 'alter') {
             $print .= "            // 'old_name' => [" . PHP_EOL;
-            $print .= "            //     'name' => 'new_name'," . PHP_EOL;
+            $print .= "            //     'name' => 'new_name', // if you want to modify its name" . PHP_EOL;
             $print .= "            //     'type' => 'VARCHAR'," . PHP_EOL;
             $print .= "            //     'constraint' => 150," . PHP_EOL;
             $print .= "            //     'null' => TRUE," . PHP_EOL;
             $print .= '            // ],' . PHP_EOL;
             $print .= "            // 'old_name' => [" . PHP_EOL;
-            $print .= "            //     'name' => 'new_name'," . PHP_EOL;
+            $print .= "            //     'name' => 'new_name', // if you want to modify its name" . PHP_EOL;
             $print .= "            //     'type' => 'VARCHAR'," . PHP_EOL;
             $print .= "            //     'constraint' => 150," . PHP_EOL;
             $print .= "            //     'null' => TRUE," . PHP_EOL;
@@ -515,7 +531,7 @@ class Seeder
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Page title.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string' . PHP_EOL;
+        $print .= '     * @param string $title' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $title;' . PHP_EOL . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;
@@ -590,35 +606,35 @@ class Seeder
             $print .= '    public function destroy($id) {' . PHP_EOL;
             $print .= '        //' . PHP_EOL;
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function destroy()
-            $print .= '    /**' . PHP_EOL;
-            $print .= '     * Function for datatables.' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @return string response json' . PHP_EOL;
-            $print .= '     */' . PHP_EOL;
-            $print .= '    public function datatables() {' . PHP_EOL;
-            $print .= '        $draw = $this->input->post(\'draw\');' . PHP_EOL;
-            $print .= '        $length = $this->input->post(\'length\');' . PHP_EOL;
-            $print .= '        $start = $this->input->post(\'start\');' . PHP_EOL;
-            $print .= '        $search = $this->input->post(\'search\') ? strtolower($this->input->post(\'search\')) : null;' . PHP_EOL;
-            $print .= '        // $columnIndex = $this->input->post(\'order\')[0][\'column\']; // Column index' . PHP_EOL;
-            $print .= '        // $columnName = $this->input->post(\'columns\')[$columnIndex][\'data\']; // Column name' . PHP_EOL;
-            $print .= '        // $columnSortOrder = $this->input->post(\'order\')[0][\'dir\']; // asc or desc' . PHP_EOL . PHP_EOL;
-            $print .= '        // Your datatables query here.' . PHP_EOL;
-            $print .= '        // $datatables = [];' . PHP_EOL;
-            $print .= '        // $totalRecordsWithFilter = 0;' . PHP_EOL;
-            $print .= '        // $totalRecords = 0;' . PHP_EOL . PHP_EOL;
-            $print .= '        $return = [' . PHP_EOL;
-            $print .= '            \'status\' => TRUE,' . PHP_EOL;
-            $print .= '            \'message\' => \'Data ditemukan\',' . PHP_EOL;
-            $print .= '            \'draw\' => intval($draw),' . PHP_EOL;
-            $print .= '            // \'aaData\' => $datatables,' . PHP_EOL;
-            $print .= '            // \'iTotalDisplayRecords\' => $totalRecordsWithFilter,' . PHP_EOL;
-            $print .= '            // \'iTotalRecords\' => $totalRecords,' . PHP_EOL;
-            $print .= '        ];' . PHP_EOL;
-            $print .= '        echo json_encode($return);' . PHP_EOL;
-            $print .= '        return;' . PHP_EOL;
-            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function datatables()
         }
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Function for datatables.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return string JSON' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    public function datatables() {' . PHP_EOL;
+        $print .= '        $draw = $this->input->post(\'draw\');' . PHP_EOL;
+        $print .= '        $length = $this->input->post(\'length\');' . PHP_EOL;
+        $print .= '        $start = $this->input->post(\'start\');' . PHP_EOL;
+        $print .= '        $search = $this->input->post(\'search\') ? strtolower($this->input->post(\'search\')) : null;' . PHP_EOL;
+        $print .= '        // $columnIndex = $this->input->post(\'order\')[0][\'column\']; // Column index' . PHP_EOL;
+        $print .= '        // $columnName = $this->input->post(\'columns\')[$columnIndex][\'data\']; // Column name' . PHP_EOL;
+        $print .= '        // $columnSortOrder = $this->input->post(\'order\')[0][\'dir\']; // asc or desc' . PHP_EOL . PHP_EOL;
+        $print .= '        // Your datatables query here.' . PHP_EOL;
+        $print .= '        // $datatables = [];' . PHP_EOL;
+        $print .= '        // $totalRecordsWithFilter = 0;' . PHP_EOL;
+        $print .= '        // $totalRecords = 0;' . PHP_EOL . PHP_EOL;
+        $print .= '        $return = [' . PHP_EOL;
+        $print .= '            \'status\' => TRUE,' . PHP_EOL;
+        $print .= '            \'message\' => \'Data ditemukan\',' . PHP_EOL;
+        $print .= '            \'draw\' => intval($draw),' . PHP_EOL;
+        $print .= '            // \'aaData\' => $datatables,' . PHP_EOL;
+        $print .= '            // \'iTotalDisplayRecords\' => $totalRecordsWithFilter,' . PHP_EOL;
+        $print .= '            // \'iTotalRecords\' => $totalRecords,' . PHP_EOL;
+        $print .= '        ];' . PHP_EOL;
+        $print .= '        echo json_encode($return);' . PHP_EOL;
+        $print .= '        return;' . PHP_EOL;
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function datatables()
         $print .= '}'; // end class
 
         return $print;
@@ -640,32 +656,38 @@ class Seeder
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Default table name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string' . PHP_EOL;
+        $print .= '     * @param string $table' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $table = \'' . strtolower($name) . '\';' . PHP_EOL . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string' . PHP_EOL;
+        $print .= '     * @param string $conn' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $conn = \'default\';' . PHP_EOL . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param object' . PHP_EOL;
+        $print .= '     * @param object $db' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private $db;' . PHP_EOL . PHP_EOL;
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * OpenBravo DB Connection.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @param object $ob' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    // private $ob;' . PHP_EOL . PHP_EOL;
         if ($withSoftDelete) {
             $print .= '    /**' . PHP_EOL;
             $print .= '     * State if Soft Delete is used or not. Parameter should be TRUE or FALSE.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param bool' . PHP_EOL;
+            $print .= '     * @param bool $softDelete' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    private $softDelete = false;' . PHP_EOL . PHP_EOL;
+            $print .= '    private $softDelete = FALSE;' . PHP_EOL . PHP_EOL;
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Soft Delete field names.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param array' . PHP_EOL;
+            $print .= '     * @param array $softDeleteParams' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    private $softDeleteParams = [\'deleted_by\', \'deleted_at\'];' . PHP_EOL . PHP_EOL;
         }
@@ -674,19 +696,19 @@ class Seeder
         $print .= '        // DB Connection, you can use your own db setting name' . PHP_EOL;
         $print .= '        $this->db = $this->load->database($this->conn, TRUE);' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
-        $print .= '    /**' . PHP_EOL;
-        $print .= '     * RAW query.' . PHP_EOL;
-        $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string $query' . PHP_EOL;
-        $print .= '     * ' . PHP_EOL;
-        $print .= '     * @return array|null' . PHP_EOL;
-        $print .= '     */' . PHP_EOL;
-        $print .= '    public function raw($query = \'\') {' . PHP_EOL;
-        $print .= '        if (empty($query)) {' . PHP_EOL;
-        $print .= '            return null;' . PHP_EOL;
-        $print .= '        }' . PHP_EOL;
-        $print .= '        return $this->db->query($query)->result();' . PHP_EOL;
-        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function raw()
+        // $print .= '    /**' . PHP_EOL;
+        // $print .= '     * RAW query.' . PHP_EOL;
+        // $print .= '     * ' . PHP_EOL;
+        // $print .= '     * @param string $query' . PHP_EOL;
+        // $print .= '     * ' . PHP_EOL;
+        // $print .= '     * @return array|null' . PHP_EOL;
+        // $print .= '     */' . PHP_EOL;
+        // $print .= '    public function raw($query = \'\') {' . PHP_EOL;
+        // $print .= '        if (empty($query)) {' . PHP_EOL;
+        // $print .= '            return null;' . PHP_EOL;
+        // $print .= '        }' . PHP_EOL;
+        // $print .= '        return $this->db->query($query)->result();' . PHP_EOL;
+        // $print .= '    }' . PHP_EOL . PHP_EOL; // end public function raw()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Get all data from database.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
@@ -712,8 +734,7 @@ class Seeder
         $print .= '        $this->db->select();' . PHP_EOL;
         $print .= '        $this->db->from($this->table);' . PHP_EOL;
         $print .= '        $this->db->where(\'id\', $id);' . PHP_EOL;
-        $print .= '        $result = $this->db->get()->result();' . PHP_EOL;
-        $print .= '        return $result;' . PHP_EOL;
+        $print .= '        return $this->db->get()->row();' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function find()
         if ($withResources) {
             $print .= '    /**' . PHP_EOL;
@@ -766,216 +787,238 @@ class Seeder
             $print .= '        $this->db->where(\'id\', $id)->delete($this->table);' . PHP_EOL;
             $print .= '        return (bool) $this->db->affected_rows();' . PHP_EOL;
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function destroy()
-            $print .= '    /**' . PHP_EOL;
-            $print .= '     * Total all records.' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @return int' . PHP_EOL;
-            $print .= '     */' . PHP_EOL;
-            $print .= '    public function totalRecords() {' . PHP_EOL;
-            $print .= '        $this->db->select(\'id\');' . PHP_EOL;
-            $print .= '        $this->db->from($this->table);' . PHP_EOL;
-            if ($withSoftDelete) {
-                $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
-            }
-            $print .= '        $result = $this->db->count_all_results();' . PHP_EOL;
-            $print .= '        return $result ? $result : 0;' . PHP_EOL;
-            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecords()
-            $print .= '    /**' . PHP_EOL;
-            $print .= '     * Total all records with filter.' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param string|null $search' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @return int' . PHP_EOL;
-            $print .= '     */' . PHP_EOL;
-            $print .= '    public function totalRecordsWithFilter($search = NULL) {' . PHP_EOL;
-            $print .= '        $this->db->select(\'id\');' . PHP_EOL;
-            $print .= '        $this->db->from($this->table);' . PHP_EOL;
-            if ($withSoftDelete) {
-                $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
-            }
-            $print .= '        if (!empty($search)) {' . PHP_EOL;
-            $print .= '            // Your LIKE query.' . PHP_EOL;
-            $print .= '            // // $search = strtolower($search);' . PHP_EOL;
-            $print .= '            // $this->db->group_start();' . PHP_EOL;
-            $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
-            $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
-            $print .= '            // $this->db->group_end();' . PHP_EOL;
-            $print .= '        }' . PHP_EOL;
-            $print .= '        $result = $this->db->count_all_results();' . PHP_EOL;
-            $print .= '        return $result ? $result : 0;' . PHP_EOL;
-            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecordsWithFilter()
-            $print .= '    /**' . PHP_EOL;
-            $print .= '     * Datatables.' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param string|int  $length' . PHP_EOL;
-            $print .= '     * @param string|int  $start' . PHP_EOL;
-            $print .= '     * @param string|null $search' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @return array' . PHP_EOL;
-            $print .= '     */' . PHP_EOL;
-            $print .= '    public function datatables($length = 10, $start = 0, $search = NULL) {' . PHP_EOL;
-            $print .= '        $this->db->select();' . PHP_EOL;
-            $print .= '        $this->db->from($this->table);' . PHP_EOL;
-            if ($withSoftDelete) {
-                $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
-            }
-            $print .= '        if (!empty($search)) {' . PHP_EOL;
-            $print .= '            // Your LIKE query.' . PHP_EOL;
-            $print .= '            // $search = strtolower($search);' . PHP_EOL;
-            $print .= '            // $this->db->group_start();' . PHP_EOL;
-            $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
-            $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
-            $print .= '            // $this->db->group_end();' . PHP_EOL;
-            $print .= '        }' . PHP_EOL;
-            $print .= '        $this->db->limit($length, $start);' . PHP_EOL;
-            $print .= '        $result = $this->db->get()->result();' . PHP_EOL;
-            $print .= '        return $result ? $result : [];' . PHP_EOL;
-            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function datatables()
-            $print .= '    /**' . PHP_EOL;
-            $print .= '     * Insert data to database with query binding. For PostgreSQL.' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param array  $param' . PHP_EOL;
-            $print .= '     * @param string $returning Returned value, all or any field' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * Example:' . PHP_EOL;
-            $print .= '     * $param = [' . PHP_EOL;
-            $print .= '     *   \'name\' => \'Virdi Gunawan\',' . PHP_EOL;
-            $print .= '     *   \'email\' => \'virdigunawann@gmail.com\',' . PHP_EOL;
-            $print .= '     *   \'visited_at\' => ["TO_DATE(\'".date(\'Y-m-d H:i:s\')."\', \'YYYY-MM-DD\')", TRUE],' . PHP_EOL;
-            $print .= '     *   \'created_at\' => ["NOW()", TRUE],' . PHP_EOL;
-            $print .= '     * ];' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * $this->createWBinding($param, \'all\');' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * Query result:' . PHP_EOL;
-            $print .= '     * INSERT INTO users (name, email, visited_at, created_at)' . PHP_EOL;
-            $print .= '     * VALUES (\'Virdi Gunawan\', \'virdigunawann@gmail.com\', TO_DATE(\'2023-02-08 14:07:56\', \'YYYY-MM-DD\'), NOW())' . PHP_EOL;
-            $print .= '     * RETURNING *;' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @return object|int' . PHP_EOL;
-            $print .= '     */' . PHP_EOL;
-            $print .= '    public function createWBinding($param, $returning = \'all\') {' . PHP_EOL;
-            $print .= '        $fields = $values = [];' . PHP_EOL;
-            $print .= '        // Parse parameters as string.' . PHP_EOL;
-            $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
-            $print .= '            $fields[] = $key;' . PHP_EOL;
-            $print .= '            // Check if value is an array.' . PHP_EOL;
-            $print .= '            if (is_array($p)) {' . PHP_EOL;
-            $print .= '                // If it is, explode then check if it should be escaped.' . PHP_EOL;
-            $print .= '                list($val, $escape) = $p;' . PHP_EOL;
-            $print .= '                if ((bool) $escape) {' . PHP_EOL;
-            $print .= '                    $p = $val;' . PHP_EOL;
-            $print .= '                } else {' . PHP_EOL;
-            $print .= '                    $p = "\'$val\'";' . PHP_EOL;
-            $print .= '                }' . PHP_EOL;
-            $print .= '            } else {' . PHP_EOL;
-            $print .= '                $p = "\'$p\'";' . PHP_EOL;
-            $print .= '            }' . PHP_EOL;
-            $print .= '            $values[] = $p;' . PHP_EOL;
-            $print .= '        }' . PHP_EOL . PHP_EOL;
-            $print .= '        // Returned value, either all or specific field.' . PHP_EOL;
-            $print .= '        $return = $returning === \'all\' ? \'*\' : \'id\';' . PHP_EOL;
-            $print .= '        // Implode field names and parameters with create query.' . PHP_EOL;
-            $print .= '        $query = \'INSERT INTO \' . $this->table . \'(\'.join(\', \', $fields).\') VALUES (\'.join(\', \', $values).\') RETURNING \' . $return . \';\';' . PHP_EOL;
-            $print .= '        return $this->db->query($query);' . PHP_EOL;
-            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function createWBinding()
-            $print .= '    /**' . PHP_EOL;
-            $print .= '     * Query binding, for Oracle DB Date format.' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param array $where' . PHP_EOL;
-            $print .= '     * @param array $param' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * Example:' . PHP_EOL;
-            $print .= '     * $where = [' . PHP_EOL;
-            $print .= '     *   \'id\' => 1,' . PHP_EOL;
-            $print .= '     * ];' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * $param = [' . PHP_EOL;
-            $print .= '     *   \'name\' => \'Virdi Gunawan\',' . PHP_EOL;
-            $print .= '     *   \'email\' => \'virdigunawann@gmail.com\',' . PHP_EOL;
-            $print .= '     *   \'updated_at\' => ["TO_DATE(\'".date(\'Y-m-d H:i:s\')."\', \'YYYY-MM-DD hh24:mi:ss\')", TRUE],' . PHP_EOL;
-            $print .= '     * ];' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * $this->binding($where, $param);' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * Result:' . PHP_EOL;
-            $print .= '     * UPDATE users' . PHP_EOL;
-            $print .= '     * SET "name" = \'Virdi Gunawan\',' . PHP_EOL;
-            $print .= '     * "email" = \'virdigunawann@gmail.com\',' . PHP_EOL;
-            $print .= '     * "updated_at" = TO_DATE(\'2023-02-08 14:07:56\', \'YYYY-MM-DD hh24:mi:ss\')' . PHP_EOL;
-            $print .= '     * WHERE "id" = \'1\';' . PHP_EOL;
-            $print .= '     * ' . PHP_EOL;
-            $print .= '     * @return string' . PHP_EOL;
-            $print .= '     */' . PHP_EOL;
-            $print .= '    public function binding($where, $param) {' . PHP_EOL;
-            $print .= '        $tempSet = $tempWhere = [];' . PHP_EOL;
-            $print .= '        // Parse parameters as string.' . PHP_EOL;
-            $print .= '        foreach ($param as $keyP => $p) {' . PHP_EOL;
-            $print .= '            // Check if value is an array.' . PHP_EOL;
-            $print .= '            if (is_array($p)) {' . PHP_EOL;
-            $print .= '                // If it is, explode then check if it should be escaped.' . PHP_EOL;
-            $print .= '                list($val, $escape) = $p;' . PHP_EOL;
-            $print .= '                if ((bool) $escape) {' . PHP_EOL;
-            $print .= '                    $p = $val;' . PHP_EOL;
-            $print .= '                } else {' . PHP_EOL;
-            $print .= '                    $p = "\'$val\'";' . PHP_EOL;
-            $print .= '                }' . PHP_EOL;
-            $print .= '            } else {' . PHP_EOL;
-            $print .= '                $p = "\'$p\'";' . PHP_EOL;
-            $print .= '            }' . PHP_EOL;
-            $print .= '            $tempSet[] = "\"$keyP\" = $p";' . PHP_EOL;
-            $print .= '        }' . PHP_EOL . PHP_EOL;
-            $print .= '        // Parse where clauses as string.' . PHP_EOL;
-            $print .= '        foreach ($where as $keyW => $w) {' . PHP_EOL;
-            $print .= '            $tempWhere[] = "\"$keyW\" = \'$w\'";' . PHP_EOL;
-            $print .= '        }' . PHP_EOL . PHP_EOL;
-            $print .= '        $setQuery = join(\', \', $tempSet);' . PHP_EOL;
-            $print .= '        $whereQuery = \' WHERE \' . join(\' AND \', $tempWhere);' . PHP_EOL . PHP_EOL;
-            $print .= '        // Implode where clauses and parameters with update query.' . PHP_EOL;
-            $print .= '        $query = "UPDATE " . $this->table . \' SET \' . $setQuery . $whereQuery . \';\';' . PHP_EOL;
-            $print .= '        return $query;' . PHP_EOL;
-            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function binding()
+            // $print .= '    /**' . PHP_EOL;
+            // $print .= '     * Insert data to database with query binding. For PostgreSQL.' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * @param array  $param' . PHP_EOL;
+            // $print .= '     * @param string $returning Returned value, all or any field' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * Example:' . PHP_EOL;
+            // $print .= '     * $param = [' . PHP_EOL;
+            // $print .= '     *   \'name\' => \'Virdi Gunawan\',' . PHP_EOL;
+            // $print .= '     *   \'email\' => \'virdigunawann@gmail.com\',' . PHP_EOL;
+            // $print .= '     *   \'visited_at\' => ["TO_DATE(\'".date(\'Y-m-d H:i:s\')."\', \'YYYY-MM-DD\')", TRUE],' . PHP_EOL;
+            // $print .= '     *   \'created_at\' => ["NOW()", TRUE],' . PHP_EOL;
+            // $print .= '     * ];' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * $this->createWBinding($param, \'all\');' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * Query result:' . PHP_EOL;
+            // $print .= '     * INSERT INTO users (name, email, visited_at, created_at)' . PHP_EOL;
+            // $print .= '     * VALUES (\'Virdi Gunawan\', \'virdigunawann@gmail.com\', TO_DATE(\'2023-02-08 14:07:56\', \'YYYY-MM-DD\'), NOW())' . PHP_EOL;
+            // $print .= '     * RETURNING *;' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * @return object|int' . PHP_EOL;
+            // $print .= '     */' . PHP_EOL;
+            // $print .= '    public function createWBinding($param, $returning = \'all\') {' . PHP_EOL;
+            // $print .= '        $fields = $values = [];' . PHP_EOL;
+            // $print .= '        // Parse parameters as string.' . PHP_EOL;
+            // $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
+            // $print .= '            $fields[] = $key;' . PHP_EOL;
+            // $print .= '            // Check if value is an array.' . PHP_EOL;
+            // $print .= '            if (is_array($p)) {' . PHP_EOL;
+            // $print .= '                // If it is, explode then check if it should be escaped.' . PHP_EOL;
+            // $print .= '                list($val, $escape) = $p;' . PHP_EOL;
+            // $print .= '                if ((bool) $escape) {' . PHP_EOL;
+            // $print .= '                    $p = $val;' . PHP_EOL;
+            // $print .= '                } else {' . PHP_EOL;
+            // $print .= '                    $p = "\'$val\'";' . PHP_EOL;
+            // $print .= '                }' . PHP_EOL;
+            // $print .= '            } else {' . PHP_EOL;
+            // $print .= '                $p = "\'$p\'";' . PHP_EOL;
+            // $print .= '            }' . PHP_EOL;
+            // $print .= '            $values[] = $p;' . PHP_EOL;
+            // $print .= '        }' . PHP_EOL . PHP_EOL;
+            // $print .= '        // Returned value, either all or specific field.' . PHP_EOL;
+            // $print .= '        $return = $returning === \'all\' ? \'*\' : \'id\';' . PHP_EOL;
+            // $print .= '        // Implode field names and parameters with create query.' . PHP_EOL;
+            // $print .= '        $query = \'INSERT INTO \' . $this->table . \'(\'.join(\', \', $fields).\') VALUES (\'.join(\', \', $values).\') RETURNING \' . $return . \';\';' . PHP_EOL;
+            // $print .= '        return $this->db->query($query);' . PHP_EOL;
+            // $print .= '    }' . PHP_EOL . PHP_EOL; // end public function createWBinding()
+            // $print .= '    /**' . PHP_EOL;
+            // $print .= '     * Query binding, for Oracle DB Date format.' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * @param array $where' . PHP_EOL;
+            // $print .= '     * @param array $param' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * Example:' . PHP_EOL;
+            // $print .= '     * $where = [' . PHP_EOL;
+            // $print .= '     *   \'id\' => 1,' . PHP_EOL;
+            // $print .= '     * ];' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * $param = [' . PHP_EOL;
+            // $print .= '     *   \'name\' => \'Virdi Gunawan\',' . PHP_EOL;
+            // $print .= '     *   \'email\' => \'virdigunawann@gmail.com\',' . PHP_EOL;
+            // $print .= '     *   \'updated_at\' => ["TO_DATE(\'".date(\'Y-m-d H:i:s\')."\', \'YYYY-MM-DD hh24:mi:ss\')", TRUE],' . PHP_EOL;
+            // $print .= '     * ];' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * $this->binding($where, $param);' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * Result:' . PHP_EOL;
+            // $print .= '     * UPDATE users' . PHP_EOL;
+            // $print .= '     * SET "name" = \'Virdi Gunawan\',' . PHP_EOL;
+            // $print .= '     * "email" = \'virdigunawann@gmail.com\',' . PHP_EOL;
+            // $print .= '     * "updated_at" = TO_DATE(\'2023-02-08 14:07:56\', \'YYYY-MM-DD hh24:mi:ss\')' . PHP_EOL;
+            // $print .= '     * WHERE "id" = \'1\';' . PHP_EOL;
+            // $print .= '     * ' . PHP_EOL;
+            // $print .= '     * @return string' . PHP_EOL;
+            // $print .= '     */' . PHP_EOL;
+            // $print .= '    public function binding($where, $param) {' . PHP_EOL;
+            // $print .= '        $tempSet = $tempWhere = [];' . PHP_EOL;
+            // $print .= '        // Parse parameters as string.' . PHP_EOL;
+            // $print .= '        foreach ($param as $keyP => $p) {' . PHP_EOL;
+            // $print .= '            // Check if value is an array.' . PHP_EOL;
+            // $print .= '            if (is_array($p)) {' . PHP_EOL;
+            // $print .= '                // If it is, explode then check if it should be escaped.' . PHP_EOL;
+            // $print .= '                list($val, $escape) = $p;' . PHP_EOL;
+            // $print .= '                if ((bool) $escape) {' . PHP_EOL;
+            // $print .= '                    $p = $val;' . PHP_EOL;
+            // $print .= '                } else {' . PHP_EOL;
+            // $print .= '                    $p = "\'$val\'";' . PHP_EOL;
+            // $print .= '                }' . PHP_EOL;
+            // $print .= '            } else {' . PHP_EOL;
+            // $print .= '                $p = "\'$p\'";' . PHP_EOL;
+            // $print .= '            }' . PHP_EOL;
+            // $print .= '            $tempSet[] = "\"$keyP\" = $p";' . PHP_EOL;
+            // $print .= '        }' . PHP_EOL . PHP_EOL;
+            // $print .= '        // Parse where clauses as string.' . PHP_EOL;
+            // $print .= '        foreach ($where as $keyW => $w) {' . PHP_EOL;
+            // $print .= '            $tempWhere[] = "\"$keyW\" = \'$w\'";' . PHP_EOL;
+            // $print .= '        }' . PHP_EOL . PHP_EOL;
+            // $print .= '        $setQuery = join(\', \', $tempSet);' . PHP_EOL;
+            // $print .= '        $whereQuery = \' WHERE \' . join(\' AND \', $tempWhere);' . PHP_EOL . PHP_EOL;
+            // $print .= '        // Implode where clauses and parameters with update query.' . PHP_EOL;
+            // $print .= '        $query = "UPDATE " . $this->table . \' SET \' . $setQuery . $whereQuery . \';\';' . PHP_EOL;
+            // $print .= '        return $query;' . PHP_EOL;
+            // $print .= '    }' . PHP_EOL . PHP_EOL; // end public function binding()
         }
+
         $print .= '    /**' . PHP_EOL;
-        $print .= '     * Soft Delete parameters.' . PHP_EOL;
+        $print .= '     * Parse procedures OB.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string $switchParam' . PHP_EOL;
+        $print .= '     * @param mixed ...arrays' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @return void' . PHP_EOL;
+        $print .= '     * @return string' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    public function softDelete($switchParam = \'clean\') {' . PHP_EOL;
-        $print .= '        if ($this->softDelete) {' . PHP_EOL;
-        $print .= '            // - \'clean\' only return all record that IS NOT deleted.' . PHP_EOL;
-        $print .= '            // - \'trashed\' only return all record that IS deleted.' . PHP_EOL;
-        $print .= '            // - \'all\' return all record.' . PHP_EOL;
-        $print .= '            // Default is \'clean\'.' . PHP_EOL;
-        $print .= '            switch ($switchParam) {' . PHP_EOL;
-        $print .= '                case \'clean\':' . PHP_EOL;
-        $print .= '                    $this->db->group_start();' . PHP_EOL;
-        $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
-        $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;
-        $print .= '                        }' . PHP_EOL;
-        $print .= '                    $this->db->group_end();' . PHP_EOL;
-        $print .= '                    break;' . PHP_EOL;
-        $print .= '                case \'trashed\':' . PHP_EOL;
-        $print .= '                    $this->db->group_start();' . PHP_EOL;
-        $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
-        $print .= '                            $this->db->where("$param IS NOT NULL");' . PHP_EOL;
-        $print .= '                        }' . PHP_EOL;
-        $print .= '                    $this->db->group_end();' . PHP_EOL;
-        $print .= '                    break;' . PHP_EOL;
-        $print .= '                case \'all\':' . PHP_EOL;
-        $print .= '                    break;' . PHP_EOL;
-        $print .= '                default:' . PHP_EOL;
-        $print .= '                    $this->db->group_start();' . PHP_EOL;
-        $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
-        $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;
-        $print .= '                        }' . PHP_EOL;
-        $print .= '                    $this->db->group_end();' . PHP_EOL;
-        $print .= '                    break;' . PHP_EOL;
-        $print .= '            }' . PHP_EOL;
+        $print .= '    // public function parseProcedures($val1, $val2, $val3, $val4, $val5, $val6, $val7) {' . PHP_EOL;
+        $print .= "    //     // Customize on your own." . PHP_EOL;
+        $print .= "    //     // If the variable is an int, do not use apostrophe (') for the template. Ex: %s" . PHP_EOL;
+        $print .= "    //     // If the variable is a string, use apostrophe (') for the template. Ex: '%s'" . PHP_EOL;
+        $print .= '    //     // If the variable is null, do not use apostrophe (\') for the template, and use ternary for its value.' . PHP_EOL;
+        $print .= '    //     // Ex: %s     is_null($val7) ? \'null\' : "\'$val7\'"' . PHP_EOL;
+        $print .= "    //     return vsprintf(\"PROC_TRX(null, '%s', '%s', %s, '%s', '%s', '%s', %s)\"," . PHP_EOL;
+        $print .= '    //         [$val1, $val2, (int) $val3, $val4, $val5, $val6, is_null($val7) ? \'null\' : "\'$val7\'"]);' . PHP_EOL;
+        $print .= '    // }' . PHP_EOL . PHP_EOL; // end public function parseProcedures()
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Run procedures OB.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @param array $procedures' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return bool' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    // public function runProcedure($procedures) {' . PHP_EOL;
+        $print .= '    //     if (count($procedures) === 0) {' . PHP_EOL;
+        $print .= '    //         return true;' . PHP_EOL;
+        $print .= '    //     }' . PHP_EOL . PHP_EOL;
+        $print .= "    //     // We are going to run every procedures provided." . PHP_EOL;
+        $print .= '    //     $this->ob = $this->load->database(\'ob\', TRUE);' . PHP_EOL;
+        $print .= '    //     $result = $this->ob->query(\'BEGIN \' . join(\';\', $procedures) . \'; END;\');' . PHP_EOL;
+        $print .= '    //     return $result ? true : false;' . PHP_EOL;
+        $print .= '    // }' . PHP_EOL . PHP_EOL; // end public function runProcedure()
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Total all records with filter.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @param string|null $search' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return int' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    public function totalRecords($search = NULL) {' . PHP_EOL;
+        $print .= '        $this->db->select(\'COUNT(id) AS totalRecordsWithFilter, (SELECT COUNT(id) FROM \'.$this->table.\') AS totalRecords\');' . PHP_EOL;
+        $print .= '        $this->db->from($this->table);' . PHP_EOL;
+        if ($withSoftDelete) {
+            $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
+        }
+        $print .= '        if (!empty($search)) {' . PHP_EOL;
+        $print .= '            // Your LIKE query.' . PHP_EOL;
+        $print .= '            // // $search = strtolower($search);' . PHP_EOL;
+        $print .= '            // $this->db->group_start();' . PHP_EOL;
+        $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
+        $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
+        $print .= '            // $this->db->group_end();' . PHP_EOL;
         $print .= '        }' . PHP_EOL;
-        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function softDelete()
+        $print .= '        $result = $this->db->get()->row();' . PHP_EOL;
+        $print .= '        return $result ? $result : (object) [\'totalRecordsWithFilter\' => 0, \'totalRecords\' => 0];' . PHP_EOL;
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecords()
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Datatables.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @param string|int  $length' . PHP_EOL;
+        $print .= '     * @param string|int  $start' . PHP_EOL;
+        $print .= '     * @param string|null $search' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return array' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    public function datatables($length = 10, $start = 0, $search = NULL) {' . PHP_EOL;
+        $print .= '        $this->db->select();' . PHP_EOL;
+        $print .= '        $this->db->from($this->table);' . PHP_EOL;
+        if ($withSoftDelete) {
+            $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
+        }
+        $print .= '        if (!empty($search)) {' . PHP_EOL;
+        $print .= '            // Your LIKE query.' . PHP_EOL;
+        $print .= '            // $search = strtolower($search);' . PHP_EOL;
+        $print .= '            // $this->db->group_start();' . PHP_EOL;
+        $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
+        $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
+        $print .= '            // $this->db->group_end();' . PHP_EOL;
+        $print .= '        }' . PHP_EOL;
+        $print .= '        $this->db->limit($length, $start);' . PHP_EOL;
+        $print .= '        $result = $this->db->get()->result();' . PHP_EOL;
+        $print .= '        return $result ? $result : [];' . PHP_EOL;
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function datatables()
+
+        if ($withSoftDelete) {
+            $print .= '    /**' . PHP_EOL;
+            $print .= '     * Soft Delete parameters.' . PHP_EOL;
+            $print .= '     * ' . PHP_EOL;
+            $print .= '     * @param string $switchParam' . PHP_EOL;
+            $print .= '     * ' . PHP_EOL;
+            $print .= '     * @return void' . PHP_EOL;
+            $print .= '     */' . PHP_EOL;
+            $print .= '    public function softDelete($switchParam = \'clean\') {' . PHP_EOL;
+            $print .= '        if ($this->softDelete) {' . PHP_EOL;
+            $print .= '            // - \'clean\' only return all record that IS NOT deleted.' . PHP_EOL;
+            $print .= '            // - \'trashed\' only return all record that IS deleted.' . PHP_EOL;
+            $print .= '            // - \'all\' return all record.' . PHP_EOL;
+            $print .= '            // Default is \'clean\'.' . PHP_EOL;
+            $print .= '            switch ($switchParam) {' . PHP_EOL;
+            $print .= '                case \'clean\':' . PHP_EOL;
+            $print .= '                    $this->db->group_start();' . PHP_EOL;
+            $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
+            $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;
+            $print .= '                        }' . PHP_EOL;
+            $print .= '                    $this->db->group_end();' . PHP_EOL;
+            $print .= '                    break;' . PHP_EOL;
+            $print .= '                case \'trashed\':' . PHP_EOL;
+            $print .= '                    $this->db->group_start();' . PHP_EOL;
+            $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
+            $print .= '                            $this->db->where("$param IS NOT NULL");' . PHP_EOL;
+            $print .= '                        }' . PHP_EOL;
+            $print .= '                    $this->db->group_end();' . PHP_EOL;
+            $print .= '                    break;' . PHP_EOL;
+            $print .= '                case \'all\':' . PHP_EOL;
+            $print .= '                    break;' . PHP_EOL;
+            $print .= '                default:' . PHP_EOL;
+            $print .= '                    $this->db->group_start();' . PHP_EOL;
+            $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
+            $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;
+            $print .= '                        }' . PHP_EOL;
+            $print .= '                    $this->db->group_end();' . PHP_EOL;
+            $print .= '                    break;' . PHP_EOL;
+            $print .= '            }' . PHP_EOL;
+            $print .= '        }' . PHP_EOL;
+            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function softDelete()
+        }
         $print .= '}'; // end class
 
         return $print;
@@ -1199,6 +1242,19 @@ class Seeder
     }
 
     /**
+     * Random string.
+     *
+     * @param string|int $length
+     *
+     * @return string
+     */
+    private function rand($length = 4)
+    {
+        $pool = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        return substr(str_shuffle(str_repeat($pool, ceil($length / strlen($pool)))), 0, $length);
+    }
+
+    /**
      * Parse returned text with green color.
      *
      * @param string $text
@@ -1247,6 +1303,29 @@ class Seeder
     }
 
     /**
+     * Add date time fields to current date time's array.
+     *
+     * @param array $fields
+     *
+     * @return void
+     */
+    public function addDateTime($fields = [])
+    {
+        $old = $this->dateTime;
+        $this->dateTime = array_values(array_unique(array_merge($old, $fields)));
+    }
+
+    /**
+     * Get array date time.
+     *
+     * @return array
+     */
+    public function getDateTime()
+    {
+        return $this->dateTime;
+    }
+
+    /**
      * Set path to seeder folder.
      *
      * @param string $path
@@ -1280,7 +1359,7 @@ class Seeder
      */
     private function getPath()
     {
-        return $this->path ?? SEEDER_PATH . DIRECTORY_SEPARATOR;
+        return $this->path ?: SEEDER_PATH . DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -1290,6 +1369,6 @@ class Seeder
      */
     private function getConn()
     {
-        return $this->conn ?? 'default';
+        return $this->conn ?: 'default';
     }
 }

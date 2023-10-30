@@ -149,7 +149,7 @@ class Seeder
         $rand = $this->rand(4);
 
         // Parse input as printable string.
-        $print = $this->parseInputMigration($name . '_' . $rand, $prefix, $param);
+        $print = $this->parseInputMigration($name, $rand, $prefix, $param);
 
         // Get the latest migration file order.
         $count = $this->latest($this->getPath());
@@ -368,12 +368,13 @@ class Seeder
      * Parse input as printable string for migration file.
      *
      * @param string $name
+     * @param string $rand
      * @param string $prefix
      * @param array  $param
      *
      * @return string
      */
-    private function parseInputMigration($name, $prefix, $param)
+    private function parseInputMigration($name, $rand, $prefix, $param)
     {
         $softDelete = '';
         if (in_array('--soft-delete', $param)) {
@@ -388,7 +389,7 @@ class Seeder
             $softDelete .= '            ],' . PHP_EOL;
         }
         $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-        $print .= 'Class Migration_' . ucwords($prefix) . '_' . $name . ' extends CI_Migration {' . PHP_EOL;
+        $print .= 'Class Migration_' . ucwords($prefix) . '_' . $name . '_' . $rand . ' extends CI_Migration {' . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Array table fields.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;

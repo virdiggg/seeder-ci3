@@ -978,32 +978,6 @@ class Seeder
         $print .= '    //     return $result ? true : false;' . PHP_EOL;
         $print .= '    // }' . PHP_EOL . PHP_EOL; // end public function runProcedure()
         $print .= '    /**' . PHP_EOL;
-        $print .= '     * Total all records with filter.' . PHP_EOL;
-        $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string|null $search' . PHP_EOL;
-        $print .= '     * ' . PHP_EOL;
-        $print .= '     * @return int' . PHP_EOL;
-        $print .= '     */' . PHP_EOL;
-        $print .= '    public function totalRecords($search = NULL) {' . PHP_EOL;
-        $print .= '        $this->db->select(\'COUNT(id) AS totalrecordswithfilter, (SELECT COUNT(id) FROM \'.$this->table.\') AS totalrecords\');' . PHP_EOL;
-        $print .= '        $this->db->from($this->table);' . PHP_EOL;
-        if ($withSoftDelete) {
-            $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
-        }
-        $print .= '        if (!empty($search)) {' . PHP_EOL;
-        $print .= '            // Your LIKE query.' . PHP_EOL;
-        $print .= '            // // $search = strtolower($search);' . PHP_EOL;
-        $print .= '            // $this->db->group_start();' . PHP_EOL;
-        $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
-        $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
-        $print .= '            // $this->db->group_end();' . PHP_EOL;
-        $print .= '        }' . PHP_EOL;
-        $print .= '        $result = $this->db->get()->row();' . PHP_EOL;
-        $print .= '        return $result' . PHP_EOL;
-        $print .= '            ? (object) [\'totalRecordsWithFilter\' => $result->totalrecordswithfilter, \'totalRecords\' => $result->totalrecords]' . PHP_EOL;
-        $print .= '            : (object) [\'totalRecordsWithFilter\' => 0, \'totalRecords\' => 0];' . PHP_EOL;
-        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecords()
-        $print .= '    /**' . PHP_EOL;
         $print .= '     * Datatables.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @param string|int  $length' . PHP_EOL;
@@ -1013,6 +987,34 @@ class Seeder
         $print .= '     * @return array' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function datatables($length = 10, $start = 0, $search = NULL) {' . PHP_EOL;
+        $print .= '        $result = $this->queryDatatables($length, $start, $search);' . PHP_EOL;
+        $print .= '        $countResult = count($result);' . PHP_EOL . PHP_EOL;
+        $print .= '        if ($countResult >= $length) {' . PHP_EOL;
+        $print .= '            $resultNextPage = $this->queryDatatables($length, $start + $length, $search);' . PHP_EOL;
+        $print .= '            $countResultNextPage = count($resultNextPage);' . PHP_EOL;
+        $print .= '            if ($countResultNextPage >= $length) {' . PHP_EOL;
+        $print .= '                $totalRecords = $start + (2 * $length);' . PHP_EOL;
+        $print .= '            } else {' . PHP_EOL;
+        $print .= '                $totalRecords = $start + $length + $countResultNextPage;' . PHP_EOL;
+        $print .= '            }' . PHP_EOL;
+        $print .= '        } else {' . PHP_EOL;
+        $print .= '            $totalRecords = $start + $countResult;' . PHP_EOL;
+        $print .= '        }' . PHP_EOL . PHP_EOL;
+        $print .= '        return [' . PHP_EOL;
+        $print .= '            \'totalRecords\' => $totalRecords,' . PHP_EOL;
+        $print .= '            \'data\' => $result ? $result : [],' . PHP_EOL;
+        $print .= '        ];' . PHP_EOL;
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function datatables()
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Datatables.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @param string|int  $length' . PHP_EOL;
+        $print .= '     * @param string|int  $start' . PHP_EOL;
+        $print .= '     * @param string|null $search' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return array' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    public function queryDatatables($length = 10, $start = 0, $search = NULL) {' . PHP_EOL;
         $print .= '        $this->db->select();' . PHP_EOL;
         $print .= '        $this->db->from($this->table);' . PHP_EOL;
         if ($withSoftDelete) {
@@ -1029,7 +1031,21 @@ class Seeder
         $print .= '        $this->db->limit($length, $start);' . PHP_EOL;
         $print .= '        $result = $this->db->get()->result();' . PHP_EOL;
         $print .= '        return $result ? $result : [];' . PHP_EOL;
-        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function datatables()
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function queryDatatables()
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Total all records with filter.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return int' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    public function totalRecords() {' . PHP_EOL;
+        $print .= '        $this->db->select();' . PHP_EOL;
+        $print .= '        $this->db->from($this->table);' . PHP_EOL;
+        if ($withSoftDelete) {
+            $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
+        }
+        $print .= '        $result = $this->db->count_all_results();' . PHP_EOL;
+        $print .= '        return $result ? $result : 0;' . PHP_EOL;
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecords()
 
         if ($withSoftDelete) {
             $print .= '    /**' . PHP_EOL;

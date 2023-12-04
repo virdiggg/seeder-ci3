@@ -17,9 +17,6 @@
 	"scripts": {
 		"post-install-cmd": [
             "@php -r \"copy('vendor/virdiggg/seeder-ci3/example/App.php', 'controllers/App.php');\""
-		],
-		"post-update-cmd": [
-            "@php -r \"copy('vendor/virdiggg/seeder-ci3/example/App.php', 'controllers/App.php');\""
 		]
 	},
     "require": {

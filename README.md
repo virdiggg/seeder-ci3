@@ -9,6 +9,14 @@
 ```
 composer require virdiggg/seeder-ci3 --dev
 ```
+- Optional, update your `composer.json` and add this line
+```
+	"scripts": {
+		"post-install-cmd": [
+            "@php -r \"copy('vendor/virdiggg/seeder-ci3/example/App.php', 'controllers/App.php');\""
+		]
+	}
+```
 - Create a controller to host all the function from this library. Example is `application/controller/App.php`
 ```
 <?php defined('BASEPATH') or exit('No direct script access allowed');

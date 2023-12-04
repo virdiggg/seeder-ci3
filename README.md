@@ -11,11 +11,11 @@ composer require virdiggg/seeder-ci3 --dev
 ```
 - Optional, update your `composer.json` and add this line
 ```
-	"scripts": {
-		"post-install-cmd": [
-            "@php -r \"copy('vendor/virdiggg/seeder-ci3/example/App.php', 'controllers/App.php');\""
-		]
-	}
+"scripts": {
+    "post-install-cmd": [
+        "@php -r \"copy('vendor/virdiggg/seeder-ci3/example/App.php', 'controllers/App.php');\""
+    ]
+}
 ```
 - Create a controller to host all the function from this library. Example is `application/controller/App.php`
 ```
@@ -33,99 +33,99 @@ class App extends CI_Controller
     }
 
     public function migrate() {
-		$this->load->library('migration');
+        $this->load->library('migration');
 
-		if (!$this->migration->current()) {
-			show_error($this->migration->error_string());
-			return;
-		}
+        if (!$this->migration->current()) {
+            show_error($this->migration->error_string());
+            return;
+        }
 
-		$res = $this->db->select('version')->from('migrations')->get()->row();
-		$msg = $this->seed->emoticon('MIGRATE NUMBER ' . $res->version . ' SUCCESS');
+        $res = $this->db->select('version')->from('migrations')->get()->row();
+        $msg = $this->seed->emoticon('MIGRATE NUMBER ' . $res->version . ' SUCCESS');
 
-		print($msg);
-		return;
+        print($msg);
+        return;
     }
 
     public function rollback() {
-		$this->load->library('migration');
+        $this->load->library('migration');
 
-		// Get all arguments passed to this function
-		$result = $this->seed->parseParam(func_get_args());
-		$args = $result->args;
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $args = $result->args;
 
-		$resOld = $this->db->select('version')->from('migrations')->get()->row();
-		// Default to current number
-		$version = $resOld->version;
+        $resOld = $this->db->select('version')->from('migrations')->get()->row();
+        // Default to current number
+        $version = $resOld->version;
 
-		foreach ($args as $arg) {
-			if (strpos($arg, '--to=') !== false) {
-				$version = substr($arg, strpos($arg, '--to=') + 5);
-			}
-		}
+        foreach ($args as $arg) {
+            if (strpos($arg, '--to=') !== false) {
+                $version = substr($arg, strpos($arg, '--to=') + 5);
+            }
+        }
 
-		if (!$this->migration->version((int) $version)) {
-			show_error($this->migration->error_string());
-			return;
-		}
+        if (!$this->migration->version((int) $version)) {
+            show_error($this->migration->error_string());
+            return;
+        }
 
-		$res = $this->db->select('version')->from('migrations')->get()->row();
-		$msg = $this->seed->emoticon('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS');
+        $res = $this->db->select('version')->from('migrations')->get()->row();
+        $msg = $this->seed->emoticon('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS');
 
-		print($msg);
-		return;
+        print($msg);
+        return;
     }
 
     public function seed() {
-		// To add date time fields, the only date time fields we covers are 'created_at', 'updated_at', 'approved_at', 'deleted_at'
-		// $this->seed->addDateTime(['create_date', 'change_date', 'last_access']);
-		// Get all arguments passed to this function
-		$result = $this->seed->parseParam(func_get_args());
-		$name = $result->name;
-		// $args = $result->args; // Seeder doesn't have arguments.
+        // To add date time fields, the only date time fields we covers are 'created_at', 'updated_at', 'approved_at', 'deleted_at'
+        // $this->seed->addDateTime(['create_date', 'change_date', 'last_access']);
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        // $args = $result->args; // Seeder doesn't have arguments.
 
-		// You can set which database connection you want to use.
-		// $this->seed->setConn('default2');
-		// $this->seed->setPath(APPPATH);
-		// You can set which migration type you're using.
-		$this->seed->setMigrationType('sequential');
-		$this->seed->seed($name);
+        // You can set which database connection you want to use.
+        // $this->seed->setConn('default2');
+        // $this->seed->setPath(APPPATH);
+        // You can set which migration type you're using.
+        $this->seed->setMigrationType('sequential');
+        $this->seed->seed($name);
     }
 
     public function migration() {
-		// Get all arguments passed to this function
-		$result = $this->seed->parseParam(func_get_args());
-		$name = $result->name;
-		$args = $result->args;
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        $args = $result->args;
 
-		// You can set which database connection you want to use.
-		// $this->seed->setConn('default2');
-		// $this->seed->setPath(APPPATH);
-		// You can set which migration type you're using.
-		$this->seed->setMigrationType('timestamp');
-		$this->seed->migration($name, $args);
+        // You can set which database connection you want to use.
+        // $this->seed->setConn('default2');
+        // $this->seed->setPath(APPPATH);
+        // You can set which migration type you're using.
+        $this->seed->setMigrationType('timestamp');
+        $this->seed->migration($name, $args);
     }
 
     public function controller() {
-		// Get all arguments passed to this function
-		$result = $this->seed->parseParam(func_get_args());
-		$name = $result->name;
-		$args = $result->args;
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        $args = $result->args;
 
-		// $this->seed->setPath(APPPATH);
-		$this->seed->controller($name, $args);
-		return;
+        // $this->seed->setPath(APPPATH);
+        $this->seed->controller($name, $args);
+        return;
     }
 
     public function model() {
-		// Get all arguments passed to this function
-		$result = $this->seed->parseParam(func_get_args());
-		$name = $result->name;
-		$args = $result->args;
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        $args = $result->args;
 
-		// $this->seed->setPath(APPPATH);
-		$this->seed->model($name, $args);
-		return;
+        // $this->seed->setPath(APPPATH);
+        $this->seed->model($name, $args);
+        return;
     }
 }
 ```

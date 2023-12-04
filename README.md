@@ -7,7 +7,7 @@
 ### HOW TO USE
 - Install this library with composer
 ```
-composer require virdiggg/seeder-ci3
+composer require virdiggg/seeder-ci3 --dev
 ```
 - Create a controller to host all the function from this library. Example is `application/controller/App.php`
 ```

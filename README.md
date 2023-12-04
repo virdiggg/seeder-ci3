@@ -79,6 +79,8 @@ class App extends CI_Controller
 		// You can set which database connection you want to use.
 		// $this->seed->setConn('default2');
 		// $this->seed->setPath(APPPATH);
+		// You can set which migration type you're using.
+		$this->seeder->setMigrationType('sequential');
 		$this->seed->seed($name);
     }
 
@@ -91,6 +93,8 @@ class App extends CI_Controller
 		// You can set which database connection you want to use.
 		// $this->seed->setConn('default2');
 		// $this->seed->setPath(APPPATH);
+		// You can set which migration type you're using.
+		$this->seeder->setMigrationType('timestamp');
 		$this->seed->migration($name, $args);
     }
 

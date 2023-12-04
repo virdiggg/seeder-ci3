@@ -56,6 +56,13 @@ class Seeder
      */
     public $OwO;
 
+    /**
+     * Migration type. sequential or timestamp
+     *
+     * @param string
+     */
+    private $migrationType;
+
     public function __construct()
     {
         $this->CI = & get_instance();
@@ -398,7 +405,7 @@ class Seeder
         $print .= '    private $fields;' . PHP_EOL . PHP_EOL;
         if ($prefix === 'alter') {
             $print .= '    /**' . PHP_EOL;
-            $print .= '     * Array table old fields.' . PHP_EOL;
+            $print .= '     * Array table old fields. For the purpose of rolling back a migration.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @param array $oldFields' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
@@ -895,20 +902,64 @@ class Seeder
         }
 
         $print .= '    /**' . PHP_EOL;
-        $print .= '     * Parse procedures OB.' . PHP_EOL;
+        $print .= '     * Parse string procedures OB.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param mixed ...arrays' . PHP_EOL;
+        $print .= '     * Example:' . PHP_EOL;
+        $print .= '     * $param = [' . PHP_EOL;
+        $print .= "     *   ['string' => 'myname']," . PHP_EOL;
+        $print .= "     *   ['int' => '333']," . PHP_EOL;
+        $print .= "     *   ['string' => 'mynametwo']," . PHP_EOL;
+        $print .= "     *   ['string' => 'myaddress']," . PHP_EOL;
+        $print .= "     *   ['string' => '21-Nov-2023']," . PHP_EOL;
+        $print .= "     *   ['stringNullable' => null]," . PHP_EOL;
+        $print .= "     *   'username'," . PHP_EOL;
+        $print .= '     * ];' . PHP_EOL;
+        $print .= '     * $procedure = $this->parseProsedur(\'GAI_Pros(null, ?, ?, ?, ?, ?, ?)\', $param);' . PHP_EOL;
+        $print .= '     * echo $procedure;' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @return string' . PHP_EOL;
+        $print .= '     * @param string $procedure' . PHP_EOL;
+        $print .= '     * @param array  $param' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @throws \Exception' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return string|null' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    // public function parseProcedures($val1, $val2, $val3, $val4, $val5, $val6, $val7) {' . PHP_EOL;
-        $print .= "    //     // Customize on your own." . PHP_EOL;
-        $print .= "    //     // If the variable is an int, do not use apostrophe (') for the template. Ex: %s" . PHP_EOL;
-        $print .= "    //     // If the variable is a string, use apostrophe (') for the template. Ex: '%s'" . PHP_EOL;
-        $print .= '    //     // If the variable is null, do not use apostrophe (\') for the template, and use ternary for its value.' . PHP_EOL;
-        $print .= '    //     // Ex: %s     is_null($val7) ? \'null\' : "\'$val7\'"' . PHP_EOL;
-        $print .= "    //     return vsprintf(\"PROC_TRX(null, '%s', '%s', %s, '%s', '%s', '%s', %s)\"," . PHP_EOL;
-        $print .= '    //         [$val1, $val2, (int) $val3, $val4, $val5, $val6, is_null($val7) ? \'null\' : "\'$val7\'"]);' . PHP_EOL;
+        $print .= '    // public function parseProcedures($procedure, $param) {' . PHP_EOL;
+        $print .= '    //     if (substr_count($procedure, \'?\') !== count($param)) {' . PHP_EOL;
+        $print .= '    //         throw new Exception(\'Total $param is not equal to placeholder in $procedure!\', 1);' . PHP_EOL;
+        $print .= '    //     }' . PHP_EOL . PHP_EOL;
+        $print .= "    //     // Replace ? in procedure string to %s because we're using vsprintf" . PHP_EOL;
+        $print .= '    //     $procedure = str_replace(\'?\', \'%s\', $procedure);' . PHP_EOL . PHP_EOL;
+        $print .= '    //     $temp = [];' . PHP_EOL;
+        $print .= '    //     if (count($param) === 0) {' . PHP_EOL;
+        $print .= '    //         return null;' . PHP_EOL;
+        $print .= '    //     }' . PHP_EOL . PHP_EOL;
+        $print .= '    //     foreach ($param as $p) {' . PHP_EOL;
+        $print .= '    //         // If $p is not an array, make it one' . PHP_EOL;
+        $print .= '    //         if (!is_array($p)) {' . PHP_EOL;
+        $print .= '    //             $p = [\'string\' => $p];' . PHP_EOL;
+        $print .= '    //         }' . PHP_EOL . PHP_EOL;
+        $print .= '    //         // Get its type data' . PHP_EOL;
+        $print .= '    //         $var = array_key_first($p);' . PHP_EOL . PHP_EOL;
+        $print .= '    //         switch ($var) {' . PHP_EOL;
+        $print .= '    //             case \'string\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             case \'int\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = $p[$var];' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             case \'stringNullable\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "\'".$p[$var]."\'";' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             case \'intNullable\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : $p[$var];' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             default:' . PHP_EOL;
+        $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //         }' . PHP_EOL;
+        $print .= '    //     }' . PHP_EOL . PHP_EOL;
+        $print .= '    //     return vsprintf($procedure, $temp);' . PHP_EOL;
         $print .= '    // }' . PHP_EOL . PHP_EOL; // end public function parseProcedures()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Run procedures OB.' . PHP_EOL;
@@ -934,7 +985,7 @@ class Seeder
         $print .= '     * @return int' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function totalRecords($search = NULL) {' . PHP_EOL;
-        $print .= '        $this->db->select(\'COUNT(id) AS totalRecordsWithFilter, (SELECT COUNT(id) FROM \'.$this->table.\') AS totalRecords\');' . PHP_EOL;
+        $print .= '        $this->db->select(\'COUNT(id) AS totalrecordswithfilter, (SELECT COUNT(id) FROM \'.$this->table.\') AS totalrecords\');' . PHP_EOL;
         $print .= '        $this->db->from($this->table);' . PHP_EOL;
         if ($withSoftDelete) {
             $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
@@ -948,7 +999,9 @@ class Seeder
         $print .= '            // $this->db->group_end();' . PHP_EOL;
         $print .= '        }' . PHP_EOL;
         $print .= '        $result = $this->db->get()->row();' . PHP_EOL;
-        $print .= '        return $result ? $result : (object) [\'totalRecordsWithFilter\' => 0, \'totalRecords\' => 0];' . PHP_EOL;
+        $print .= '        return $result' . PHP_EOL;
+        $print .= '            ? (object) [\'totalRecordsWithFilter\' => $result->totalrecordswithfilter, \'totalRecords\' => $result->totalrecords]' . PHP_EOL;
+        $print .= '            : (object) [\'totalRecordsWithFilter\' => 0, \'totalRecords\' => 0];' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecords()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Datatables.' . PHP_EOL;
@@ -1212,6 +1265,10 @@ class Seeder
      */
     private function latest($path)
     {
+        if ($this->getMigrationType() === 'timestamp') {
+            return date('YmdHis');
+        }
+
         // Get all migration files.
         $seeders = $path . '*.php';
         $globs = array_filter(glob($seeders), 'is_file');
@@ -1221,13 +1278,30 @@ class Seeder
 
             // Get the latest array order.
             $latestMigration = (int) $this->before($this->afterLast($globs[0], '\\'), '_');
-            $count = str_pad($latestMigration + 1, 3, '0', STR_PAD_LEFT);
+            $count = str_pad($latestMigration + 1, $this->countLatest($latestMigration), '0', STR_PAD_LEFT);
         } else {
             // Default is sequential order, not timestamp.
             $count = '001';
         }
 
         return $count;
+    }
+
+    /**
+     * Count latest migration
+     * 
+     * @param int $latest
+     * 
+     * @return int
+     */
+    private function countLatest($latest) {
+        // To verify if the next number digit is increased or not.
+        // Ex. strlen(800 + 1) = 3
+        $nextNumber = strlen($latest + 1);
+        // Count the next digit.
+        // Ex. strlen(800) + 1 = 4
+        $nextDigit = strlen($latest) + 1;
+        return $nextNumber === $nextDigit ? $nextDigit : $nextNumber;
     }
 
     /**
@@ -1354,6 +1428,18 @@ class Seeder
     }
 
     /**
+     * Set which migration type you're using fot this seeder.
+     *
+     * @param string $type
+     *
+     * @return void
+     */
+    public function setMigrationType($type = 'sequential')
+    {
+        $this->migrationType = $type;
+    }
+
+    /**
      * Get path to seeder folder. Default to constant SEEDER_PATH.
      *
      * @return string
@@ -1371,5 +1457,15 @@ class Seeder
     private function getConn()
     {
         return $this->conn ?: 'default';
+    }
+
+    /**
+     * Get which migration type you're using.
+     *
+     * @return string
+     */
+    private function getMigrationType()
+    {
+        return $this->migrationType;
     }
 }

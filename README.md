@@ -43,7 +43,7 @@ class App extends CI_Controller
 		$this->load->library('migration');
 
 		// Get all arguments passed to this function
-		$result = $this->seeder->parseParam(func_get_args());
+		$result = $this->seed->parseParam(func_get_args());
 		$args = $result->args;
 
 		$resOld = $this->db->select('version')->from('migrations')->get()->row();
@@ -80,7 +80,7 @@ class App extends CI_Controller
 		// $this->seed->setConn('default2');
 		// $this->seed->setPath(APPPATH);
 		// You can set which migration type you're using.
-		$this->seeder->setMigrationType('sequential');
+		$this->seed->setMigrationType('sequential');
 		$this->seed->seed($name);
     }
 
@@ -94,7 +94,7 @@ class App extends CI_Controller
 		// $this->seed->setConn('default2');
 		// $this->seed->setPath(APPPATH);
 		// You can set which migration type you're using.
-		$this->seeder->setMigrationType('timestamp');
+		$this->seed->setMigrationType('timestamp');
 		$this->seed->migration($name, $args);
     }
 

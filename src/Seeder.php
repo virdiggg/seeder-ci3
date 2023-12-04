@@ -1304,7 +1304,7 @@ class Seeder
     }
 
     /**
-     * Count latest migration
+     * Count latest migration. Return 3 digit number by default.
      * 
      * @param int $latest
      * 
@@ -1317,7 +1317,8 @@ class Seeder
         // Count the next digit.
         // Ex. strlen(800) + 1 = 4
         $nextDigit = strlen($latest) + 1;
-        return $nextNumber === $nextDigit ? $nextDigit : $nextNumber;
+        $result = $nextNumber === $nextDigit ? $nextDigit : $nextNumber;
+        return $result < 3 ? 3 : $result;
     }
 
     /**

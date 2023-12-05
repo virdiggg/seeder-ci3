@@ -55,8 +55,13 @@ class App extends CI_Controller
         $args = $result->args;
 
         $resOld = $this->db->select('version')->from('migrations')->get()->row();
+        if (!isset($resOld->version)) {
+            print('No Migration Found');
+            return;
+        }
+
         // Default to current number
-        $version = $resOld->version;
+        $version = $resOld->version === 1 ? 1 : $resOld->version - 1;
 
         foreach ($args as $arg) {
             if (strpos($arg, '--to=') !== false) {
@@ -72,7 +77,7 @@ class App extends CI_Controller
         $res = $this->db->select('version')->from('migrations')->get()->row();
         $msg = $this->seed->emoticon('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS');
 
-        print($msg);
+        print("\033[92m" . $msg . "\033[0m \n");
         return;
     }
 

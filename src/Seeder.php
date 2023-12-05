@@ -1029,8 +1029,7 @@ class Seeder
         $print .= '            // $this->db->group_end();' . PHP_EOL;
         $print .= '        }' . PHP_EOL;
         $print .= '        $this->db->limit($length, $start);' . PHP_EOL;
-        $print .= '        $result = $this->db->get()->result();' . PHP_EOL;
-        $print .= '        return $result ? $result : [];' . PHP_EOL;
+        $print .= '        return $this->db->get()->result();' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function queryDatatables()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Total all records with filter.' . PHP_EOL;

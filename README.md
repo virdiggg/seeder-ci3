@@ -2,7 +2,7 @@
 
 <img src="https://img.shields.io/packagist/php-v/virdiggg/seeder-ci3" /> <img src="https://img.shields.io/badge/codeigniter--version-3-green" /> <img src="https://img.shields.io/github/license/virdiggg/seeder-ci3" />
 
-## Inspired from [orangehill/iseed](https://github.com/orangehill/iseed) for laravel.
+## Inspired from Laravel Artisan and [orangehill/iseed](https://github.com/orangehill/iseed) for Laravel.
 
 ### HOW TO USE
 - Install this library with composer

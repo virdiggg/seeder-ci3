@@ -346,7 +346,7 @@ class Seeder
                     $r = 'date(\'Y-m-d H:i:s.\', strtotime('.$r.')).gettimeofday()[\'usec\']';
                 }
                 // Trim values
-                $r = htmlspecialchars(trim(strip_tags($r)));
+                $r = trim(strip_tags($r));
                 // Delete whitespace and newline
                 $r = str_replace(["\t", "\r", "\n", "\\"], ['', '', '', ''], $r);
                 $print .= '            \'' . $k . '\' => ' . $r . ',' . PHP_EOL;

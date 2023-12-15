@@ -338,7 +338,8 @@ class Seeder
         foreach ($results as $key => $res) {
             $print .= '        $param[] = [' . PHP_EOL;
             foreach ($keys as $k) {
-                $r = is_null($res[$k]) ? 'NULL' : '\'' . $res[$k] . '\'';
+                // Replace ALL ' (single quote) with " (double quote) from the value.
+                $r = is_null($res[$k]) ? 'NULL' : '\'' . str_replace("'", '"', $res[$k]) . '\'';
 
                 // For DateTime value
                 if (in_array($k, $this->getDateTime()) && $r !== 'NULL') {

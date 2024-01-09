@@ -503,6 +503,8 @@ class Seeder
             $print .= '        $this->dbforge->add_field($this->fields);' . PHP_EOL;
             $print .= '        $this->dbforge->add_key($this->primary, TRUE);' . PHP_EOL;
             $print .= '        $this->dbforge->create_table($this->name);' . PHP_EOL;
+            $print .= '        // Uncomment if you want to create index for this table.' . PHP_EOL;
+            $print .= '        // $this->db->query(\'CREATE INDEX CONCURRENTLY ON "\'.$this->name.\'" ("\'.join(\'", "\', array_keys($this->fields)).\'")\');' . PHP_EOL;
         }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
         $print .= '    /**' . PHP_EOL;

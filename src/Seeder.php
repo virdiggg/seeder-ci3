@@ -624,9 +624,9 @@ class Seeder
         $print .= '     * @return string JSON' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function datatables() {' . PHP_EOL;
-        $print .= '        $draw = $this->input->post(\'draw\');' . PHP_EOL;
-        $print .= '        $length = $this->input->post(\'length\');' . PHP_EOL;
-        $print .= '        $start = $this->input->post(\'start\');' . PHP_EOL;
+        $print .= '        $draw = $this->input->post(\'draw\') ?: 1;' . PHP_EOL;
+        $print .= '        $length = $this->input->post(\'length\') ?: 10;' . PHP_EOL;
+        $print .= '        $start = $this->input->post(\'start\') ?: 0;' . PHP_EOL;
         $print .= '        $search = $this->input->post(\'search\') ? strtolower($this->input->post(\'search\')) : null;' . PHP_EOL;
         $print .= '        // $columnIndex = $this->input->post(\'order\')[0][\'column\']; // Column index' . PHP_EOL;
         $print .= '        // $columnName = $this->input->post(\'columns\')[$columnIndex][\'data\']; // Column name' . PHP_EOL;

@@ -951,11 +951,17 @@ class Seeder
         $print .= '    //             case \'int\':' . PHP_EOL;
         $print .= '    //                 $temp[] = $p[$var];' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             case \'date\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = "TO_DATE(\'".$p[$var]."\', \'YYYY-MM-DD\')";' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             case \'stringNullable\':' . PHP_EOL;
         $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "\'".$p[$var]."\'";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             case \'intNullable\':' . PHP_EOL;
         $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : $p[$var];' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             case \'dateNullable\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "TO_DATE(\'".$p[$var]."\', \'YYYY-MM-DD\')";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             default:' . PHP_EOL;
         $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;

@@ -624,9 +624,9 @@ class Seeder
         $print .= '     * @return string JSON' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function datatables() {' . PHP_EOL;
-        $print .= '        $draw = $this->input->post(\'draw\');' . PHP_EOL;
-        $print .= '        $length = $this->input->post(\'length\');' . PHP_EOL;
-        $print .= '        $start = $this->input->post(\'start\');' . PHP_EOL;
+        $print .= '        $draw = $this->input->post(\'draw\') ?: 1;' . PHP_EOL;
+        $print .= '        $length = $this->input->post(\'length\') ?: 10;' . PHP_EOL;
+        $print .= '        $start = $this->input->post(\'start\') ?: 0;' . PHP_EOL;
         $print .= '        $search = $this->input->post(\'search\') ? strtolower($this->input->post(\'search\')) : null;' . PHP_EOL;
         $print .= '        // $columnIndex = $this->input->post(\'order\')[0][\'column\']; // Column index' . PHP_EOL;
         $print .= '        // $columnName = $this->input->post(\'columns\')[$columnIndex][\'data\']; // Column name' . PHP_EOL;
@@ -943,7 +943,11 @@ class Seeder
         $print .= '    //             $p = [\'string\' => $p];' . PHP_EOL;
         $print .= '    //         }' . PHP_EOL . PHP_EOL;
         $print .= '    //         // Get its type data' . PHP_EOL;
-        $print .= '    //         $var = array_key_first($p);' . PHP_EOL . PHP_EOL;
+        if ($this->belowPHP5()) {
+            $print .= '    //         $var = array_keys($p)[0];' . PHP_EOL . PHP_EOL;
+        } else {
+            $print .= '    //         $var = array_key_first($p);' . PHP_EOL . PHP_EOL;
+        }
         $print .= '    //         switch ($var) {' . PHP_EOL;
         $print .= '    //             case \'string\':' . PHP_EOL;
         $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;
@@ -951,11 +955,17 @@ class Seeder
         $print .= '    //             case \'int\':' . PHP_EOL;
         $print .= '    //                 $temp[] = $p[$var];' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             case \'date\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = "TO_DATE(\'".$p[$var]."\', \'YYYY-MM-DD\')";' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             case \'stringNullable\':' . PHP_EOL;
         $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "\'".$p[$var]."\'";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             case \'intNullable\':' . PHP_EOL;
         $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : $p[$var];' . PHP_EOL;
+        $print .= '    //                 break;' . PHP_EOL;
+        $print .= '    //             case \'dateNullable\':' . PHP_EOL;
+        $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "TO_DATE(\'".$p[$var]."\', \'YYYY-MM-DD\')";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             default:' . PHP_EOL;
         $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;
@@ -1486,5 +1496,19 @@ class Seeder
     private function getMigrationType()
     {
         return $this->migrationType;
+    }
+
+    /**
+     * Check if PHP version is below 7.
+     * 
+     * @return bool
+     */
+    private function belowPHP5() {
+        $version = explode('.', PHP_VERSION);
+        if ($version[0] < 7) {
+            return true;
+        }
+
+        return false;
     }
 }

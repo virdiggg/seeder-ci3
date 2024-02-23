@@ -943,7 +943,11 @@ class Seeder
         $print .= '    //             $p = [\'string\' => $p];' . PHP_EOL;
         $print .= '    //         }' . PHP_EOL . PHP_EOL;
         $print .= '    //         // Get its type data' . PHP_EOL;
-        $print .= '    //         $var = array_key_first($p);' . PHP_EOL . PHP_EOL;
+        if ($this->belowPHP5()) {
+            $print .= '    //         $var = array_keys($p)[0];' . PHP_EOL . PHP_EOL;
+        } else {
+            $print .= '    //         $var = array_key_first($p);' . PHP_EOL . PHP_EOL;
+        }
         $print .= '    //         switch ($var) {' . PHP_EOL;
         $print .= '    //             case \'string\':' . PHP_EOL;
         $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;
@@ -1492,5 +1496,19 @@ class Seeder
     private function getMigrationType()
     {
         return $this->migrationType;
+    }
+
+    /**
+     * Check if PHP version is below 7.
+     * 
+     * @return bool
+     */
+    private function belowPHP5() {
+        $version = explode('.', PHP_VERSION);
+        if ($version[0] < 7) {
+            return true;
+        }
+
+        return false;
     }
 }

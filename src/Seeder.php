@@ -367,6 +367,14 @@ class Seeder
         $print .= '    public function down() {' . PHP_EOL;
         $print .= '        $this->' . $this->getConn() . '->truncate($this->name);' . PHP_EOL;
         $print .= '    }' . PHP_EOL; // end public function down()
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Preparing array keys.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return array $this' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    public function handleFields() {' . PHP_EOL;
+        $print .= '        $this->name = strip_tags(trim(preg_replace(\'/\xc2\xa0/\', \'\', $this->name)));' . PHP_EOL;
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function handleFields()
         $print .= '}'; // end class
 
         return $print;
@@ -471,7 +479,7 @@ class Seeder
             $print .= '            ],' . PHP_EOL;
         }
         $print .= $softDelete;
-        $print .= '        ];' . PHP_EOL; // end public $this->fields
+        $print .= '        ];' . PHP_EOL . PHP_EOL; // end public $this->fields
         if ($prefix === 'alter') {
             $print .= '        $this->oldFields = [' . PHP_EOL;
             $print .= $softDelete;
@@ -487,8 +495,11 @@ class Seeder
             $print .= "            //     'constraint' => 150," . PHP_EOL;
             $print .= "            //     'null' => TRUE," . PHP_EOL;
             $print .= '            // ],' . PHP_EOL;
-            $print .= '        ];' . PHP_EOL; // end public $this->oldFields
+            $print .= '        ];' . PHP_EOL . PHP_EOL; // end public $this->oldFields
         }
+        $print .= '        // Handle keys of $this->fields' . ($prefix === 'alter' ? ' and $this->oldFields' : '') . '.' . PHP_EOL;
+        $print .= '        // Convert special characters to underscore.' . PHP_EOL;
+        $print .= '        $this->handleFields();' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Migration.' . PHP_EOL;
@@ -504,6 +515,7 @@ class Seeder
             $print .= '        $this->dbforge->add_key($this->primary, TRUE);' . PHP_EOL;
             $print .= '        $this->dbforge->create_table($this->name);' . PHP_EOL;
             $print .= '        // Uncomment if you want to create index for this table.' . PHP_EOL;
+            $print .= '        // Recommended if this table doesn\'t have UPDATE and DELETE operations. PostgreSQL only.' . PHP_EOL;
             $print .= '        // $this->db->query(\'CREATE INDEX CONCURRENTLY ON "\'.$this->name.\'" ("\'.join(\'", "\', array_keys($this->fields)).\'")\');' . PHP_EOL;
         }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
@@ -521,7 +533,32 @@ class Seeder
         } else {
             $print .= '        $this->dbforge->drop_table($this->name, TRUE);' . PHP_EOL;
         }
-        $print .= '    }' . PHP_EOL; // end public function down()
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function down()
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Preparing array keys.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @return array $this' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    public function handleFields() {' . PHP_EOL;
+        $print .= '        $this->name = strip_tags(trim(preg_replace(\'/\xc2\xa0/\', \'\', $this->name)));' . PHP_EOL;
+        if ($prefix !== 'alter') {
+            $print .= '        $this->primary = strip_tags(trim(preg_replace(\'/\xc2\xa0/\', \'\', $this->primary)));' . PHP_EOL;
+        }
+        $print .= '        $fields = $this->fields;' . PHP_EOL;
+        $print .= '        $res = [];' . PHP_EOL;
+        $print .= '        foreach ($fields as $key => $f) {' . PHP_EOL;
+        $print .= '            $res[str_replace("\'", "", preg_replace(\'/[^a-zA-Z0-9\\\']/\', \'_\', trim($key)))] = $f;' . PHP_EOL;
+        $print .= '        }' . PHP_EOL;
+        $print .= '        $this->fields = $res;' . PHP_EOL . PHP_EOL;
+        if ($prefix === 'alter') {
+            $print .= '        $oldFields = $this->oldFields;' . PHP_EOL;
+            $print .= '        $res = [];' . PHP_EOL;
+            $print .= '        foreach ($oldFields as $key => $f) {' . PHP_EOL;
+            $print .= '            $res[str_replace("\'", "", preg_replace(\'/[^a-zA-Z0-9\\\']/\', \'_\', trim($key)))] = $f;' . PHP_EOL;
+            $print .= '        }' . PHP_EOL;
+            $print .= '        $this->oldFields = $res;' . PHP_EOL;
+        }
+        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function handleFields()
         $print .= '}'; // end class
 
         return $print;
@@ -950,7 +987,7 @@ class Seeder
         }
         $print .= '    //         switch ($var) {' . PHP_EOL;
         $print .= '    //             case \'string\':' . PHP_EOL;
-        $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;
+        $print .= '    //                 $temp[] = "\'".str_replace("\'", "\'\'", $p[$var])."\'";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             case \'int\':' . PHP_EOL;
         $print .= '    //                 $temp[] = $p[$var];' . PHP_EOL;
@@ -959,7 +996,7 @@ class Seeder
         $print .= '    //                 $temp[] = "TO_DATE(\'".$p[$var]."\', \'YYYY-MM-DD\')";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             case \'stringNullable\':' . PHP_EOL;
-        $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "\'".$p[$var]."\'";' . PHP_EOL;
+        $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "\'".str_replace("\'", "\'\'", $p[$var])."\'";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             case \'intNullable\':' . PHP_EOL;
         $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : $p[$var];' . PHP_EOL;
@@ -968,7 +1005,7 @@ class Seeder
         $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "TO_DATE(\'".$p[$var]."\', \'YYYY-MM-DD\')";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //             default:' . PHP_EOL;
-        $print .= '    //                 $temp[] = "\'".$p[$var]."\'";' . PHP_EOL;
+        $print .= '    //                 $temp[] = "\'".str_replace("\'", "\'\'", $p[$var])."\'";' . PHP_EOL;
         $print .= '    //                 break;' . PHP_EOL;
         $print .= '    //         }' . PHP_EOL;
         $print .= '    //     }' . PHP_EOL . PHP_EOL;

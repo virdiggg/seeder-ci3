@@ -1343,6 +1343,9 @@ class Seeder
 
             // Get the latest array order.
             $latestMigration = (int) $this->before($this->afterLast($globs[0], '\\'), '_');
+            if ($latestMigration > 990) {
+                print($this->parseRedText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000, PLEASE SWITCH TO TIMETAMP ╰(*°▽°*)╯'));
+            } 
             $count = str_pad($latestMigration + 1, $this->countLatest($latestMigration), '0', STR_PAD_LEFT);
         } else {
             // Default is sequential order, not timestamp.

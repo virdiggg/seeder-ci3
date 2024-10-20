@@ -28,15 +28,40 @@ class MY_AppController extends \CI_Controller
     }
 
     public function help() {
-        $msg = "
-        php index.php app migrate                                             To run migration
-        php index.php app rollback [--to=number]                              To rollback migration
-        php index.php app seed [table_name]                                   To create seeder file based on table
-        php index.php app migration [table_name] [--soft-delete]              To create migration file based on table
-        php index.php app model [dir/model_name] [--r] [--c] [--soft-delete]  To create model file
-        php index.php app controller [dir/controller_name] [--r]              To create controller file
-        ";
-        print("\033[92m" . $msg . "\033[0m \n");
+        $arr = [
+            [
+                'label' => 'To open help options',
+                'cmd' => 'php index.php app help',
+            ],
+            [
+                'label' => 'To run migration',
+                'cmd' => 'php index.php app migrate',
+            ],
+            [
+                'label' => 'To rollback migration',
+                'cmd' => 'php index.php app rollback [--to=number]',
+            ],
+            [
+                'label' => 'To create seeder file based on table',
+                'cmd' => 'php index.php app seed [table_name]',
+            ],
+            [
+                'label' => 'To create migration file based on table',
+                'cmd' => 'php index.php app migration [table_name] [--soft-delete] ',
+            ],
+            [
+                'label' => 'To create model file',
+                'cmd' => 'php index.php app model [dir/model_name] [--r] [--c] [--soft-delete]',
+            ],
+            [
+                'label' => 'To create controller file',
+                'cmd' => 'php index.php app controller [dir/controller_name] [--r]',
+            ],
+        ];
+
+        foreach ($arr as $a) {
+            print("\033[93m" . $a['label'] . "\n\033[92m" . $a['cmd'] . "\n\n");
+        }
         return;
     }
 

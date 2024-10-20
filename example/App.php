@@ -11,7 +11,7 @@ class App extends MY_AppController
     }
 
     // If you don't wish to have rollback function
-	public function rollback() {
-		return;
-	}
+    public function rollback() {
+        return;
+    }
 }

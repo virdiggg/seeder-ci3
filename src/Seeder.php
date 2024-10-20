@@ -1185,18 +1185,18 @@ class Seeder
     {
         if (!is_dir($path)) {
             // If folder doesn't exist, create a new one with permission (rwxrwxrwx).
-			$old = umask(0);
+            $old = umask(0);
             mkdir($path, $mode, TRUE);
             @chown($path, $owner);
             // @chgrp($path, $owner);
-			umask($old);
+            umask($old);
         } else {
             // If exists, change its permission to 0755 (rwxr-xr-x).
-			$old = umask(0);
+            $old = umask(0);
             @chmod($path, $mode);
             @chown($path, $owner);
             // @chgrp($path, $owner);
-			umask($old);
+            umask($old);
         }
     }
 
@@ -1241,16 +1241,16 @@ class Seeder
         }
 
         $command = '';
-		$name = $param = [];
-		foreach ($args as $key => $arg) {
-			if ($this->startsWith($arg, '--')) {
-				$param[] = $arg;
-			} elseif ($this->startsWith($arg, 'create:')) {
-				$command = $this->afterLast($arg, ':');
-			} else {
-				$name[] = $arg;
-			}
-		}
+        $name = $param = [];
+        foreach ($args as $key => $arg) {
+            if ($this->startsWith($arg, '--')) {
+                $param[] = $arg;
+            } elseif ($this->startsWith($arg, 'create:')) {
+                $command = $this->afterLast($arg, ':');
+            } else {
+                $name[] = $arg;
+            }
+        }
 
         return (object) [
             'command' => $command,

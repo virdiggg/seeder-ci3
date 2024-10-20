@@ -6,10 +6,25 @@ use Virdiggg\SeederCi3\Seeder;
 class MY_AppController extends \CI_Controller
 {
     public $seed;
-    public function __construct()
+    public $migrationType;
+    public $dbConn;
+    public $migrationPath;
+
+    /**
+     * @param string $migrationType  Type of migration, sequential or timestamp. Default to 'sequential'.
+     * @param string $dbConn         Name of database connection. Default to 'default'.
+     * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
+     * */
+    public function __construct($migrationType = 'sequential', $dbConn = 'default', $migrationPath = APPPATH . 'migrations')
     {
         parent::__construct();
         $this->seed = new Seeder();
+        // You can set which migration type you're using.
+        $this->seed->setMigrationType($migrationType);
+        // You can set which database connection you want to use.
+        $this->seed->setConn($dbConn);
+        // Migration path
+        $this->seed->setPath($migrationPath);
     }
 
     public function help() {
@@ -82,11 +97,6 @@ class MY_AppController extends \CI_Controller
         $name = $result->name;
         // $args = $result->args; // Seeder doesn't have arguments.
 
-        // You can set which database connection you want to use.
-        // $this->seed->setConn('default2');
-        // $this->seed->setPath(APPPATH);
-        // You can set which migration type you're using.
-        $this->seed->setMigrationType('sequential');
         $this->seed->seed($name);
     }
 
@@ -96,11 +106,6 @@ class MY_AppController extends \CI_Controller
         $name = $result->name;
         $args = $result->args;
 
-        // You can set which database connection you want to use.
-        // $this->seed->setConn('default2');
-        // $this->seed->setPath(APPPATH);
-        // You can set which migration type you're using.
-        $this->seed->setMigrationType('sequential');
         $this->seed->migration($name, $args);
     }
 

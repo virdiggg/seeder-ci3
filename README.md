@@ -21,6 +21,11 @@ class App extends MY_AppController
     {
         parent::__construct();
     }
+
+    // If you don't wish to have rollback function
+	public function rollback() {
+		return;
+	}
 }
 ```
 

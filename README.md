@@ -30,10 +30,12 @@ class App extends MY_AppController
         /**
          * You can pass argument here
          * @param string $migrationType  Type of migration, sequential or timestamp. Default to 'sequential'.
+         * @param array  $dateTime       List of additional table rows with datetime data type.
+         *                               Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
          * @param string $dbConn         Name of database connection. Default to 'default'.
          * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
          * */
-        parent::__construct('timestamp');
+        parent::__construct('timestamp', ['create_date', 'change_date', 'last_access']);
     }
 
     public function migrate()

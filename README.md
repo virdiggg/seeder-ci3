@@ -24,7 +24,7 @@ class App extends MY_AppController
      * 
      * @return bool $this
      */
-	private $migrateCalled = false;
+    private $migrateCalled = false;
     public function __construct()
     {
         /**
@@ -47,11 +47,11 @@ class App extends MY_AppController
         return;
     }
 
-	public function __destruct()
+    public function __destruct()
     {
         if ($this->migrateCalled) {
-			// $this->db->query("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myrole");
-			// $this->db->query("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO myrole");
+            // $this->db->query("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myrole");
+            // $this->db->query("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO myrole");
         }
     }
 }

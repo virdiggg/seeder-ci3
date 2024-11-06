@@ -7,6 +7,7 @@ use Virdiggg\SeederCi3\Templates\ControllerTemplate as Cont;
 use Virdiggg\SeederCi3\Templates\SeederTemplate as Se;
 use Virdiggg\SeederCi3\Templates\MigrationTemplate as Mig;
 use Virdiggg\SeederCi3\Templates\ModelTemplate as Mod;
+use Virdiggg\SeederCi3\Templates\HelpTemplate as Help;
 
 defined('APPPATH') or define('APPPATH', '..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR);
 
@@ -71,6 +72,7 @@ class Seeder
     private $se;
     private $mig;
     private $mod;
+    private $help;
 
     const APP_PATH = APPPATH;
     const SEEDER_PATH = self::APP_PATH.'migrations';
@@ -80,68 +82,6 @@ class Seeder
         $this->CI = & get_instance();
         $this->str = new Str();
         $this->fl = new Fl();
-    }
-
-    /**
-     * Help options
-     * 
-     * @return void
-     */
-    public function help() {
-        $arr = [
-            [
-                'label' => 'To open help options',
-                'cmd' => 'php index.php app help',
-            ],
-            [
-                'label' => 'To run migration',
-                'cmd' => 'php index.php app migrate',
-            ],
-            [
-                'label' => 'To rollback migration',
-                'cmd' => 'php index.php app rollback [--to=number]',
-            ],
-            [
-                'label' => 'To create seeder file based on table',
-                'cmd' => 'php index.php app seed [table_name]',
-            ],
-            [
-                'label' => 'To create migration file based on table',
-                'cmd' => 'php index.php app migration [table_name] [--soft-delete] ',
-            ],
-            [
-                'label' => 'To create model file',
-                'cmd' => 'php index.php app model [dir/model_name] [--r] [--c] [--soft-delete]',
-            ],
-            [
-                'label' => 'To create controller file',
-                'cmd' => 'php index.php app controller [dir/controller_name] [--r]',
-            ],
-        ];
-
-        foreach ($arr as $a) {
-            $msg = $this->str->yellowText($a['label']) . $this->str->greenText($a['cmd'], false) . "\n";
-            print($msg);
-        }
-        return;
-    }
-
-    /**
-     * Query seeder
-     * 
-     * @param string   $tableName
-     * @param int|null $limit
-     * 
-     * @return array
-     */
-    private function querySeeder($tableName, $limit = null) {
-        $this->db->select();
-        $this->db->from(trim($tableName));
-        if (!empty($limit)) {
-            $this->db->limit($limit);
-        }
-
-        return $this->db->get()->result_array();
     }
 
     /**
@@ -189,7 +129,7 @@ class Seeder
         $print = $this->se->template($name, $rand, $results);
 
         // Get the latest migration file order.
-        $count = $this->latest($this->getPath());
+        $count = $this->str->latest($this->migrationType, $this->getPath());
 
         $name = $this->str->parseFileName($count . '_seeder_' . $name . '_' . $rand);
         // Create seeder file.
@@ -218,6 +158,9 @@ class Seeder
         // So don't be confused with the one we are going to print in migration file.
         $this->db = $this->CI->load->database($this->getConn(), TRUE);
 
+        // Set path to migrations folder
+        $this->setPath(self::APP_PATH . 'migrations');
+
         $prefix = 'create';
         if ($this->db->table_exists($name)) {
             $prefix = 'alter';
@@ -230,7 +173,7 @@ class Seeder
         $print = $this->mig->template($name, $rand, $prefix, $param);
 
         // Get the latest migration file order.
-        $count = $this->latest($this->getPath());
+        $count = $this->str->latest($this->migrationType, $this->getPath());
 
         $name = $this->str->parseFileName($count . '_' . $prefix . '_' . $name . '_' . $rand);
         // Create migration file.
@@ -320,24 +263,44 @@ class Seeder
         // Create model file.
         $this->fl->printFile($this->getPath(), $name, $print);
 
-        if (in_array('--r', $param)) {
-            $withResources = TRUE;
-        }
-        if (in_array('--c', $param)) {
-            $withController = TRUE;
-        }
-
         print('MODEL CREATED: ' . $this->str->greenText($this->getPath() . $name));
 
-        if ($withController) {
-            $args = [];
-            if ($withResources) {
-                $args = ['--r'];
-            }
-            $this->controller($fullName, $args);
+        if (in_array('--c', $param)) {
+            $this->controller($fullName, $param);
+        }
+        if (in_array('--m', $param)) {
+            $this->migration($fullName, $param);
         }
 
         return;
+    }
+
+    /**
+     * Help options
+     * 
+     * @return void
+     */
+    public function help() {
+        $this->help = new Help();
+        $this->help->template();
+    }
+
+    /**
+     * Query seeder
+     * 
+     * @param string   $tableName
+     * @param int|null $limit
+     * 
+     * @return array
+     */
+    private function querySeeder($tableName, $limit = null) {
+        $this->db->select();
+        $this->db->from(trim($tableName));
+        if (!empty($limit)) {
+            $this->db->limit($limit);
+        }
+
+        return $this->db->get()->result_array();
     }
 
     /**
@@ -374,41 +337,6 @@ class Seeder
             'name' => join(DIRECTORY_SEPARATOR, $name), // Implode/Join array name with DIRECTORY_SEPARATOR.
             'args' => array_values(array_unique($param)), // Distinct, then rebase the arguments array.
         ];
-    }
-
-    /**
-     * Get latest migration order.
-     * Default is sequential, if there is no migration file exist.
-     *
-     * @param string $path
-     *
-     * @return string
-     */
-    private function latest($path)
-    {
-        if ($this->migrationType === 'timestamp') {
-            return date('YmdHis');
-        }
-
-        // Get all migration files.
-        $seeders = $path . '*.php';
-        $globs = array_filter(glob($seeders), 'is_file');
-        if (count($globs) > 0) {
-            // Reverse the array.
-            rsort($globs);
-
-            // Get the latest array order.
-            $latestMigration = (int) $this->str->before($this->str->afterLast($globs[0], '\\'), '_');
-            if ($latestMigration > 990) {
-                print($this->str->redText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000, PLEASE SWITCH TO TIMESTAMP ╰(*°▽°*)╯'));
-            } 
-            $count = str_pad($latestMigration + 1, $this->str->countLatest($latestMigration), '0', STR_PAD_LEFT);
-        } else {
-            // Default is sequential order, not timestamp.
-            $count = '001';
-        }
-
-        return $count;
     }
 
     /**

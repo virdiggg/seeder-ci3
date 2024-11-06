@@ -340,41 +340,6 @@ class Seeder
     }
 
     /**
-     * Get latest migration order.
-     * Default is sequential, if there is no migration file exist.
-     *
-     * @param string $path
-     *
-     * @return string
-     */
-    private function latest($path)
-    {
-        if ($this->migrationType === 'timestamp') {
-            return date('YmdHis');
-        }
-
-        // Get all migration files.
-        $seeders = $path . '*.php';
-        $globs = array_filter(glob($seeders), 'is_file');
-        if (count($globs) > 0) {
-            // Reverse the array.
-            rsort($globs);
-
-            // Get the latest array order.
-            $latestMigration = (int) $this->str->before($this->str->afterLast($globs[0], '\\'), '_');
-            if ($latestMigration > 990) {
-                print($this->str->redText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000, PLEASE SWITCH TO TIMESTAMP ╰(*°▽°*)╯'));
-            } 
-            $count = str_pad($latestMigration + 1, $this->str->countLatest($latestMigration), '0', STR_PAD_LEFT);
-        } else {
-            // Default is sequential order, not timestamp.
-            $count = '001';
-        }
-
-        return $count;
-    }
-
-    /**
      * Add date time fields to current date time's array.
      *
      * @param array $fields

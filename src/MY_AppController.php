@@ -60,9 +60,8 @@ class MY_AppController extends \CI_Controller
         ];
 
         foreach ($arr as $a) {
-            print("\033[93m" . $a['label'] . "\n\033[92m" . $a['cmd'] . "\n\n");
+            print("\033[93m" . $a['label'] . "\n\033[92m" . $a['cmd'] . "\033[0m\n\n");
         }
-        print("\033[0m");
         return;
     }
 

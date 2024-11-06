@@ -54,6 +54,7 @@ class App extends MY_AppController
         if ($this->migrateCalled) {
             // $this->db->query("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myrole");
             // $this->db->query("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO myrole");
+            // log_message('error', 'PREVILEGES GRANTED');
         }
     }
 }
@@ -63,33 +64,35 @@ class App extends MY_AppController
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app help
 ```
-#### How to run migration: `php index.php <your controller name> <your function name>`.
+#### How to run migration: `php index.php <your controller name> migrate`.
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app migrate
 ```
-#### How to run rollback migration: `php index.php <your controller name> <your function name> [--args]`.
+#### How to run rollback migration: `php index.php <your controller name> rollback [--args]`.
 - Add `--to=1` to run migration number <args>. Optional. Default is the latest number in your database min 1.
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app rollback --to=1
 ```
-#### How to create Seeder file: `php index.php <your controller name> <your function name> <table_name>`.
+#### How to create Seeder file: `php index.php <your controller name> <your function name> seed [--args]`.
+- Add `--limit=5` to limit the query result. Optional.
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app seed users
+cd c:/xampp/htdocs/codeigniter && php index.php app seed users --limit=10
 ```
-#### How to create Migration file: `php index.php <your controller name> <your function name> <table_name> [--args]`.
+#### How to create Migration file: `php index.php <your controller name> <your function name> migration [--args]`.
 - Add `--soft-delete` to add soft delete parameter. Optional.
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app migration users --soft-delete
 ```
-#### How to create Controller file: `php index.php <your controller name> <your function name> <filename> [--args]`.
+#### How to create Controller file: `php index.php <your controller name> controller <filename> [--args]`.
 - Add `--r` to generate resources. Optional.
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app controller Admin/Dashboard/Table --r
 ```
-#### How to create Model file: `php index.php <your controller name> <your function name> <filename> [--args]`.
+#### How to create Model file: `php index.php <your controller name> model <filename> [--args]`.
 - Add `--r` to generate resources. Optional.
 - Add `--c` to generate its controller file as well. Optional.
+- Add `--m` to generate its migration file as well. Optional.
 - Add `--soft-delete` if your model using soft delete. Optional.
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app model Admin/Users --r --c --soft-delete
+cd c:/xampp/htdocs/codeigniter && php index.php app model Admin/Users --r --c --m --soft-delete
 ```

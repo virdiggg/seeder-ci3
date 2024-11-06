@@ -26,6 +26,40 @@ class StrHelper
     }
 
     /**
+     * Get latest migration order.
+     * Default is sequential, if there is no migration file exist.
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    public function latest($migrationType, $path)
+    {
+        if ($migrationType === 'timestamp') {
+            return date('YmdHis');
+        }
+
+        print($this->redText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000, PLEASE USE TO TIMESTAMP INSTEAD ╰(*°▽°*)╯'));
+
+        // Get all migration files.
+        $seeders = $path . '*.php';
+        $globs = array_filter(glob($seeders), 'is_file');
+        if (count($globs) > 0) {
+            // Reverse the array.
+            rsort($globs);
+
+            // Get the latest array order.
+            $latestMigration = (int) $this->before($this->afterLast($globs[0], '\\'), '_');
+            $count = str_pad($latestMigration + 1, $this->countLatest($latestMigration), '0', STR_PAD_LEFT);
+        } else {
+            // Default is sequential order, not timestamp.
+            $count = '001';
+        }
+
+        return $count;
+    }
+
+    /**
      * Random string.
      *
      * @param string|int $length

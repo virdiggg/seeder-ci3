@@ -2,22 +2,33 @@
 
 namespace Virdiggg\SeederCi3;
 use Virdiggg\SeederCi3\Seeder;
+use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 
 class MY_AppController extends \CI_Controller
 {
     public $seed;
     public $migrationType;
+    public $dateTime = [];
     public $dbConn;
     public $migrationPath;
+    private $str;
 
     /**
      * @param string $migrationType  Type of migration, sequential or timestamp. Default to 'sequential'.
+     * @param array  $dateTime       List of additional table rows with datetime data type.
+     *                               Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
      * @param string $dbConn         Name of database connection. Default to 'default'.
      * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
      * */
-    public function __construct($migrationType = 'sequential', $dbConn = 'default', $migrationPath = APPPATH . 'migrations')
+    public function __construct(
+        $migrationType = 'sequential',
+        $dateTime = [],
+        $dbConn = 'default',
+        $migrationPath = APPPATH . 'migrations'
+    )
     {
         parent::__construct();
+        $this->str = new Str();
         $this->seed = new Seeder();
         // You can set which migration type you're using.
         $this->seed->setMigrationType($migrationType);
@@ -25,62 +36,45 @@ class MY_AppController extends \CI_Controller
         $this->seed->setConn($dbConn);
         // Migration path
         $this->seed->setPath($migrationPath);
+        if (!empty($dateTime)) {
+            $this->seed->addDateTime($dateTime);
+        }
     }
 
     public function help() {
-        $arr = [
-            [
-                'label' => 'To open help options',
-                'cmd' => 'php index.php app help',
-            ],
-            [
-                'label' => 'To run migration',
-                'cmd' => 'php index.php app migrate',
-            ],
-            [
-                'label' => 'To rollback migration',
-                'cmd' => 'php index.php app rollback [--to=number]',
-            ],
-            [
-                'label' => 'To create seeder file based on table',
-                'cmd' => 'php index.php app seed [table_name]',
-            ],
-            [
-                'label' => 'To create migration file based on table',
-                'cmd' => 'php index.php app migration [table_name] [--soft-delete] ',
-            ],
-            [
-                'label' => 'To create model file',
-                'cmd' => 'php index.php app model [dir/model_name] [--r] [--c] [--soft-delete]',
-            ],
-            [
-                'label' => 'To create controller file',
-                'cmd' => 'php index.php app controller [dir/controller_name] [--r]',
-            ],
-        ];
-
-        foreach ($arr as $a) {
-            print("\033[93m" . $a['label'] . "\n\033[92m" . $a['cmd'] . "\033[0m\n\n");
+        if (!is_cli()) {
+            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            return;
         }
+
+        $this->seed->help();
         return;
     }
 
     public function migrate() {
+        if (!is_cli()) {
+            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            return;
+        }
+
         $this->load->library('migration');
 
         if (!$this->migration->current()) {
-            show_error($this->migration->error_string());
+            print($this->str->redText($this->migration->error_string()));
             return;
         }
 
         $res = $this->db->select('version')->from('migrations')->get()->row();
-        $msg = $this->seed->emoticon('MIGRATE NUMBER ' . $res->version . ' SUCCESS');
-
-        print("\033[92m" . $msg . "\033[0m \n");
+        print($this->str->greenText('MIGRATE NUMBER ' . $res->version . ' SUCCESS'));
         return;
     }
 
     public function rollback() {
+        if (!is_cli()) {
+            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            return;
+        }
+
         $this->load->library('migration');
 
         // Get all arguments passed to this function
@@ -89,7 +83,7 @@ class MY_AppController extends \CI_Controller
 
         $resOld = $this->db->select('version')->from('migrations')->get()->row();
         if (!isset($resOld->version)) {
-            print('No Migration Found');
+            print($this->str->yellowText('No Migration Found'));
             return;
         }
 
@@ -103,29 +97,35 @@ class MY_AppController extends \CI_Controller
         }
 
         if (!$this->migration->version((int) $version)) {
-            show_error($this->migration->error_string());
+            print($this->str->redText($this->migration->error_string()));
             return;
         }
 
         $res = $this->db->select('version')->from('migrations')->get()->row();
-        $msg = $this->seed->emoticon('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS');
-
-        print("\033[92m" . $msg . "\033[0m \n");
+        print($this->str->redText('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS'));
         return;
     }
 
     public function seed() {
-        // To add date time fields, the only date time fields we covers are 'created_at', 'updated_at', 'approved_at', 'deleted_at'
-        $this->seed->addDateTime(['create_date', 'change_date', 'last_access']);
+        if (!is_cli()) {
+            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            return;
+        }
+
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;
-        // $args = $result->args; // Seeder doesn't have arguments.
+        $args = $result->args;
 
-        $this->seed->seed($name);
+        $this->seed->seed($name, $args);
     }
 
     public function migration() {
+        if (!is_cli()) {
+            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            return;
+        }
+
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;
@@ -135,6 +135,11 @@ class MY_AppController extends \CI_Controller
     }
 
     public function controller() {
+        if (!is_cli()) {
+            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            return;
+        }
+
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;
@@ -146,6 +151,11 @@ class MY_AppController extends \CI_Controller
     }
 
     public function model() {
+        if (!is_cli()) {
+            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            return;
+        }
+
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;

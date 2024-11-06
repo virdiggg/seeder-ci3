@@ -7,7 +7,7 @@ class StrHelper
     /**
      * Emoticons.
      *
-     * @param array
+     * @param array $OwO
      */
     public $OwO;
 

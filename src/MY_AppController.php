@@ -8,16 +8,24 @@ class MY_AppController extends \CI_Controller
 {
     public $seed;
     public $migrationType;
+    public $dateTime = [];
     public $dbConn;
     public $migrationPath;
     private $str;
 
     /**
      * @param string $migrationType  Type of migration, sequential or timestamp. Default to 'sequential'.
+     * @param array  $dateTime       List of additional table rows with datetime data type.
+     *                               Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
      * @param string $dbConn         Name of database connection. Default to 'default'.
      * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
      * */
-    public function __construct($migrationType = 'sequential', $dbConn = 'default', $migrationPath = APPPATH . 'migrations')
+    public function __construct(
+        $migrationType = 'sequential',
+        $dateTime = [],
+        $dbConn = 'default',
+        $migrationPath = APPPATH . 'migrations'
+    )
     {
         parent::__construct();
         $this->str = new Str();
@@ -28,23 +36,26 @@ class MY_AppController extends \CI_Controller
         $this->seed->setConn($dbConn);
         // Migration path
         $this->seed->setPath($migrationPath);
+        if (!empty($dateTime)) {
+            $this->seed->addDateTime($dateTime);
+        }
     }
 
     public function help() {
-		if (!is_cli()) {
+        if (!is_cli()) {
             $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
-			return;
-		}
+            return;
+        }
 
         $this->seed->help();
         return;
     }
 
     public function migrate() {
-		if (!is_cli()) {
+        if (!is_cli()) {
             $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
-			return;
-		}
+            return;
+        }
 
         $this->load->library('migration');
 
@@ -59,10 +70,10 @@ class MY_AppController extends \CI_Controller
     }
 
     public function rollback() {
-		if (!is_cli()) {
+        if (!is_cli()) {
             $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
-			return;
-		}
+            return;
+        }
 
         $this->load->library('migration');
 
@@ -96,26 +107,24 @@ class MY_AppController extends \CI_Controller
     }
 
     public function seed() {
-		if (!is_cli()) {
+        if (!is_cli()) {
             $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
-			return;
-		}
+            return;
+        }
 
-        // To add date time fields, the only date time fields we covers are 'created_at', 'updated_at', 'approved_at', 'deleted_at'
-        $this->seed->addDateTime(['create_date', 'change_date', 'last_access']);
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;
-        // $args = $result->args; // Seeder doesn't have arguments.
+        $args = $result->args;
 
-        $this->seed->seed($name);
+        $this->seed->seed($name, $args);
     }
 
     public function migration() {
-		if (!is_cli()) {
+        if (!is_cli()) {
             $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
-			return;
-		}
+            return;
+        }
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
@@ -126,10 +135,10 @@ class MY_AppController extends \CI_Controller
     }
 
     public function controller() {
-		if (!is_cli()) {
+        if (!is_cli()) {
             $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
-			return;
-		}
+            return;
+        }
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
@@ -142,10 +151,10 @@ class MY_AppController extends \CI_Controller
     }
 
     public function model() {
-		if (!is_cli()) {
+        if (!is_cli()) {
             $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
-			return;
-		}
+            return;
+        }
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());

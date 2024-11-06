@@ -7,7 +7,7 @@ class FileHelper
     /**
      * File Pointer.
      *
-     * @param object
+     * @param object $filePointer
      */
     public $filePointer;
 

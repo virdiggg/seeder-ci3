@@ -43,7 +43,7 @@ class MY_AppController extends \CI_Controller
 
     public function help() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            $this->printer($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯"));
             return;
         }
 
@@ -53,25 +53,25 @@ class MY_AppController extends \CI_Controller
 
     public function migrate() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            $this->printer($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯"));
             return;
         }
 
         $this->load->library('migration');
 
         if (!$this->migration->current()) {
-            print($this->str->redText($this->migration->error_string()));
+            $this->printer($this->str->redText($this->migration->error_string()));
             return;
         }
 
         $res = $this->db->select('version')->from('migrations')->get()->row();
-        print($this->str->greenText('MIGRATE NUMBER ' . $res->version . ' SUCCESS'));
+        $this->printer($this->str->greenText('MIGRATE NUMBER ' . $res->version . ' SUCCESS'));
         return;
     }
 
     public function rollback() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            $this->printer($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯"));
             return;
         }
 
@@ -83,7 +83,7 @@ class MY_AppController extends \CI_Controller
 
         $resOld = $this->db->select('version')->from('migrations')->get()->row();
         if (!isset($resOld->version)) {
-            print($this->str->yellowText('No Migration Found'));
+            $this->printer($this->str->yellowText('No Migration Found'));
             return;
         }
 
@@ -97,18 +97,18 @@ class MY_AppController extends \CI_Controller
         }
 
         if (!$this->migration->version((int) $version)) {
-            print($this->str->redText($this->migration->error_string()));
+            $this->printer($this->str->redText($this->migration->error_string()));
             return;
         }
 
         $res = $this->db->select('version')->from('migrations')->get()->row();
-        print($this->str->redText('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS'));
+        $this->printer($this->str->redText('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS'));
         return;
     }
 
     public function seed() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            $this->printer($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯"));
             return;
         }
 
@@ -122,7 +122,7 @@ class MY_AppController extends \CI_Controller
 
     public function migration() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            $this->printer($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯"));
             return;
         }
 
@@ -136,7 +136,7 @@ class MY_AppController extends \CI_Controller
 
     public function controller() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            $this->printer($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯"));
             return;
         }
 
@@ -152,7 +152,7 @@ class MY_AppController extends \CI_Controller
 
     public function model() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            $this->printer($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯"));
             return;
         }
 
@@ -164,5 +164,9 @@ class MY_AppController extends \CI_Controller
         // $this->seed->setPath(APPPATH);
         $this->seed->model($name, $args);
         return;
+    }
+
+    private function printer($message) {
+        print(PHP_EOL.$message.PHP_EOL);
     }
 }

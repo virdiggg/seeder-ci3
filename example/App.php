@@ -28,11 +28,13 @@ class App extends MY_AppController
     public function migrate()
     {
         parent::migrate();
+        // Migration has been called
         $this->migrateCalled = true;
+        return;
     }
 
-    // If you don't wish to have rollback function
     public function rollback() {
+        // If you don't wish to have rollback function
         return;
     }
 

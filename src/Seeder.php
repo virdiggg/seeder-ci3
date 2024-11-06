@@ -1,9 +1,11 @@
 <?php 
 
 namespace Virdiggg\SeederCi3;
+use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
+use Virdiggg\SeederCi3\Helpers\FileHelper as Fl;
 
 defined('APPPATH') or define('APPPATH', '..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR);
-defined('SEEDER_PATH') or define('SEEDER_PATH', APPPATH.'migrations');
 
 class Seeder
 {
@@ -50,32 +52,86 @@ class Seeder
     public $filePointer;
 
     /**
-     * Emoticons.
-     *
-     * @param array
-     */
-    public $OwO;
-
-    /**
      * Migration type. sequential or timestamp
      *
      * @param string
      */
     private $migrationType;
 
+    /**
+     * String helper
+     *
+     * @param object
+     */
+    private $str;
+
+    /**
+     * Environment helper
+     *
+     * @param object
+     */
+    private $env;
+
+    /**
+     * File helper
+     *
+     * @param object
+     */
+    private $fl;
+
+    const APP_PATH = APPPATH;
+    const SEEDER_PATH = self::APP_PATH.'migrations';
+
     public function __construct()
     {
         $this->CI = & get_instance();
-        $this->OwO = [
-            '╰(*°▽°*)╯', '(❁´◡`❁)', "(*/ω＼*)", '(^///^)', '☆*: .｡. o(≧▽≦)o .｡.:*☆', "(●'◡'●)", 'ヾ(≧▽≦*)o',
-            'ψ(｀∇´)ψ', 'φ(*￣0￣)', '（￣︶￣）↗', 'q(≧▽≦q)', '*^____^*', '(～￣▽￣)～', '( •̀ ω •́ )✧', '[]~(￣▽￣)~*',
-            'O(∩_∩)O', 'o(*^＠^*)o', 'φ(゜▽゜*)♪', '(*^▽^*)', "`(*>﹏<*)′", '(✿◡‿◡)', '(●ˇ∀ˇ●)', '(´▽`ʃ♡ƪ)', '(≧∇≦)ﾉ',
-            '(*^_^*)', '（*＾-＾*）', '\^o^/', '(￣y▽￣)╭ Ohohoho.....', '○( ＾皿＾)っ Hehehe…', '(‾◡◝)', '(o゜▽゜)o☆',
-            '(〃￣︶￣)人(￣︶￣〃)', '(^_-)db(-_^)', 'o(*￣▽￣*)ブ', 'o(*^▽^*)┛', '(≧∀≦)ゞ', '♪(^∇^*)', 'o(*￣▽￣*)ブ',
-            '(oﾟvﾟ)ノ', 'o(*￣︶￣*)o', '( $ _ $ )', '(/≧▽≦)/', 'o(*≧▽≦)ツ┏━┓', 'ㄟ(≧◇≦)ㄏ', 'ヾ(＠⌒ー⌒＠)ノ', '(☆▽☆)',
-            'ヾ(≧ ▽ ≦)ゝ', 'o((>ω< ))o', '( *︾▽︾)', '(((o(*ﾟ▽ﾟ*)o)))', '＼(((￣(￣(￣▽￣)￣)￣)))／', '( *^-^)ρ(^0^* )',
-            '♪(´▽｀)', "~~~///(^v^)\\\\\\\~~~", 'o(*￣▽￣*)o', '(p≧w≦q)', 'ƪ(˘⌣˘)ʃ', '( •̀ ω •́ )y'
+        $this->str = new Str();
+        $this->env = new Ev();
+        $this->fl = new Fl();
+    }
+
+    /**
+     * Help options
+     * 
+     * @return void
+     */
+    public function help() {
+        $arr = [
+            [
+                'label' => 'To open help options',
+                'cmd' => 'php index.php app help',
+            ],
+            [
+                'label' => 'To run migration',
+                'cmd' => 'php index.php app migrate',
+            ],
+            [
+                'label' => 'To rollback migration',
+                'cmd' => 'php index.php app rollback [--to=number]',
+            ],
+            [
+                'label' => 'To create seeder file based on table',
+                'cmd' => 'php index.php app seed [table_name]',
+            ],
+            [
+                'label' => 'To create migration file based on table',
+                'cmd' => 'php index.php app migration [table_name] [--soft-delete] ',
+            ],
+            [
+                'label' => 'To create model file',
+                'cmd' => 'php index.php app model [dir/model_name] [--r] [--c] [--soft-delete]',
+            ],
+            [
+                'label' => 'To create controller file',
+                'cmd' => 'php index.php app controller [dir/controller_name] [--r]',
+            ],
         ];
+
+        foreach ($arr as $a) {
+            $msg = $this->str->yellowText($a['label']) . $this->str->greenText($a['cmd'], false) . "\n";
+            print($msg);
+        }
+        return;
     }
 
     /**
@@ -89,7 +145,7 @@ class Seeder
     public function seed($name = '', $param = [])
     {
         if (!$name) {
-            print($this->parseRedText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
+            print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
             return;
         }
 
@@ -98,19 +154,18 @@ class Seeder
         $this->db = $this->CI->load->database($this->getConn(), TRUE);
 
         if (!$this->db->table_exists($name)) {
-            print($this->parseRedText('TABLE "' . $name . '" NOT FOUND IN YOUR DATABASE ╰(*°▽°*)╯'));
+            print($this->str->redText('TABLE "' . $name . '" NOT FOUND IN YOUR DATABASE ╰(*°▽°*)╯'));
             return;
         }
 
-        $results = $this->db->select()->from(trim($name))
-            ->get()->result_array();
+        $results = $this->db->select()->from(trim($name))->get()->result_array();
 
         if (count($results) === 0) {
-            print($this->parseRedText('NO RECORDS IN TABLE "' . $name . '" ╰(*°▽°*)╯'));
+            print($this->str->redText('NO RECORDS IN TABLE "' . $name . '" ╰(*°▽°*)╯'));
             return;
         }
 
-        $rand = $this->rand(4);
+        $rand = $this->str->rand(4);
 
         // Parse input as printable string.
         $print = $this->parseInputSeeder($name, $rand, $results);
@@ -118,14 +173,11 @@ class Seeder
         // Get the latest migration file order.
         $count = $this->latest($this->getPath());
 
-        $name = $this->parseFileName($count . '_seeder_' . $name . '_' . $rand);
+        $name = $this->str->parseFileName($count . '_seeder_' . $name . '_' . $rand);
         // Create seeder file.
-        $this->createFile($this->getPath(), $name);
+        $this->fl->printFile($this->getPath(), $name, $print);
 
-        // Write to newly created seeder file.
-        fwrite($this->filePointer, $print . PHP_EOL);
-
-        print('SEEDER CREATED: ' . $this->parseGreenText($this->getPath() . $name));
+        print('SEEDER CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
     }
 
@@ -140,7 +192,7 @@ class Seeder
     public function migration($name = '', $param = [])
     {
         if (!$name) {
-            print($this->parseRedText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
+            print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
             return;
         }
 
@@ -153,7 +205,7 @@ class Seeder
             $prefix = 'alter';
         }
 
-        $rand = $this->rand(4);
+        $rand = $this->str->rand(4);
 
         // Parse input as printable string.
         $print = $this->parseInputMigration($name, $rand, $prefix, $param);
@@ -161,14 +213,11 @@ class Seeder
         // Get the latest migration file order.
         $count = $this->latest($this->getPath());
 
-        $name = $this->parseFileName($count . '_' . $prefix . '_' . $name . '_' . $rand);
+        $name = $this->str->parseFileName($count . '_' . $prefix . '_' . $name . '_' . $rand);
         // Create migration file.
-        $this->createFile($this->getPath(), $name);
+        $this->fl->printFile($this->getPath(), $name, $print);
 
-        // Write to newly created migration file.
-        fwrite($this->filePointer, $print . PHP_EOL);
-
-        print('MIGRATION CREATED: ' . $this->parseGreenText($this->getPath() . $name));
+        print('MIGRATION CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
     }
 
@@ -183,21 +232,21 @@ class Seeder
     public function controller($fullName = '', $param = [])
     {
         if (!$fullName) {
-            print($this->parseRedText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
+            print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
             return;
         }
 
         // File path is before the last slash \. If exists, add another slash.
-        $before = $this->beforeLast($fullName, '\\');
+        $before = $this->str->beforeLast($fullName, '\\');
         if ($before) {
             $before = DIRECTORY_SEPARATOR . $before;
         }
 
         // Set path to controllers folder
-        $this->setPath(APPPATH . 'controllers' . $before);
+        $this->setPath(self::APP_PATH . 'controllers' . $before);
 
         // File name is after the last slash \.
-        $name = $this->afterLast($fullName, '\\');
+        $name = $this->str->afterLast($fullName, '\\');
 
         // Ucfirst for file and class name
         $name = ucfirst(strtolower(trim($name)));
@@ -212,14 +261,11 @@ class Seeder
         // Parse input as printable string.
         $print = $this->parseInputController($name, $withResources);
 
-        $name = $this->parseFileName($name);
+        $name = $this->str->parseFileName($name);
         // Create controller file.
-        $this->createFile($this->getPath(), $name);
+        $this->fl->printFile($this->getPath(), $name, $print);
 
-        // Write to newly created controller file.
-        fwrite($this->filePointer, $print . PHP_EOL);
-
-        print('CONTROLLER CREATED: ' . $this->parseGreenText($this->getPath() . $name));
+        print('CONTROLLER CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
     }
 
@@ -234,21 +280,21 @@ class Seeder
     public function model($fullName = '', $param = [])
     {
         if (!$fullName) {
-            print($this->parseRedText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
+            print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
             return;
         }
 
         // File path is before the last slash \. If exists, add another slash.
-        $before = $this->beforeLast($fullName, '\\');
+        $before = $this->str->beforeLast($fullName, '\\');
         if ($before) {
             $before = DIRECTORY_SEPARATOR . $before;
         }
 
         // Set path to models folder
-        $this->setPath(APPPATH . 'models' . $before);
+        $this->setPath(self::APP_PATH . 'models' . $before);
 
         // File name is after the last slash \.
-        $name = $this->afterLast($fullName, '\\');
+        $name = $this->str->afterLast($fullName, '\\');
 
         // Ucfirst for file and class name
         $name = ucfirst(strtolower(trim($name)));
@@ -269,12 +315,9 @@ class Seeder
         // Parse input as printable string.
         $print = $this->parseInputModel($name, $withResources, $withSoftDelete);
 
-        $name = $this->parseFileName('M_' . $name);
+        $name = $this->str->parseFileName('M_' . $name);
         // Create model file.
-        $this->createFile($this->getPath(), $name);
-
-        // Write to newly created model file.
-        fwrite($this->filePointer, $print . PHP_EOL);
+        $this->fl->printFile($this->getPath(), $name, $print);
 
         if ($withController) {
             $args = [];
@@ -284,7 +327,7 @@ class Seeder
             $this->controller($fullName, $args);
         }
 
-        print('MODEL CREATED: ' . $this->parseGreenText($this->getPath() . $name));
+        print('MODEL CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
     }
 
@@ -549,7 +592,7 @@ class Seeder
         $print .= '        foreach ($fields as $key => $f) {' . PHP_EOL;
         $print .= '            $res[str_replace("\'", "", preg_replace(\'/[^a-zA-Z0-9\\\']/\', \'_\', trim($key)))] = $f;' . PHP_EOL;
         $print .= '        }' . PHP_EOL;
-        $print .= '        $this->fields = $res;' . PHP_EOL . PHP_EOL;
+        $print .= '        $this->fields = $res;' . PHP_EOL;
         if ($prefix === 'alter') {
             $print .= '        $oldFields = $this->oldFields;' . PHP_EOL;
             $print .= '        $res = [];' . PHP_EOL;
@@ -584,7 +627,7 @@ class Seeder
         $print .= '    private $title;' . PHP_EOL . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;
         $print .= '        parent::__construct();' . PHP_EOL;
-        $print .= '        $this->title = \'' . ucwords($this->parseWhiteSpace($name)) . '\';' . PHP_EOL;
+        $print .= '        $this->title = \'' . $this->str->parseTitle($name) . '\';' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Index page.' . PHP_EOL;
@@ -980,7 +1023,7 @@ class Seeder
         $print .= '    //             $p = [\'string\' => $p];' . PHP_EOL;
         $print .= '    //         }' . PHP_EOL . PHP_EOL;
         $print .= '    //         // Get its type data' . PHP_EOL;
-        if ($this->belowPHP5()) {
+        if ($this->env->belowPHP5()) {
             $print .= '    //         $var = array_keys($p)[0];' . PHP_EOL . PHP_EOL;
         } else {
             $print .= '    //         $var = array_key_first($p);' . PHP_EOL . PHP_EOL;
@@ -1144,86 +1187,6 @@ class Seeder
     }
 
     /**
-     * Create seeder file. Drop if already exists, then create a new one.
-     *
-     * @param string $path
-     * @param string $name
-     *
-     * @return void
-     */
-    private function createFile($path, $name)
-    {
-        $this->folderPermission($path, 0755, 'apache');
-
-        $fullPath = $path . $name;
-
-        $old = umask(0);
-
-        $file = $fullPath;
-        // If file exists, drop it.
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
-        }
-        $file = fopen($fullPath, 'a') or exit("Can't open $fullPath!");
-        umask($old);
-
-        $this->filePointer = $file;
-    }
-
-    /**
-     * Create folder with 0755 (rwxr-xr-x) permission if doesn't exist.
-     * If exists, change its permission to 0755 (rwxrwxrwx).
-     * Owner default to www-data:www-data.
-     *
-     * @param string $path
-     * @param string $mode
-     * @param string $owner
-     *
-     * @return void
-     */
-    private function folderPermission($path, $mode = 0755, $owner = 'www-data:www-data')
-    {
-        if (!is_dir($path)) {
-            // If folder doesn't exist, create a new one with permission (rwxrwxrwx).
-            $old = umask(0);
-            mkdir($path, $mode, TRUE);
-            @chown($path, $owner);
-            // @chgrp($path, $owner);
-            umask($old);
-        } else {
-            // If exists, change its permission to 0755 (rwxr-xr-x).
-            $old = umask(0);
-            @chmod($path, $mode);
-            @chown($path, $owner);
-            // @chgrp($path, $owner);
-            umask($old);
-        }
-    }
-
-    /**
-     * Return the remainder of a string after the last occurrence of a given value.
-     * Stolen from laravel helper.
-     *
-     * @param  string  $subject
-     * @param  string  $search
-     * @return string
-     */
-    private function afterLast($subject, $search)
-    {
-        if ($search === '') {
-            return $subject;
-        }
-
-        $position = strrpos($subject, (string) $search);
-
-        if ($position === FALSE) {
-            return $subject;
-        }
-
-        return substr($subject, $position + strlen($search));
-    }
-
-    /**
      * Parse the given arguments to determine if they are name string or arguments.
      *
      * @param array $args
@@ -1243,10 +1206,10 @@ class Seeder
         $command = '';
         $name = $param = [];
         foreach ($args as $key => $arg) {
-            if ($this->startsWith($arg, '--')) {
+            if ($this->str->startsWith($arg, '--')) {
                 $param[] = $arg;
-            } elseif ($this->startsWith($arg, 'create:')) {
-                $command = $this->afterLast($arg, ':');
+            } elseif ($this->str->startsWith($arg, 'create:')) {
+                $command = $this->str->afterLast($arg, ':');
             } else {
                 $name[] = $arg;
             }
@@ -1257,67 +1220,6 @@ class Seeder
             'name' => join(DIRECTORY_SEPARATOR, $name), // Implode/Join array name with DIRECTORY_SEPARATOR.
             'args' => array_values(array_unique($param)), // Distinct, then rebase the arguments array.
         ];
-    }
-
-    /**
-     * Determine if a given string starts with a given substring. Case sensitive.
-     * Stolen from laravel helper.
-     *
-     * @param  string  $haystack
-     * @param  string|string[]  $needles
-     * @return bool
-     */
-    private function startsWith($haystack, $needles)
-    {
-        foreach ((array) $needles as $needle) {
-            if ((string) $needle !== '' && strncmp($haystack, $needle, strlen($needle)) === 0) {
-                return TRUE;
-            }
-        }
-
-        return FALSE;
-    }
-
-    /**
-     * Get the portion of a string before the first occurrence of a given value.
-     * Stolen from laravel helper.
-     *
-     * @param  string  $subject
-     * @param  string  $search
-     * @return string
-     */
-    private function before($subject, $search)
-    {
-        if ($search === '') {
-            return $subject;
-        }
-
-        $result = strstr($subject, (string) $search, TRUE);
-
-        return $result === FALSE ? $subject : $result;
-    }
-
-    /**
-     * Get the portion of a string before the last occurrence of a given value.
-     * Stolen from laravel helper.
-     *
-     * @param  string  $subject
-     * @param  string  $search
-     * @return string
-     */
-    private function beforeLast($subject, $search)
-    {
-        if ($search === '') {
-            return $subject;
-        }
-
-        $pos = mb_strrpos($subject, $search);
-
-        if ($pos === FALSE) {
-            return $subject;
-        }
-
-        return substr($subject, 0, $pos);
     }
 
     /**
@@ -1342,35 +1244,17 @@ class Seeder
             rsort($globs);
 
             // Get the latest array order.
-            $latestMigration = (int) $this->before($this->afterLast($globs[0], '\\'), '_');
+            $latestMigration = (int) $this->str->before($this->str->afterLast($globs[0], '\\'), '_');
             if ($latestMigration > 990) {
-                print($this->parseRedText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000, PLEASE SWITCH TO TIMETAMP ╰(*°▽°*)╯'));
+                print($this->str->redText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000, PLEASE SWITCH TO TIMESTAMP ╰(*°▽°*)╯'));
             } 
-            $count = str_pad($latestMigration + 1, $this->countLatest($latestMigration), '0', STR_PAD_LEFT);
+            $count = str_pad($latestMigration + 1, $this->str->countLatest($latestMigration), '0', STR_PAD_LEFT);
         } else {
             // Default is sequential order, not timestamp.
             $count = '001';
         }
 
         return $count;
-    }
-
-    /**
-     * Count latest migration. Return 3 digit number by default.
-     * 
-     * @param int $latest
-     * 
-     * @return int
-     */
-    private function countLatest($latest) {
-        // To verify if the next number digit is increased or not.
-        // Ex. strlen(800 + 1) = 3
-        $nextNumber = strlen($latest + 1);
-        // Count the next digit.
-        // Ex. strlen(800) + 1 = 4
-        $nextDigit = strlen($latest) + 1;
-        $result = $nextNumber === $nextDigit ? $nextDigit : $nextNumber;
-        return $result < 3 ? 3 : $result;
     }
 
     /**
@@ -1417,7 +1301,7 @@ class Seeder
      *
      * @return string
      */
-    private function parseRedText($text)
+    public function parseRedText($text)
     {
         return "\e[31m" . $text . "\033[0m" . "\n";
     }
@@ -1431,7 +1315,7 @@ class Seeder
      */
     public function emoticon($text)
     {
-        return $text . ' ' . $this->OwO[array_rand($this->OwO, 1)];
+        return $this->str->emoticon($text);
     }
 
     /**
@@ -1476,7 +1360,7 @@ class Seeder
      *
      * @return void
      */
-    public function setPath($path = SEEDER_PATH)
+    public function setPath($path = self::SEEDER_PATH)
     {
         // Path shouldn't have trailing slash or backslash.
         // We'are going to add DIRECTORY_SEPARATOR after the path ourself.
@@ -1515,7 +1399,7 @@ class Seeder
      */
     private function getPath()
     {
-        return $this->path ?: SEEDER_PATH . DIRECTORY_SEPARATOR;
+        return $this->path ?: self::SEEDER_PATH . DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -1536,19 +1420,5 @@ class Seeder
     private function getMigrationType()
     {
         return $this->migrationType;
-    }
-
-    /**
-     * Check if PHP version is below 7.
-     * 
-     * @return bool
-     */
-    private function belowPHP5() {
-        $version = explode('.', PHP_VERSION);
-        if ($version[0] < 7) {
-            return true;
-        }
-
-        return false;
     }
 }

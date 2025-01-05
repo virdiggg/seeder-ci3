@@ -102,6 +102,15 @@ class App extends MY_AppController
             'controller' => [
                 '$this->authenticated->isAuthenticated();',
             ],
+            'model' => [
+                '$this->load->helper(\'string\');',
+            ],
+            'seed' => [
+                '$this->load->helper(\'string\');',
+            ],
+            'migration' => [
+                '$this->load->helper(\'string\');',
+            ],
         ];
 
         parent::__construct($config);

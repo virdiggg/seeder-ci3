@@ -16,10 +16,11 @@ class ControllerTemplate
      *
      * @param string $name
      * @param array  $param
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return string
      */
-    public function template($name, $param = [])
+    public function template($name, $param = [], $constructors = [])
     {
         $withResources = FALSE;
         if (count($param) > 0) {
@@ -39,6 +40,9 @@ class ControllerTemplate
         $print .= '    public function __construct() {' . PHP_EOL;
         $print .= '        parent::__construct();' . PHP_EOL;
         $print .= '        $this->title = \'' . $this->str->parseTitle($name) . '\';' . PHP_EOL;
+        foreach ($constructors as $constructor) {
+            $print .= '        ' . $constructor . PHP_EOL;
+        }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Index page.' . PHP_EOL;

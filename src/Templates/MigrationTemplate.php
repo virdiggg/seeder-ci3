@@ -11,10 +11,11 @@ class MigrationTemplate
      * @param string $rand
      * @param string $prefix
      * @param array  $param
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return string
      */
-    public function template($name, $rand, $prefix, $param)
+    public function template($name, $rand, $prefix, $param, $constructors = [])
     {
         $softDelete = $this->softDelete($param);
 
@@ -114,6 +115,9 @@ class MigrationTemplate
         $print .= '        // Handle keys of $this->fields' . ($prefix === 'alter' ? ' and $this->oldFields' : '') . '.' . PHP_EOL;
         $print .= '        // Convert special characters to underscore.' . PHP_EOL;
         $print .= '        $this->handleFields();' . PHP_EOL;
+        foreach ($constructors as $constructor) {
+            $print .= '        ' . $constructor . PHP_EOL;
+        }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Migration.' . PHP_EOL;

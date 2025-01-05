@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 use Virdiggg\SeederCi3\MY_AppController;
+use Virdiggg\SeederCi3\Config\MigrationConfig;
 
 class App extends MY_AppController
 {
@@ -21,8 +22,18 @@ class App extends MY_AppController
          *                               Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
          * @param string $dbConn         Name of database connection. Default to 'default'.
          * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
+         * @param array  $constructors   List of additional function to be called in constructor. Default to [].
          * */
-        parent::__construct('timestamp', ['create_date', 'change_date', 'last_access']);
+        $config = new MigrationConfig();
+        $config->migrationType = 'timestamp';
+        $config->dateTime = ['create_date', 'change_date', 'last_access'];
+        $config->constructors = [
+            'controller' => [
+                '$this->authenticated->isAuthenticated();',
+            ],
+        ];
+
+        parent::__construct($config);
     }
 
     public function migrate()

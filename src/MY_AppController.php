@@ -2,42 +2,35 @@
 
 namespace Virdiggg\SeederCi3;
 use Virdiggg\SeederCi3\Seeder;
+use Virdiggg\SeederCi3\Config\MigrationConfig;
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 
 class MY_AppController extends \CI_Controller
 {
     public $seed;
-    public $migrationType;
-    public $dateTime = [];
-    public $dbConn;
-    public $migrationPath;
     private $str;
+    private $constructors = [];
 
     /**
-     * @param string $migrationType  Type of migration, sequential or timestamp. Default to 'sequential'.
-     * @param array  $dateTime       List of additional table rows with datetime data type.
-     *                               Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
-     * @param string $dbConn         Name of database connection. Default to 'default'.
-     * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
+     * @param MigrationConfig|null $config
      * */
-    public function __construct(
-        $migrationType = 'sequential',
-        $dateTime = [],
-        $dbConn = 'default',
-        $migrationPath = APPPATH . 'migrations'
-    )
+    public function __construct(MigrationConfig $config = null)
     {
         parent::__construct();
+        $config = $config ?: new MigrationConfig();
+
         $this->str = new Str();
         $this->seed = new Seeder();
-        // You can set which migration type you're using.
-        $this->seed->setMigrationType($migrationType);
-        // You can set which database connection you want to use.
-        $this->seed->setConn($dbConn);
-        // Migration path
-        $this->seed->setPath($migrationPath);
-        if (!empty($dateTime)) {
-            $this->seed->addDateTime($dateTime);
+        $this->seed->setMigrationType($config->migrationType);
+        $this->seed->setConn($config->dbConn);
+        $this->seed->setPath($config->migrationPath);
+
+        if (!empty($config->dateTime)) {
+            $this->seed->addDateTime($config->dateTime);
+        }
+
+        if (count($config->constructors) > 0) {
+            $this->constructors = $config->constructors;
         }
     }
 
@@ -117,7 +110,11 @@ class MY_AppController extends \CI_Controller
         $name = $result->name;
         $args = $result->args;
 
-        $this->seed->seed($name, $args);
+        $constructors = [];
+        if (isset($this->constructors['seed'])) {
+            $constructors = (array) $this->constructors['seed'];
+        }
+        $this->seed->seed($name, $args, $constructors);
     }
 
     public function migration() {
@@ -131,7 +128,11 @@ class MY_AppController extends \CI_Controller
         $name = $result->name;
         $args = $result->args;
 
-        $this->seed->migration($name, $args);
+        $constructors = [];
+        if (isset($this->constructors['migration'])) {
+            $constructors = (array) $this->constructors['migration'];
+        }
+        $this->seed->migration($name, $args, $constructors);
     }
 
     public function controller() {
@@ -146,7 +147,11 @@ class MY_AppController extends \CI_Controller
         $args = $result->args;
 
         // $this->seed->setPath(APPPATH);
-        $this->seed->controller($name, $args);
+        $constructors = [];
+        if (isset($this->constructors['controller'])) {
+            $constructors = (array) $this->constructors['controller'];
+        }
+        $this->seed->controller($name, $args, $constructors);
         return;
     }
 
@@ -162,7 +167,11 @@ class MY_AppController extends \CI_Controller
         $args = $result->args;
 
         // $this->seed->setPath(APPPATH);
-        $this->seed->model($name, $args);
+        $constructors = [];
+        if (isset($this->constructors['model'])) {
+            $constructors = (array) $this->constructors['model'];
+        }
+        $this->seed->model($name, $args, $constructors);
         return;
     }
 }

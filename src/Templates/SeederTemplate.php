@@ -28,12 +28,13 @@ class SeederTemplate
      * Parse input as printable string for seeder file.
      *
      * @param string $name
-     * @param string $rand    Random string
+     * @param string $rand         Random string
      * @param array  $results
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return string
      */
-    public function template($name, $rand, $results)
+    public function template($name, $rand, $results, $constructors = [])
     {
         $res = $this->parse($results);
         $keys = $res['keys'];
@@ -57,6 +58,9 @@ class SeederTemplate
         $print .= '        parent::__construct();' . PHP_EOL;
         $print .= '        $this->{{conn}} = $this->load->database(\'{{conn}}\', TRUE);' . PHP_EOL;
         $print .= '        $this->name = \'' . $name . '\';' . PHP_EOL;
+        foreach ($constructors as $constructor) {
+            $print .= '        ' . $constructor . PHP_EOL;
+        }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Run migration.' . PHP_EOL;

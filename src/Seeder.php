@@ -87,12 +87,13 @@ class Seeder
     /**
      * Create a simple seeder file.
      *
-     * @param string $fullName Table name
-     * @param array  $param    Optional parameter
+     * @param string $fullName     Table name
+     * @param array  $param        Optional parameter
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return void
      */
-    public function seed($name = '', $param = [])
+    public function seed($name = '', $param = [], $constructors = [])
     {
         if (!$name) {
             print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
@@ -126,7 +127,7 @@ class Seeder
 
         $this->se = new Se($this->getConn(), $this->dateTime);
         // Parse input as printable string.
-        $print = $this->se->template($name, $rand, $results);
+        $print = $this->se->template($name, $rand, $results, $constructors);
 
         // Get the latest migration file order.
         $count = $this->str->latest($this->migrationType, $this->getPath());
@@ -142,12 +143,13 @@ class Seeder
     /**
      * Create a simple migration file.
      *
-     * @param string $fullName Table name
-     * @param array  $param    Optional parameter
+     * @param string $fullName     Table name
+     * @param array  $param        Optional parameter
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return void
      */
-    public function migration($name = '', $param = [])
+    public function migration($name = '', $param = [], $constructors = [])
     {
         if (!$name) {
             print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
@@ -170,7 +172,7 @@ class Seeder
 
         $this->mig = new Mig($this->getConn(), $this->dateTime);
         // Parse input as printable string.
-        $print = $this->mig->template($name, $rand, $prefix, $param);
+        $print = $this->mig->template($name, $rand, $prefix, $param, $constructors);
 
         // Get the latest migration file order.
         $count = $this->str->latest($this->migrationType, $this->getPath());
@@ -186,12 +188,13 @@ class Seeder
     /**
      * Create a simple controller file.
      *
-     * @param string $fullName Table name
-     * @param array  $param    Optional parameter
+     * @param string $fullName     Table name
+     * @param array  $param        Optional parameter
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return void
      */
-    public function controller($fullName = '', $param = [])
+    public function controller($fullName = '', $param = [], $constructors = [])
     {
         if (!$fullName) {
             print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
@@ -215,7 +218,7 @@ class Seeder
 
         // Parse input as printable string.
         $this->cont = new Cont();
-        $print = $this->cont->template($name, $param);
+        $print = $this->cont->template($name, $param, $constructors);
 
         $name = $this->str->parseFileName($name);
         // Create controller file.
@@ -228,12 +231,13 @@ class Seeder
     /**
      * Create a simple model file.
      *
-     * @param string $fullName Table name
-     * @param array  $param    Optional parameter
+     * @param string $fullName     Table name
+     * @param array  $param        Optional parameter
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return void
      */
-    public function model($fullName = '', $param = [])
+    public function model($fullName = '', $param = [], $constructors = [])
     {
         if (!$fullName) {
             print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
@@ -257,7 +261,7 @@ class Seeder
 
         // Parse input as printable string.
         $this->mod = new Mod();
-        $print = $this->mod->template($name, $param);
+        $print = $this->mod->template($name, $param, $constructors);
 
         $name = $this->str->parseFileName('M_' . $name);
         // Create model file.

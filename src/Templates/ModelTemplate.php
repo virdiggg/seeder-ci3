@@ -17,10 +17,11 @@ class ModelTemplate
      *
      * @param string $name
      * @param array  $param
+     * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return string
      */
-    public function template($name, $param = [])
+    public function template($name, $param = [], $constructors = [])
     {
         $withResources = $withSoftDelete = FALSE;
         if (count($param) > 0) {
@@ -77,6 +78,9 @@ class ModelTemplate
         $print .= '        // DB Connection, you can use your own db setting name' . PHP_EOL;
         $print .= '        $this->db = $this->load->database($this->conn, TRUE);' . PHP_EOL;
         $print .= '        // $this->ob = $this->load->database(\'otherdb\', TRUE);' . PHP_EOL;
+        foreach ($constructors as $constructor) {
+            $print .= '        ' . $constructor . PHP_EOL;
+        }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         // $print .= '    /**' . PHP_EOL;
         // $print .= '     * RAW query.' . PHP_EOL;

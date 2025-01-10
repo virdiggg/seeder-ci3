@@ -3,6 +3,7 @@
 namespace Virdiggg\SeederCi3;
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 use Virdiggg\SeederCi3\Helpers\FileHelper as Fl;
+use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
 use Virdiggg\SeederCi3\Templates\ControllerTemplate as Cont;
 use Virdiggg\SeederCi3\Templates\SeederTemplate as Se;
 use Virdiggg\SeederCi3\Templates\MigrationTemplate as Mig;
@@ -35,6 +36,13 @@ class Seeder
     public $conn;
 
     /**
+     * Custom DB driver setting.
+     *
+     * @param string
+     */
+    public $driver;
+
+    /**
      * Date time fields.
      *
      * @param array
@@ -62,6 +70,7 @@ class Seeder
      */
     private $str; // String
     private $fl; // File
+    private $env; // Environment
 
     /**
      * Printer templates
@@ -82,6 +91,7 @@ class Seeder
         $this->CI = & get_instance();
         $this->str = new Str();
         $this->fl = new Fl();
+        $this->env = new Ev();
     }
 
     /**
@@ -260,7 +270,7 @@ class Seeder
         $name = ucfirst(strtolower(trim($name)));
 
         // Parse input as printable string.
-        $this->mod = new Mod();
+        $this->mod = new Mod($this->driver);
         $print = $this->mod->template($name, $param, $constructors);
 
         $name = $this->str->parseFileName('M_' . $name);
@@ -381,6 +391,19 @@ class Seeder
     public function setConn($conn = 'default')
     {
         $this->conn = $conn;
+        $this->setDriver($conn);
+    }
+
+    /**
+     * Set which connection used for this seeder.
+     *
+     * @param string $conn
+     *
+     * @return void
+     */
+    private function setDriver($conn = 'default')
+    {
+        $this->driver = $this->env->verifyDBDir($conn);
     }
 
     /**

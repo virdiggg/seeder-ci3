@@ -4,6 +4,7 @@ namespace Virdiggg\SeederCi3\Helpers;
 
 class EnvHelper
 {
+    private $confDir = APPPATH . 'config' . DIRECTORY_SEPARATOR;
     public function __construct()
     {
     }
@@ -20,5 +21,36 @@ class EnvHelper
         }
 
         return false;
+    }
+
+    /**
+     * Verify if database.php file exists.
+     * 
+     * @param string $conn
+     * 
+     * @return string
+     */
+    public function verifyDBDir($conn) {
+        // 'databse.php' should be inside config directory, or inside subdir ENVIRONMENT
+        // ENVIRONMENT should have initialized when we installed CodeIgniter 3 otherwise the apps won't run,
+        // so I don't think I have to verify whether ENVIRONMENT is set or not
+        $defaultConfigFile = $this->confDir . 'database.php';
+        $envConfigFile = $this->confDir . ENVIRONMENT . DIRECTORY_SEPARATOR . 'database.php';
+        if (file_exists($envConfigFile)) {
+            include $envConfigFile;
+        } elseif (file_exists($defaultConfigFile)) {
+            include $defaultConfigFile;
+        } else {
+            // We're not able to find database.php file
+            // So we return 'mysql' as it's default database driver when installing CodeIgniter 3
+            return 'mysql';
+        }
+
+        // Access the dbdriver value dynamically
+        if (isset($db[$conn]['dbdriver']) === false) {
+            return 'mysql';
+        }
+
+        return $db[$conn]['dbdriver'];
     }
 }

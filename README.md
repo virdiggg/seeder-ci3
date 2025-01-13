@@ -96,7 +96,9 @@ class App extends MY_AppController
          * @param array  $constructors   List of additional function to be called in constructor. Default to [].
          * */
         $config = new MigrationConfig();
+        // $config->dbConn = 'default2';
         $config->migrationType = 'timestamp';
+        // Append 'create_date', 'change_date', 'last_access' to the list of $dateTime
         $config->dateTime = ['create_date', 'change_date', 'last_access'];
         $config->constructors = [
             'controller' => [
@@ -168,6 +170,43 @@ cd c:/xampp/htdocs/codeigniter && php index.php app controller Admin/Dashboard/T
 ```
 #### How to create Model file: `php index.php <your controller name> model <filename> [--args]`.
 - Add `--r` to generate resources. Optional.
+When using [--r], you will have a function to create or update a row (storeOrUpdate), please read the comment before you decide to use them. Example:
+```php
+// In this code, we will insert a new user $param,
+// only if there is no user with $conditions in the table
+// So, insert into table when there is no row with name = 'myname'
+// and username = 'myusername'
+$param = [
+    'name' => 'myname',
+    'username' => 'myusername',
+    'password' => password_hash('password1', PASSWORD_BCRYPT),
+    'created_at' => date('Y-m-d H:i:s'),
+    'updated_at' => date('Y-m-d H:i:s'),
+    'created_by' => 'admin',
+    'updated_by' => 'admin',
+];
+$conditions = [
+    'name' => 'myname',
+    'username' => 'myusername',
+];
+$res = $this->mymodel->storeOrUpdate($param, $conditions);
+// In this code, we will insert a new user $param,
+// but since we don't pass the second parameters,
+// then we will use the first parameters as $conditions
+// but only if they're not in list of $this->exceptions
+// So, insert into table when there is no row with name = 'myname'
+// and username = 'myusername' and password = hashed string, etc...
+$param = [
+    'name' => 'myname',
+    'username' => 'myusername',
+    'password' => password_hash('password1', PASSWORD_BCRYPT),
+    'created_at' => date('Y-m-d H:i:s'),
+    'updated_at' => date('Y-m-d H:i:s'),
+    'created_by' => 'admin',
+    'updated_by' => 'admin',
+];
+$res = $this->mymodel->storeOrUpdate($param);
+```
 - Add `--c` to generate its controller file as well. Optional.
 - Add `--m` to generate its migration file as well. Optional.
 - Add `--soft-delete` if your model using soft delete. Optional.

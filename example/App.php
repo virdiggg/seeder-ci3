@@ -25,6 +25,7 @@ class App extends MY_AppController
          * @param array  $constructors   List of additional function to be called in constructor. Default to [].
          * */
         $config = new MigrationConfig();
+        // $config->dbConn = 'default2';
         $config->migrationType = 'timestamp';
         $config->dateTime = ['create_date', 'change_date', 'last_access'];
         $config->constructors = [

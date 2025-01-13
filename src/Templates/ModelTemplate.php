@@ -212,6 +212,7 @@ class ModelTemplate
                 $print .= '        $insertStr = "INSERT INTO \"{$this->table}\" (" . join(\', \', $var) . ") SELECT " . join(", ", $val) . " WHERE NOT EXISTS (SELECT \"{$this->primary}\" FROM checking) RETURNING *";' . PHP_EOL;
                 $print .= '        $updateStr = "UPDATE \"{$this->table}\" SET " . join(\', \', $set) . " WHERE \"{$this->primary}\" = COALESCE((SELECT \"{$this->primary}\" FROM inserted LIMIT 1), (SELECT \"{$this->primary}\" FROM checking LIMIT 1)) AND NOT EXISTS (SELECT \"{$this->primary}\" FROM inserted LIMIT 1) RETURNING *";' . PHP_EOL;
                 $print .= '        $query = "WITH checking AS ($checkingStr), inserted AS ($insertStr), updated AS ($updateStr) SELECT * FROM inserted UNION SELECT * FROM updated";' . PHP_EOL;
+                $print .= '        unset($var, $val, $where, $set, $checkingStr, $insertStr, $updateStr);' . PHP_EOL;
                 $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
                 $print .= '    }' . PHP_EOL . PHP_EOL; // end public function storeOrUpdate()
             }

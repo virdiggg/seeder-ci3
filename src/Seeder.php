@@ -211,8 +211,11 @@ class Seeder
             return;
         }
 
+        // Normalize slash.
+        $fullName = $this->str->normalizeSlash($fullName);
+
         // File path is before the last slash \. If exists, add another slash.
-        $before = $this->str->beforeLast($fullName, '\\');
+        $before = $this->str->beforeLast($fullName, DIRECTORY_SEPARATOR);
         if ($before) {
             $before = DIRECTORY_SEPARATOR . $before;
         }
@@ -221,7 +224,7 @@ class Seeder
         $this->setPath(self::APP_PATH . 'controllers' . $before);
 
         // File name is after the last slash \.
-        $name = $this->str->afterLast($fullName, '\\');
+        $name = $this->str->afterLast($fullName, DIRECTORY_SEPARATOR);
 
         // Ucfirst for file and class name
         $name = ucfirst(strtolower(trim($name)));
@@ -254,8 +257,11 @@ class Seeder
             return;
         }
 
+        // Normalize slash.
+        $fullName = $this->str->normalizeSlash($fullName);
+
         // File path is before the last slash \. If exists, add another slash.
-        $before = $this->str->beforeLast($fullName, '\\');
+        $before = $this->str->beforeLast($fullName, DIRECTORY_SEPARATOR);
         if ($before) {
             $before = DIRECTORY_SEPARATOR . $before;
         }
@@ -264,7 +270,7 @@ class Seeder
         $this->setPath(self::APP_PATH . 'models' . $before);
 
         // File name is after the last slash \.
-        $name = $this->str->afterLast($fullName, '\\');
+        $name = $this->str->afterLast($fullName, DIRECTORY_SEPARATOR);
 
         // Ucfirst for file and class name
         $name = ucfirst(strtolower(trim($name)));

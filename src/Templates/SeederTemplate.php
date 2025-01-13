@@ -131,7 +131,7 @@ class SeederTemplate
             $r = trim(strip_tags($r));
             // Delete whitespace and newline
             $r = str_replace(["\t", "\r", "\n", "\\"], '', $r);
-            $print .= '            \'' . $k . '\' => ' . $r . ',' . PHP_EOL;
+            $print .= '            "' . $k . '" => ' . $r . ',' . PHP_EOL;
         }
         $print .= '        ];' . PHP_EOL; // end $param[]
 

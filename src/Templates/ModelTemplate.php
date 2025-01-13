@@ -407,8 +407,14 @@ class ModelTemplate
         $print .= '     */' . PHP_EOL;
         $print .= '    public function parse($result, $start = 0) {' . PHP_EOL;
         $print .= '        foreach ($result as $r) {' . PHP_EOL;
-        $print .= '            $start++;' . PHP_EOL;
-        $print .= '            $r->no = $start;' . PHP_EOL;
+        if ($this->driver === 'pdo') {
+            $print .= '            $r->no = $r->RNUM;' . PHP_EOL;
+        } else if ($this->driver === 'sqlsrv') {
+            $print .= '            $r->no = $r->rownum;' . PHP_EOL;
+        } else {
+            $print .= '            $start++;' . PHP_EOL;
+            $print .= '            $r->no = $start;' . PHP_EOL;
+        }
         $print .= '            $r->action = \'\';' . PHP_EOL;
         $print .= '        }' . PHP_EOL . PHP_EOL;
         $print .= '        return $result;' . PHP_EOL;
@@ -423,26 +429,88 @@ class ModelTemplate
         $print .= '     * @return array' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function queryDatatables($length = 10, $start = 0, $search = NULL) {' . PHP_EOL;
-        $print .= '        $this->db->select();' . PHP_EOL;
-        $print .= '        $this->db->from($this->table);' . PHP_EOL;
-        if ($withSoftDelete) {
-            $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
+        if (in_array($this->driver, ['pdo', 'sqlsrv'])) {
+            $print .= '        /**' . PHP_EOL;
+            $print .= '         * Since CodeIgniter 3 default behavior when using LIMIT OFFSET in' . PHP_EOL;
+            $print .= '         * SQL Server 2008 and old Oracle DB always break the query if there is' . PHP_EOL;
+            $print .= '         * subquery in SELECT statement, we will use this workaround.' . PHP_EOL;
+            $print .= '         * Example query:' . PHP_EOL;
+            $print .= '         * $this->db->select("*,' . PHP_EOL;
+            $print .= '         *     (CASE WHEN is_active = 1 THEN \'Active\' ELSE \'Inactive\' END) AS status,' . PHP_EOL;
+            $print .= '         *     COALESCE((SELECT COUNT(*) FROM details), 0) AS count")' . PHP_EOL;
+            $print .= '         *     ->from("header")' . PHP_EOL;
+            $print .= '         *     ->get()->result();' . PHP_EOL;
+            $print .= '         */' . PHP_EOL . PHP_EOL;
+            $print .= '        // Please modify anything below this line according to your needs.' . PHP_EOL . PHP_EOL;
+            $print .= '        $where = [];' . PHP_EOL;
+            if ($withSoftDelete) {
+                $print .= '        // If you are using soft delete, pass the condition here.' . PHP_EOL;
+                $print .= '        // $where[] = "(is_deleted = 0 AND deleted_by IS NULL)' . PHP_EOL;
+            }
+            $print .= '        if (!empty($search)) {' . PHP_EOL;
+            $print .= '            // Your LIKE query.' . PHP_EOL;
+            $print .= '            // $search = strtolower($search);' . PHP_EOL;
+            $print .= '            // $where[] = "(' . PHP_EOL;
+            $print .= '            //     LOWER(name) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+            $print .= '            //     OR LOWER(phone) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+            $print .= '            // )";' . PHP_EOL;
+            $print .= '        }' . PHP_EOL . PHP_EOL;
+            $print .= '        // WHERE query only if $where is not empty' . PHP_EOL;
+            $print .= '        $whereStr = count($where) > 0 ? "WHERE " . join(" AND ", $where) : "";' . PHP_EOL;
+            $print .= '        $subqStart = $start + $length; // Limit' . PHP_EOL . PHP_EOL;
+            $print .= '        // Define what you want to select here.' . PHP_EOL;
+            if ($this->driver === 'pdo') { // Oracle DB
+                $print .= '        $subq = "SELECT *' . PHP_EOL;
+                $print .= '            FROM \"{$this->table}\"' . PHP_EOL;
+                $print .= '            $whereStr' . PHP_EOL;
+                $print .= '            ORDER BY \"{$this->primary}\" ASC";' . PHP_EOL . PHP_EOL;
+                $print .= '        // We will wrap your query here.' . PHP_EOL;
+                $print .= '        // You can modify this according to your needs,' . PHP_EOL;
+                $print .= '        // but we will use this as default.' . PHP_EOL;
+                $print .= '        $finalQuery = "SELECT * FROM (' . PHP_EOL;
+                $print .= '            SELECT INNERQ.*, ROWNUM RNUM FROM ($subq) AS INNERQ WHERE ROWNUM <= $subqStart' . PHP_EOL;
+                $print .= '        ) OUTERQ WHERE OUTERQ.RNUM >= $start";' . PHP_EOL . PHP_EOL;
+            } else if ($this->driver === 'sqlsrv') { // SQL Server DB 2008
+                $print .= '        // You can use custom order for ROW_NUMBER () here. Example:' . PHP_EOL;
+                $print .= '        // (ORDER BY \"{$this->primary}\" ASC, created_at DESC, code ASC)' . PHP_EOL;
+                $print .= '        $subq = "SELECT *, ROW_NUMBER () OVER (ORDER BY \"{$this->primary}\" ASC) AS rownum' . PHP_EOL;
+                $print .= '            FROM \"{$this->table}\"' . PHP_EOL;
+                $print .= '            $whereStr' . PHP_EOL;
+                $print .= '            ORDER BY \"{$this->primary}\" ASC";' . PHP_EOL . PHP_EOL;
+                $print .= '        // We will wrap your query here.' . PHP_EOL;
+                $print .= '        // You can modify this according to your needs,' . PHP_EOL;
+                $print .= '        // but we will use this as default.' . PHP_EOL;
+                $print .= '        $finalQuery = "SELECT * FROM ($subq) INNERQ WHERE INNERQ.rownum BETWEEN $start AND $subqStart";' . PHP_EOL . PHP_EOL;
+            }
+            $print .= '        $query = $this->db->query($finalQuery);' . PHP_EOL;
+            $print .= '        $result = $query->result();' . PHP_EOL . PHP_EOL;
+            $print .= '        // Free up memory' . PHP_EOL;
+            $print .= '        $query->free_result();' . PHP_EOL;
+            $print .= '        $this->db->close();' . PHP_EOL . PHP_EOL;
+            $print .= '        unset($where, $whereStr, $subq, $subqStart, $finalQuery);' . PHP_EOL;
+            $print .= '        return $result;' . PHP_EOL;
+        } else {
+            $print .= '        $this->db->select();' . PHP_EOL;
+            $print .= '        $this->db->from($this->table);' . PHP_EOL;
+            if ($withSoftDelete) {
+                $print .= '        $this->softDelete("clean");' . PHP_EOL;
+            }
+            $print .= '        if (!empty($search)) {' . PHP_EOL;
+            $print .= '            // Your LIKE query.' . PHP_EOL;
+            $print .= '            // $search = strtolower($search);' . PHP_EOL;
+            $print .= '            // $this->db->group_start();' . PHP_EOL;
+            $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
+            $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
+            $print .= '            // $this->db->group_end();' . PHP_EOL;
+            $print .= '        }' . PHP_EOL;
+            $print .= '        $this->db->limit($length, $start);' . PHP_EOL;
+            $print .= '        $query = $this->db->get();' . PHP_EOL;
+            $print .= '        $result = $query->result();' . PHP_EOL . PHP_EOL;
+            $print .= '        // Free up memory' . PHP_EOL;
+            $print .= '        $query->free_result();' . PHP_EOL;
+            $print .= '        $this->db->close();' . PHP_EOL . PHP_EOL;
+            $print .= '        return $result;' . PHP_EOL;
         }
-        $print .= '        if (!empty($search)) {' . PHP_EOL;
-        $print .= '            // Your LIKE query.' . PHP_EOL;
-        $print .= '            // $search = strtolower($search);' . PHP_EOL;
-        $print .= '            // $this->db->group_start();' . PHP_EOL;
-        $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
-        $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
-        $print .= '            // $this->db->group_end();' . PHP_EOL;
-        $print .= '        }' . PHP_EOL;
-        $print .= '        $this->db->limit($length, $start);' . PHP_EOL;
-        $print .= '        $query = $this->db->get();' . PHP_EOL;
-        $print .= '        $result = $query->result();' . PHP_EOL . PHP_EOL;
-        $print .= '        // Free up memory' . PHP_EOL;
-        $print .= '        $query->free_result();' . PHP_EOL;
-        $print .= '        $this->db->close();' . PHP_EOL . PHP_EOL;
-        $print .= '        return $result;' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function queryDatatables()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Total all records with filter.' . PHP_EOL;
@@ -453,7 +521,7 @@ class ModelTemplate
         $print .= '        $this->db->select();' . PHP_EOL;
         $print .= '        $this->db->from($this->table);' . PHP_EOL;
         if ($withSoftDelete) {
-            $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
+            $print .= '        $this->softDelete("clean");' . PHP_EOL;
         }
         $print .= '        $result = $this->db->count_all_results();' . PHP_EOL;
         $print .= '        return $result ? $result : 0;' . PHP_EOL;
@@ -490,28 +558,28 @@ class ModelTemplate
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @return void' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    public function softDelete($switchParam = \'clean\') {' . PHP_EOL;
+            $print .= '    public function softDelete($switchParam = "clean" {' . PHP_EOL;
             $print .= '        if ($this->softDelete) {' . PHP_EOL;
-            $print .= '            // - \'clean\' only return all record that IS NOT deleted.' . PHP_EOL;
-            $print .= '            // - \'trashed\' only return all record that IS deleted.' . PHP_EOL;
-            $print .= '            // - \'all\' return all record.' . PHP_EOL;
-            $print .= '            // Default is \'clean\'.' . PHP_EOL;
+            $print .= '            // - "clean"only return all record that IS NOT deleted.' . PHP_EOL;
+            $print .= '            // - "trashed" only return all record that IS deleted.' . PHP_EOL;
+            $print .= '            // - "all" return all record.' . PHP_EOL;
+            $print .= '            // Default is "clean"' . PHP_EOL;
             $print .= '            switch ($switchParam) {' . PHP_EOL;
-            $print .= '                case \'clean\':' . PHP_EOL;
+            $print .= '                case "clean"' . PHP_EOL;
             $print .= '                    $this->db->group_start();' . PHP_EOL;
             $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
             $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;
             $print .= '                        }' . PHP_EOL;
             $print .= '                    $this->db->group_end();' . PHP_EOL;
             $print .= '                    break;' . PHP_EOL;
-            $print .= '                case \'trashed\':' . PHP_EOL;
+            $print .= '                case "trashed":' . PHP_EOL;
             $print .= '                    $this->db->group_start();' . PHP_EOL;
             $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
             $print .= '                            $this->db->where("$param IS NOT NULL");' . PHP_EOL;
             $print .= '                        }' . PHP_EOL;
             $print .= '                    $this->db->group_end();' . PHP_EOL;
             $print .= '                    break;' . PHP_EOL;
-            $print .= '                case \'all\':' . PHP_EOL;
+            $print .= '                case "all":' . PHP_EOL;
             $print .= '                    break;' . PHP_EOL;
             $print .= '                default:' . PHP_EOL;
             $print .= '                    $this->db->group_start();' . PHP_EOL;

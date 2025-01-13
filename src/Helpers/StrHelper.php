@@ -258,4 +258,16 @@ class StrHelper
     {
         return $text . ' ' . $this->OwO[array_rand($this->OwO, 1)];
     }
+
+    /**
+     * Normalize slash.
+     *
+     * @param string $text
+     *
+     * @return string
+     */
+    public function normalizeSlash($text)
+    {
+        return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $text);
+    }
 }

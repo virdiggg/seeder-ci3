@@ -105,13 +105,13 @@ class App extends MY_AppController
                 '$this->authenticated->isAuthenticated();',
             ],
             'model' => [
-                '$this->load->helper(\'string\');',
+                '$this->load->helper("string");',
             ],
             'seed' => [
-                '$this->load->helper(\'string\');',
+                '$this->load->helper("string");',
             ],
             'migration' => [
-                '$this->load->helper(\'string\');',
+                '$this->load->helper("string");',
             ],
         ];
 

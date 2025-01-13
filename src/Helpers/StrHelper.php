@@ -39,7 +39,7 @@ class StrHelper
             return date('YmdHis');
         }
 
-        print($this->redText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000, PLEASE USE TO TIMESTAMP INSTEAD ╰(*°▽°*)╯'));
+        print($this->redText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000 OR ABOVE, PLEASE USE TIMESTAMP INSTEAD ╰(*°▽°*)╯'));
 
         // Get all migration files.
         $seeders = $path . '*.php';

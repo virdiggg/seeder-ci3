@@ -16,12 +16,12 @@ class SeederTemplate
      * Constructor.
      * 
      * @param string $conn
-     * @param array  $additional
+     * @param array  $dateTime
      */
-    public function __construct($conn = 'default', $additional = [])
+    public function __construct($conn = 'default', $dateTime = [])
     {
         $this->conn = $conn;
-        $this->addDateTime($additional);
+        $this->addDateTime($dateTime);
     }
 
     /**
@@ -121,16 +121,16 @@ class SeederTemplate
         $print = '        $param[] = [' . PHP_EOL;
         foreach ($keys as $k) {
             // Replace ALL ' (single quote) with " (double quote) from the value.
-            $r = is_null($res[$k]) ? 'NULL' : '\'' . str_replace("'", '"', $res[$k]) . '\'';
+            $r = !is_null($res[$k]) ? $this->db->escape($res[$k]) : "NULL";
 
             // For DateTime value
-            if (in_array($k, $this->dateTime) && $r !== 'NULL') {
-                $r = 'date(\'Y-m-d H:i:s.\', strtotime('.$r.')).gettimeofday()[\'usec\']';
+            if (in_array($k, $this->dateTime) && $r !== "NULL") {
+                $r = 'date("Y-m-d H:i:s.", strtotime('.$r.')).gettimeofday()["usec"]';
             }
             // Trim values
             $r = trim(strip_tags($r));
             // Delete whitespace and newline
-            $r = str_replace(["\t", "\r", "\n", "\\"], ['', '', '', ''], $r);
+            $r = str_replace(["\t", "\r", "\n", "\\"], '', $r);
             $print .= '            \'' . $k . '\' => ' . $r . ',' . PHP_EOL;
         }
         $print .= '        ];' . PHP_EOL; // end $param[]

@@ -42,13 +42,13 @@ class ModelTemplate
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @param string $table' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    private $table = \'' . strtolower($name) . '\';' . PHP_EOL . PHP_EOL;
+        $print .= '    private $table = "' . strtolower($name) . '";' . PHP_EOL . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @param string $conn' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    private $conn = \'default\';' . PHP_EOL . PHP_EOL;
+        $print .= '    private $conn = "default";' . PHP_EOL . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
@@ -73,7 +73,7 @@ class ModelTemplate
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @param array $exceptions' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    private $exceptions = ["created_by", "created_at", "updated_by", "updated_at"];' . PHP_EOL . PHP_EOL;
+            $print .= '    private $exceptions = ["created_by", "created_at", "updated_by", "updated_at", "password"];' . PHP_EOL . PHP_EOL;
         }
         if ($withSoftDelete) {
             $print .= '    /**' . PHP_EOL;
@@ -87,7 +87,7 @@ class ModelTemplate
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @param array $softDeleteParams' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    private $softDeleteParams = [\'deleted_by\', \'deleted_at\'];' . PHP_EOL . PHP_EOL;
+            $print .= '    private $softDeleteParams = ["deleted_by", "deleted_at"];' . PHP_EOL . PHP_EOL;
         }
         $print .= '    public function __construct() {' . PHP_EOL;
         $print .= '        parent::__construct();' . PHP_EOL;
@@ -119,7 +119,7 @@ class ModelTemplate
         $print .= '        $this->db->select();' . PHP_EOL;
         $print .= '        $this->db->from($this->table);' . PHP_EOL;
         if ($withSoftDelete) {
-            $print .= '        $this->softDelete(\'clean\');' . PHP_EOL;
+            $print .= '        $this->softDelete("clean");' . PHP_EOL;
         }
         $print .= '        $query = $this->db->get();' . PHP_EOL;
         $print .= '        $result = $query->result();' . PHP_EOL . PHP_EOL;
@@ -224,6 +224,11 @@ class ModelTemplate
             $print .= '     * @return bool' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    public function insert($param) {' . PHP_EOL;
+            $print .= '        // CodeIgniter 3 always run insert_batch even if you pass 0 array,' . PHP_EOL;
+            $print .= '        // and it will throw error, so we need to check if $param is empty.' . PHP_EOL;
+            $print .= '        if (count($param) === 0) {' . PHP_EOL;
+            $print .= '            return TRUE;' . PHP_EOL;
+            $print .= '        }' . PHP_EOL;
             $print .= '        $this->db->insert_batch($this->table, $param);' . PHP_EOL;
             $print .= '        return TRUE;' . PHP_EOL;
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function insert()
@@ -233,7 +238,7 @@ class ModelTemplate
             $print .= '     * @param string|int $id' . PHP_EOL;
             $print .= '     * @param array      $param' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
-            $print .= '     * @return object|bool' . PHP_EOL;
+            $print .= '     * @return object|null' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    public function update($id, $param) {' . PHP_EOL;
             if ($this->driver === 'postgre') {
@@ -455,6 +460,29 @@ class ModelTemplate
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecords()
 
         if ($withSoftDelete) {
+            $print .= '    /**' . PHP_EOL;
+            $print .= '     * Toggle soft delete' . PHP_EOL;
+            $print .= '     * ' . PHP_EOL;
+            $print .= '     * @param string|int $id' . PHP_EOL;
+            $print .= '     * @param string     $condition "restore" or "delete"' . PHP_EOL;
+            $print .= '     * ' . PHP_EOL;
+            $print .= '     * @return bool' . PHP_EOL;
+            $print .= '     */' . PHP_EOL;
+            $print .= '    public function toggleSoftDelete($id, $condition = "restore") {' . PHP_EOL;
+            $print .= '        $param = [];' . PHP_EOL;
+            $print .= '        if ($condition === "restore") {' . PHP_EOL;
+            $print .= '            // Define your own parameters here.' . PHP_EOL;
+            $print .= '            foreach ($this->softDeleteParams as $p) {' . PHP_EOL;
+            $print .= '                $param[$p] = NULL;' . PHP_EOL;
+            $print .= '            }' . PHP_EOL;
+            $print .= '        } else {' . PHP_EOL;
+            $print .= '            // Define your own parameters here.' . PHP_EOL;
+            $print .= '            foreach ($this->softDeleteParams as $p) {' . PHP_EOL;
+            $print .= '                $param[$p] = $p === "deleted_at" ? date("Y-m-d H:i:s") : "admin";' . PHP_EOL;
+            $print .= '            }' . PHP_EOL;
+            $print .= '        }' . PHP_EOL . PHP_EOL;
+            $print .= '        return $this->update($id, $param);' . PHP_EOL;
+            $print .= '    }' . PHP_EOL . PHP_EOL; // end public function toggleSoftDelete()
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Soft Delete parameters.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;

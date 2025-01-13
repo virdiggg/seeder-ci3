@@ -61,6 +61,20 @@ class ModelTemplate
         $print .= '     * @param object $ob' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    // private $ob;' . PHP_EOL . PHP_EOL;
+        $print .= '    /**' . PHP_EOL;
+        $print .= '     * Primary key.' . PHP_EOL;
+        $print .= '     * ' . PHP_EOL;
+        $print .= '     * @param string $primary' . PHP_EOL;
+        $print .= '     */' . PHP_EOL;
+        $print .= '    private $primary = "id";' . PHP_EOL . PHP_EOL;
+        if ($this->driver === 'postgre') {
+            $print .= '    /**' . PHP_EOL;
+            $print .= '     * Column exceptions when running insert where not exists query.' . PHP_EOL;
+            $print .= '     * ' . PHP_EOL;
+            $print .= '     * @param array $exceptions' . PHP_EOL;
+            $print .= '     */' . PHP_EOL;
+            $print .= '    private $exceptions = ["created_by", "created_at", "updated_by", "updated_at"];' . PHP_EOL . PHP_EOL;
+        }
         if ($withSoftDelete) {
             $print .= '    /**' . PHP_EOL;
             $print .= '     * State if Soft Delete is used or not. Parameter should be TRUE or FALSE.' . PHP_EOL;
@@ -127,7 +141,7 @@ class ModelTemplate
         $print .= '    public function find($id) {' . PHP_EOL;
         $print .= '        $this->db->select();' . PHP_EOL;
         $print .= '        $this->db->from($this->table);' . PHP_EOL;
-        $print .= '        $this->db->where(\'id\', $id);' . PHP_EOL;
+        $print .= '        $this->db->where($this->primary, $id);' . PHP_EOL;
         $print .= '        return $this->db->get()->row();' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function find()
         if ($withResources) {
@@ -143,15 +157,64 @@ class ModelTemplate
                 $print .= '        $var = $val = [];' . PHP_EOL;
                 $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
                 $print .= '            $var[] = \'"\' . $key . \'"\';' . PHP_EOL;
-                $print .= '            $val[] = !is_null($p) ? $this->db->escape($p) : \'NULL\';' . PHP_EOL;
+                $print .= '            $val[] = !is_null($p) ? $this->db->escape($p) : "NULL";' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
-                $print .= '        $query = "INSERT INTO {$this->table} (" . join(\', \', $var) . ") VALUES (" . join(\', \', $val) . ") RETURNING *;";' . PHP_EOL;
+                $print .= '        $query = "INSERT INTO \"{$this->table}\" (" . join(\', \', $var) . ") VALUES (" . join(\', \', $val) . ") RETURNING *;";' . PHP_EOL;
                 $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
             } else {
                 $print .= '        $this->db->insert($this->table, $param);' . PHP_EOL;
                 $print .= '        return $this->find($this->db->insert_id());' . PHP_EOL;
             }
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function create()
+            if ($this->driver === 'postgre') {
+                $print .= '    /**' . PHP_EOL;
+                $print .= '     * Insert data to database if not exists, then select the row.' . PHP_EOL;
+                $print .= '     * Update data if exists, then select the row.' . PHP_EOL;
+                $print .= '     * ' . PHP_EOL;
+                $print .= '     * !IMPORTANT!' . PHP_EOL;
+                $print .= '     * It\'s advisable to not pass anything in datetime format,' . PHP_EOL;
+                $print .= '     * encrypted and hashed data in $conditions,' . PHP_EOL;
+                $print .= '     * as you will most likely get unexpected results.' . PHP_EOL;
+                $print .= '     * Make sure you put all the datetime format, encrypted and hashed fields' . PHP_EOL;
+                $print .= '     * in $this->exceptions to avoid unexpected results.' . PHP_EOL;
+                $print .= '     * Also, don\'t forget to set the $this->primary,' . PHP_EOL;
+                $print .= '     * because we\'re going to check the row based on it before inserting or updating.' . PHP_EOL;
+                $print .= '     * ' . PHP_EOL;
+                $print .= '     * @param array $param' . PHP_EOL;
+                $print .= '     * @param array $conditions' . PHP_EOL;
+                $print .= '     * ' . PHP_EOL;
+                $print .= '     * @return object' . PHP_EOL;
+                $print .= '     */' . PHP_EOL;
+                $print .= '    public function storeOrUpdate($param, $conditions = []) {' . PHP_EOL;
+                $print .= '        $var = $val = $where = $set = [];' . PHP_EOL;
+                $print .= '        if (count($conditions) > 0) {' . PHP_EOL;
+                $print .= '            foreach ($conditions as $index => $c) {' . PHP_EOL;
+                $print .= '                if (!in_array($index, $this->exceptions)) {' . PHP_EOL;
+                $print .= '                    $where[] = \'"\'.$index.\'" = \'.(!is_null($c) ? $this->db->escape($c) : "NULL");' . PHP_EOL;
+                $print .= '                }' . PHP_EOL;
+                $print .= '            }' . PHP_EOL;
+                $print .= '        }' . PHP_EOL . PHP_EOL;
+                $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
+                $print .= '            $value = !is_null($p) ? $this->db->escape($p) : "NULL";' . PHP_EOL;
+                $print .= '            $set[] = \'"\'.$key.\'" = \'.$value;' . PHP_EOL;
+                $print .= '            $var[] = \'"\' . $key . \'"\';' . PHP_EOL;
+                $print .= '            $val[] = $value;' . PHP_EOL;
+                $print .= '            // If $conditions is not empty, then skip.' . PHP_EOL;
+                $print .= '            if (count($conditions) > 0) {' . PHP_EOL;
+                $print .= '                continue;' . PHP_EOL;
+                $print .= '            }' . PHP_EOL;
+                $print .= '            // If $conditions is empty, then use any fields provided except anything in $this->exceptions as conditions.' . PHP_EOL;
+                $print .= '            if (!in_array($key, $this->exceptions)) {' . PHP_EOL;
+                $print .= '                $where[] = \'"\'.$key.\'" = \'.$value;' . PHP_EOL;
+                $print .= '            }' . PHP_EOL;
+                $print .= '        }' . PHP_EOL . PHP_EOL;
+                $print .= '        $checkingStr = "SELECT \"{$this->primary}\" FROM \"{$this->table}\" WHERE " . join(" AND ", $where) . " LIMIT 1";' . PHP_EOL;
+                $print .= '        $insertStr = "INSERT INTO \"{$this->table}\" (" . join(\', \', $var) . ") SELECT " . join(", ", $val) . " WHERE NOT EXISTS (SELECT \"{$this->primary}\" FROM checking) RETURNING *";' . PHP_EOL;
+                $print .= '        $updateStr = "UPDATE \"{$this->table}\" SET " . join(\', \', $set) . " WHERE \"{$this->primary}\" = COALESCE((SELECT \"{$this->primary}\" FROM inserted LIMIT 1), (SELECT \"{$this->primary}\" FROM checking LIMIT 1)) AND NOT EXISTS (SELECT \"{$this->primary}\" FROM inserted LIMIT 1) RETURNING *";' . PHP_EOL;
+                $print .= '        $query = "WITH checking AS ($checkingStr), inserted AS ($insertStr), updated AS ($updateStr) SELECT * FROM inserted UNION SELECT * FROM updated";' . PHP_EOL;
+                $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
+                $print .= '    }' . PHP_EOL . PHP_EOL; // end public function storeOrUpdate()
+            }
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Batch insert data to database.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
@@ -178,19 +241,19 @@ class ModelTemplate
                 $print .= '        }' . PHP_EOL . PHP_EOL;
                 $print .= '        $values = [];' . PHP_EOL;
                 $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
-                $print .= '            $val = !is_null($p) ? $this->db->escape($p) : \'NULL\';' . PHP_EOL;
+                $print .= '            $val = !is_null($p) ? $this->db->escape($p) : "NULL";' . PHP_EOL;
                 $print .= '            $values[] = \'"\' . $key . \'" = \' . $val;' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
                 $print .= '        $set = join(", ", $values);' . PHP_EOL . PHP_EOL;
                 $print .= '        $tmpWhere = [];' . PHP_EOL;
-                $print .= '        $tmpWhere[] = \'"id" = \' . $this->db->escape($id);' . PHP_EOL;
+                $print .= '        $tmpWhere[] = "\"{$this->primary}\" = " . $this->db->escape($id);' . PHP_EOL;
                 $print .= '        // More conditions here' . PHP_EOL . PHP_EOL;
                 $print .= '        $where = "WHERE " . join(" AND ", $tmpWhere);' . PHP_EOL;
-                $print .= '        $query = "UPDATE {$this->table} SET $set $where RETURNING *;";' . PHP_EOL;
+                $print .= '        $query = "UPDATE \"{$this->table}\" SET $set $where RETURNING *;";' . PHP_EOL;
                 $print .= '        unset($tmpWhere, $values, $where);' . PHP_EOL;
                 $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
             } else {
-                $print .= '        $this->db->where(\'id\', $id);' . PHP_EOL;
+                $print .= '        $this->db->where($this->primary, $id);' . PHP_EOL;
                 $print .= '        $this->db->update($this->table, $param);' . PHP_EOL;
                 $print .= '        $result = (bool) $this->db->affected_rows();' . PHP_EOL;
                 $print .= '        if (!$result) {' . PHP_EOL;
@@ -207,7 +270,7 @@ class ModelTemplate
             $print .= '     * @return bool' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    public function destroy($id) {' . PHP_EOL;
-            $print .= '        $this->db->where(\'id\', $id)->delete($this->table);' . PHP_EOL;
+            $print .= '        $this->db->where($this->primary, $id)->delete($this->table);' . PHP_EOL;
             $print .= '        return (bool) $this->db->affected_rows();' . PHP_EOL;
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function destroy()
             $print .= '    /**' . PHP_EOL;
@@ -265,13 +328,13 @@ class ModelTemplate
             $print .= '    //                 $temp[] = "TO_DATE(".$this->db->escape($p[$var]).", \'YYYY-MM-DD\')";' . PHP_EOL;
             $print .= '    //                 break;' . PHP_EOL;
             $print .= '    //             case \'stringNullable\':' . PHP_EOL;
-            $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : $this->db->escape($p[$var]);' . PHP_EOL;
+            $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : $this->db->escape($p[$var]);' . PHP_EOL;
             $print .= '    //                 break;' . PHP_EOL;
             $print .= '    //             case \'intNullable\':' . PHP_EOL;
-            $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : $p[$var];' . PHP_EOL;
+            $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : $p[$var];' . PHP_EOL;
             $print .= '    //                 break;' . PHP_EOL;
             $print .= '    //             case \'dateNullable\':' . PHP_EOL;
-            $print .= '    //                 $temp[] = empty($p[$var]) ? \'null\' : "TO_DATE(".$this->db->escape($p[$var]).", \'YYYY-MM-DD\')";' . PHP_EOL;
+            $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : "TO_DATE(".$this->db->escape($p[$var]).", \'YYYY-MM-DD\')";' . PHP_EOL;
             $print .= '    //                 break;' . PHP_EOL;
             $print .= '    //             default:' . PHP_EOL;
             $print .= '    //                 $temp[] = $this->db->escape($p[$var]);' . PHP_EOL;

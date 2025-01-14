@@ -451,8 +451,13 @@ class ModelTemplate
             $print .= '            // Your LIKE query.' . PHP_EOL;
             $print .= '            // $search = strtolower($search);' . PHP_EOL;
             $print .= '            // $where[] = "(' . PHP_EOL;
-            $print .= '            //     LOWER(name) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
-            $print .= '            //     OR LOWER(phone) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+            if ($this->driver === 'sqlsrv') {
+                $print .= '            //     LOWER(CONVERT(VARCHAR(MAX), name)) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+                $print .= '            //     OR LOWER(CONVERT(VARCHAR(MAX), phone)) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+            } else {
+                $print .= '            //     LOWER(name) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+                $print .= '            //     OR LOWER(phone) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+            }
             $print .= '            // )";' . PHP_EOL;
             $print .= '        }' . PHP_EOL . PHP_EOL;
             $print .= '        // WHERE query only if $where is not empty' . PHP_EOL;

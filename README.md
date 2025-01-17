@@ -209,7 +209,7 @@ $res = $this->mymodel->storeOrUpdate($param);
 ```
 - Add `--c` to generate its controller file as well. Optional.
 - Add `--m` to generate its migration file as well. Optional.
-- Add `--soft-delete` if your model using soft delete. Optional.
+- Add `--soft-delete` if your model using soft delete. Optional. When used along with `--m`, migration will have soft delete fields too.
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app model Admin/Users --r --c --m --soft-delete
 ```

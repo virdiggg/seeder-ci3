@@ -563,14 +563,14 @@ class ModelTemplate
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @return void' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    public function softDelete($switchParam = "clean" {' . PHP_EOL;
+            $print .= '    public function softDelete($switchParam = "clean") {' . PHP_EOL;
             $print .= '        if ($this->softDelete) {' . PHP_EOL;
             $print .= '            // - "clean"only return all record that IS NOT deleted.' . PHP_EOL;
             $print .= '            // - "trashed" only return all record that IS deleted.' . PHP_EOL;
             $print .= '            // - "all" return all record.' . PHP_EOL;
             $print .= '            // Default is "clean"' . PHP_EOL;
             $print .= '            switch ($switchParam) {' . PHP_EOL;
-            $print .= '                case "clean"' . PHP_EOL;
+            $print .= '                case "clean":' . PHP_EOL;
             $print .= '                    $this->db->group_start();' . PHP_EOL;
             $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
             $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;

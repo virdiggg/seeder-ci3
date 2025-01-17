@@ -180,7 +180,7 @@ class Seeder
 
         $rand = $this->str->rand(4);
 
-        $this->mig = new Mig($this->getConn(), $this->dateTime);
+        $this->mig = new Mig($this->driver);
         // Parse input as printable string.
         $print = $this->mig->template($name, $rand, $prefix, $param, $constructors);
 

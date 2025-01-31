@@ -369,7 +369,7 @@ class Seeder
     public function addDateTime($fields = [])
     {
         $old = $this->dateTime;
-        $this->dateTime = array_values(array_unique(array_merge($old, $fields)));
+        $this->dateTime = array_values(array_unique(array_merge($old, (array) $fields)));
     }
 
     /**

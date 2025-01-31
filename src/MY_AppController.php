@@ -25,7 +25,8 @@ class MY_AppController extends \CI_Controller
         $this->seed->setConn($config->dbConn);
         $this->seed->setPath($config->migrationPath);
 
-        if (!empty($config->dateTime)) {
+        // $config->dateTime should be an array
+        if (count((array) $config->dateTime) > 0) {
             $this->seed->addDateTime($config->dateTime);
         }
 

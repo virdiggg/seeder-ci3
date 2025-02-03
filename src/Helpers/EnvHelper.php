@@ -16,11 +16,7 @@ class EnvHelper
      */
     public function belowPHP5() {
         $version = explode('.', PHP_VERSION);
-        if ($version[0] < 7) {
-            return true;
-        }
-
-        return false;
+        return $version[0] < 7;
     }
 
     /**

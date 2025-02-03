@@ -432,14 +432,13 @@ class ModelTemplate
         if (in_array($this->driver, ['pdo', 'sqlsrv'])) {
             $print .= '        /**' . PHP_EOL;
             $print .= '         * Since CodeIgniter 3 default behavior when using LIMIT OFFSET in' . PHP_EOL;
-            $print .= '         * SQL Server 2008 and old Oracle DB always break the query if there is' . PHP_EOL;
+            $print .= '         * SQL Server 2008 and old Oracle DB always break the query if there exists' . PHP_EOL;
             $print .= '         * subquery in SELECT statement, we will use this workaround.' . PHP_EOL;
             $print .= '         * Example query:' . PHP_EOL;
             $print .= '         * $this->db->select("*,' . PHP_EOL;
             $print .= '         *     (CASE WHEN is_active = 1 THEN \'Active\' ELSE \'Inactive\' END) AS status,' . PHP_EOL;
             $print .= '         *     COALESCE((SELECT COUNT(*) FROM details), 0) AS count")' . PHP_EOL;
-            $print .= '         *     ->from("header")' . PHP_EOL;
-            $print .= '         *     ->get()->result();' . PHP_EOL;
+            $print .= '         *     ->from("header")->limit(10, 0)->get()->result();' . PHP_EOL;
             $print .= '         */' . PHP_EOL . PHP_EOL;
             $print .= '        // Please modify anything below this line according to your needs.' . PHP_EOL . PHP_EOL;
             $print .= '        $where = [];' . PHP_EOL;
@@ -449,7 +448,7 @@ class ModelTemplate
             }
             $print .= '        if (!empty($search)) {' . PHP_EOL;
             $print .= '            // Your LIKE query.' . PHP_EOL;
-            $print .= '            // $search = strtolower($search);' . PHP_EOL;
+            $print .= '            // $search = $this->db->escape_like_str(strtolower($search));' . PHP_EOL;
             $print .= '            // $where[] = "(' . PHP_EOL;
             if ($this->driver === 'sqlsrv') {
                 $print .= '            //     LOWER(CONVERT(VARCHAR(MAX), name)) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;

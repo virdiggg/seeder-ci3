@@ -160,6 +160,7 @@ class ModelTemplate
                 $print .= '            $val[] = !is_null($p) ? $this->db->escape($p) : "NULL";' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
                 $print .= '        $query = "INSERT INTO \"{$this->table}\" (" . join(\', \', $var) . ") VALUES (" . join(\', \', $val) . ") RETURNING *;";' . PHP_EOL;
+                $print .= '        unset($var, $val);' . PHP_EOL;
                 $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
             } else {
                 $print .= '        $this->db->insert($this->table, $param);' . PHP_EOL;

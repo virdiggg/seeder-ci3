@@ -84,7 +84,8 @@ class SeederTemplate
         $print .= '     * @return void' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function down() {' . PHP_EOL;
-        $print .= '        $this->{{conn}}->truncate($this->name);' . PHP_EOL;
+        // $print .= '        $this->{{conn}}->truncate($this->name);' . PHP_EOL;
+        $print .= '        $this->{{conn}}->query("TRUNCATE TABLE " . $this->name . " RESTART IDENTITY");' . PHP_EOL;
         $print .= '    }' . PHP_EOL; // end public function down()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Preparing array keys.' . PHP_EOL;

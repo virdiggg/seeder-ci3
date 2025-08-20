@@ -416,7 +416,7 @@ class ModelTemplate
             $print .= '            $start++;' . PHP_EOL;
             $print .= '            $r->no = $start;' . PHP_EOL;
         }
-        $print .= '            $r->action = \'\';' . PHP_EOL;
+        $print .= '            $r->actions = \'\';' . PHP_EOL;
         $print .= '        }' . PHP_EOL . PHP_EOL;
         $print .= '        return $result;' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function parse()

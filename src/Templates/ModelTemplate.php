@@ -206,7 +206,7 @@ class ModelTemplate
                 $print .= '            }' . PHP_EOL;
                 $print .= '            // If $conditions is empty, then use any fields provided except anything in $this->exceptions as conditions.' . PHP_EOL;
                 $print .= '            if (!in_array($key, $this->exceptions)) {' . PHP_EOL;
-                $print .= '                $where[] = \'"\'.$key.\'" = \'.$value;' . PHP_EOL;
+                $print .= '                $where[] = \'"\'.$key.\'" \'.($value === \'NULL\' ? \'IS NULL\' : \'= \'.$value);' . PHP_EOL;
                 $print .= '            }' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
                 $print .= '        $checkingStr = "SELECT \"{$this->primary}\" FROM \"{$this->table}\" WHERE " . join(" AND ", $where) . " ORDER BY \"{$this->primary}\" DESC LIMIT 1";' . PHP_EOL;

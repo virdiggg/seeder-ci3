@@ -135,7 +135,7 @@ class Seeder
 
         $rand = $this->str->rand(4);
 
-        $this->se = new Se($this->getConn(), $this->dateTime);
+        $this->se = new Se($this->getConn(), $this->dateTime, $this->driver);
         // Parse input as printable string.
         $print = $this->se->template($name, $rand, $results, $constructors);
 

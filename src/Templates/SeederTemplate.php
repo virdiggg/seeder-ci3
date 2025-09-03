@@ -5,6 +5,7 @@ namespace Virdiggg\SeederCi3\Templates;
 class SeederTemplate
 {
     private $conn;
+    private $driver;
     /**
      * Date time fields.
      *
@@ -17,11 +18,13 @@ class SeederTemplate
      * 
      * @param string $conn
      * @param array  $dateTime
+     * @param string $driver
      */
-    public function __construct($conn = 'default', $dateTime = [])
+    public function __construct($conn = 'default', $dateTime = [], $driver = 'mysql')
     {
         $this->conn = $conn;
         $this->addDateTime($dateTime);
+        $this->driver = $driver;
     }
 
     /**
@@ -84,8 +87,11 @@ class SeederTemplate
         $print .= '     * @return void' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function down() {' . PHP_EOL;
-        // $print .= '        $this->{{conn}}->truncate($this->name);' . PHP_EOL;
-        $print .= '        $this->{{conn}}->query("TRUNCATE TABLE " . $this->name . " RESTART IDENTITY");' . PHP_EOL;
+        if ($this->driver === 'postgre') {
+            $print .= '        $this->{{conn}}->query("TRUNCATE TABLE " . $this->name . " RESTART IDENTITY");' . PHP_EOL;
+        } else {
+            $print .= '        $this->{{conn}}->truncate($this->name);' . PHP_EOL;
+        }
         $print .= '    }' . PHP_EOL; // end public function down()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Preparing array keys.' . PHP_EOL;

@@ -48,4 +48,50 @@ class EnvHelper
 
         return $db[$conn]['dbdriver'];
     }
+
+    /**
+     * Load config file.
+     * 
+     * @param string $name
+     * 
+     * @return string|null
+     */
+    public function loadConfig($name = 'migration') {
+        $defaultConfigFile = CI3_CONFIG_PATH . $name . '.php';
+        $envConfigFile = CI3_CONFIG_PATH . ENVIRONMENT . DIRECTORY_SEPARATOR . $name . '.php';
+        if (file_exists($envConfigFile)) {
+            include $envConfigFile;
+            return $envConfigFile;
+        } elseif (file_exists($defaultConfigFile)) {
+            include $defaultConfigFile;
+            return $defaultConfigFile;
+        }
+        return null;
+    }
+
+    /**
+     * Get configuration from seeder.php and migration.php
+     * 
+     * @return object
+     */
+    public function getConfig() {
+        include_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'seeder.php';
+
+        $this->loadConfig('migration');
+        $this->loadConfig('seeder');
+
+        $migrationType = $config['migration_type'];
+        $migrationPath = $config['migration_path'];
+        $dateTime = $config['date_time'];
+        $dbConn = $config['db_conn'];
+        $constructors = $config['constructors'];
+
+        return (object) [
+            'migrationType' => $migrationType,
+            'migrationPath' => $migrationPath,
+            'dateTime' => $dateTime,
+            'dbConn' => $dbConn,
+            'constructors' => $constructors,
+        ];
+    }
 }

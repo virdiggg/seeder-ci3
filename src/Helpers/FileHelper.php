@@ -18,13 +18,34 @@ class FileHelper
 
     public function __construct()
     {
+        $this->str = new Str();
+        $this->env = new Ev();
     }
 
+    /**
+     * Create and write to file.
+     *
+     * @param string $path
+     * @param string $fileName
+     * @param string $str
+     *
+     * @return bool
+     */
     public function printFile($path, $fileName, $str)
     {
+        $this->folderPermission($path, 0755, 'apache');
+
+        $fullPath = $path . $fileName;
+        // If file exists, stop the process.
+        if (file_exists($fullPath)) {
+            print("FILE EXISTS: " . $this->str->yellowText($fullPath));
+            return false;
+        }
+
         $this->createFile($path, $fileName);
         // Write to newly created migration file.
         fwrite($this->filePointer, $str . PHP_EOL);
+        return true;
     }
 
     /**
@@ -37,17 +58,11 @@ class FileHelper
      */
     private function createFile($path, $name)
     {
-        $this->folderPermission($path, 0755, 'apache');
-
         $fullPath = $path . $name;
 
         $old = umask(0);
 
         $file = $fullPath;
-        // If file exists, drop it.
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
-        }
         $file = fopen($fullPath, 'a') or exit("Can't open $fullPath!");
         umask($old);
 

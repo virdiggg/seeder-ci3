@@ -30,14 +30,15 @@ class MY_AppController extends \CI_Controller
             $this->seed->addDateTime($config->dateTime);
         }
 
-        if (count($config->constructors) > 0) {
+        // $config->constructors should be an array
+        if (count((array) $config->constructors) > 0) {
             $this->constructors = $config->constructors;
         }
     }
 
     public function help() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
 
@@ -47,7 +48,7 @@ class MY_AppController extends \CI_Controller
 
     public function migrate() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
 
@@ -65,7 +66,7 @@ class MY_AppController extends \CI_Controller
 
     public function rollback() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
 
@@ -102,7 +103,7 @@ class MY_AppController extends \CI_Controller
 
     public function seed() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
 
@@ -120,7 +121,7 @@ class MY_AppController extends \CI_Controller
 
     public function migration() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
 
@@ -138,7 +139,7 @@ class MY_AppController extends \CI_Controller
 
     public function controller() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
 
@@ -158,7 +159,7 @@ class MY_AppController extends \CI_Controller
 
     public function model() {
         if (!is_cli()) {
-            $this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n");
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
 

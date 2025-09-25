@@ -430,7 +430,7 @@ class Seeder
      *
      * @return void
      */
-    public function setMigrationType($type = 'sequential')
+    public function setMigrationType($type = 'timestamp')
     {
         $this->migrationType = $type;
     }

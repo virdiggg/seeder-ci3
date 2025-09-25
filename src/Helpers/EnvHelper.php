@@ -4,7 +4,6 @@ namespace Virdiggg\SeederCi3\Helpers;
 
 class EnvHelper
 {
-    private $confDir = APPPATH . 'config' . DIRECTORY_SEPARATOR;
     public function __construct()
     {
     }
@@ -14,7 +13,7 @@ class EnvHelper
      * 
      * @return bool
      */
-    public function belowPHP5() {
+    public function belowPHP7() {
         $version = explode('.', PHP_VERSION);
         return $version[0] < 7;
     }

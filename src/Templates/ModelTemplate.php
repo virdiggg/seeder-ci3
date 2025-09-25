@@ -322,7 +322,7 @@ class ModelTemplate
                 $print .= '    //             $p = [\'string\' => $p];' . PHP_EOL;
                 $print .= '    //         }' . PHP_EOL . PHP_EOL;
                 $print .= '    //         // Get its type data' . PHP_EOL;
-                if ($this->env->belowPHP5()) {
+                if ($this->env->belowPHP7()) {
                     $print .= '    //         $var = array_keys($p)[0];' . PHP_EOL . PHP_EOL;
                 } else {
                     $print .= '    //         $var = array_key_first($p);' . PHP_EOL . PHP_EOL;

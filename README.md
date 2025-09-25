@@ -10,7 +10,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 use Virdiggg\SeederCi3\MY_AppController;
-use Virdiggg\SeederCi3\Config\MigrationConfig;
 
 class App extends MY_AppController
 {
@@ -24,18 +23,7 @@ class App extends MY_AppController
     private $migrateCalled = false;
     public function __construct()
     {
-        /**
-         * You can pass argument here
-         * @param string $migrationType  Type of migration, sequential or timestamp. Default to 'sequential'.
-         * @param array  $dateTime       List of additional table rows with datetime data type.
-         *                               Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
-         * @param string $dbConn         Name of database connection. Default to 'default'.
-         * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
-         * @param array  $constructors   List of additional function to be called in constructor. Default to [].
-         * */
-        $config = new MigrationConfig();
-
-        parent::__construct($config);
+        parent::__construct();
     }
 
     public function migrate()
@@ -72,7 +60,6 @@ composer require virdiggg/seeder-ci3 --dev
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 use Virdiggg\SeederCi3\MY_AppController;
-use Virdiggg\SeederCi3\Config\MigrationConfig;
 
 class App extends MY_AppController
 {
@@ -86,36 +73,7 @@ class App extends MY_AppController
     private $migrateCalled = false;
     public function __construct()
     {
-        /**
-         * You can pass argument here
-         * @param string $migrationType  Type of migration, sequential or timestamp. Default to 'sequential'.
-         * @param array  $dateTime       List of additional table rows with datetime data type.
-         *                               Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
-         * @param string $dbConn         Name of database connection. Default to 'default'.
-         * @param string $migrationPath  Path of migration file. Default to 'ROOT/application/migrations'.
-         * @param array  $constructors   List of additional function to be called in constructor. Default to [].
-         * */
-        $config = new MigrationConfig();
-        // $config->dbConn = 'default2';
-        $config->migrationType = 'timestamp';
-        // Append 'create_date', 'change_date', 'last_access' to the list of $dateTime
-        $config->dateTime = ['create_date', 'change_date', 'last_access'];
-        $config->constructors = [
-            'controller' => [
-                '$this->authenticated->isAuthenticated();',
-            ],
-            'model' => [
-                '$this->load->helper("string");',
-            ],
-            'seed' => [
-                '$this->load->helper("string");',
-            ],
-            'migration' => [
-                '$this->load->helper("string");',
-            ],
-        ];
-
-        parent::__construct($config);
+        parent::__construct();
     }
 
     public function migrate()
@@ -139,10 +97,66 @@ class App extends MY_AppController
     }
 }
 ```
+- Create a config file named `seeder.php` or run `php index.php <your controller name> publish`
+```bash
+php index.php app publish
+```
+File should contains
+```php
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+
+/**
+ * Type of migration, sequential or timestamp. Default to 'timestamp'.
+ * 
+ * Optional, we will take the value from migration.php if not present
+ */
+$config['migration_type'] = 'timestamp';
+
+/**
+ * Path of migration file. Default to 'ROOT/application/migrations'.
+ * 
+ * Optional, we will take the value from migration.php if not present
+ */
+$config['migration_path'] = APPPATH . 'migrations' . DIRECTORY_SEPARATOR;
+
+/**
+ * List of additional table rows with datetime data type.
+ * 
+ * Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
+ */
+$config['date_time'] = [];
+
+/**
+ * Name of database connection. Default to 'default'.
+ */
+$config['db_conn'] = 'default';
+
+/**
+ * List of additional function to be called in constructor. Default to [].
+ */
+$config['constructors'] = [
+    'controller' => [
+        '$this->authenticated->isAuthenticated();',
+    ],
+    'model' => [
+        '$this->load->helper("string");',
+    ],
+    'seed' => [
+        '$this->load->helper("string");',
+    ],
+    'migration' => [
+        '$this->load->helper("string");',
+    ],
+];
+```
 
 #### Help options: `php index.php <your controller name> help`.
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app help
+```
+#### Publish config file: `php index.php <your controller name> publish`.
+```bash
+cd c:/xampp/htdocs/codeigniter && php index.php app publish
 ```
 #### How to run migration: `php index.php <your controller name> migrate`.
 ```bash

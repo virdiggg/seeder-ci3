@@ -2,25 +2,24 @@
 
 namespace Virdiggg\SeederCi3;
 use Virdiggg\SeederCi3\Seeder;
-use Virdiggg\SeederCi3\Config\MigrationConfig;
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
 
 class MY_AppController extends \CI_Controller
 {
     public $seed;
     private $str;
     private $constructors = [];
+    private $env;
 
-    /**
-     * @param MigrationConfig|null $config
-     * */
-    public function __construct(MigrationConfig $config = null)
+    public function __construct()
     {
         parent::__construct();
-        $config = $config ?: new MigrationConfig();
-
         $this->str = new Str();
         $this->seed = new Seeder();
+        $this->env = new Ev();
+        $config = $this->env->getConfig();
+
         $this->seed->setMigrationType($config->migrationType);
         $this->seed->setConn($config->dbConn);
         $this->seed->setPath($config->migrationPath);

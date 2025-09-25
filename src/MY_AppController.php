@@ -175,4 +175,14 @@ class MY_AppController extends \CI_Controller
         $this->seed->model($name, $args, $constructors);
         return;
     }
+
+    public function publish() {
+        if (!is_cli()) {
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+            return;
+        }
+
+        $this->seed->copyConfig();
+        return;
+    }
 }

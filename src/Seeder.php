@@ -97,6 +97,15 @@ class Seeder
     }
 
     /**
+     * Copy seeder.php config files to application/config
+     * 
+     * @return void
+     */
+    public function copyConfig() {
+        $this->fl->copyConfig();
+    }
+
+    /**
      * Create a simple seeder file.
      *
      * @param string $fullName     Table name

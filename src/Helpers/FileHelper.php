@@ -2,6 +2,9 @@
 
 namespace Virdiggg\SeederCi3\Helpers;
 
+use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
+
 class FileHelper
 {
     /**
@@ -10,6 +13,8 @@ class FileHelper
      * @param object $filePointer
      */
     public $filePointer;
+    private $str;
+    private $env;
 
     public function __construct()
     {
@@ -77,5 +82,31 @@ class FileHelper
             // @chgrp($path, $owner);
             umask($old);
         }
+    }
+
+    /**
+     * Copy seeder.php config file to config folder.
+     *
+     * @return void
+     */
+    public function copyConfig()
+    {
+        $defaultConfigFile = CI3_CONFIG_PATH . 'seeder.php';
+        $envConfigFile = CI3_CONFIG_PATH . ENVIRONMENT . DIRECTORY_SEPARATOR . 'seeder.php';
+        if (file_exists($defaultConfigFile)) {
+            $msg = $this->str->yellowText($defaultConfigFile) . $this->str->redText('already exists in your config folder. ╰(*°▽°*)╯') . "\n";
+            print("\n".$msg);
+            return;
+        }
+
+        if (file_exists($envConfigFile)) {
+            $msg = $this->str->yellowText($envConfigFile) . $this->str->redText('already exists in your config folder. ╰(*°▽°*)╯') . "\n";
+            print("\n".$msg);
+            return;
+        }
+
+        // Copy the seeder.php file from package to config folder
+        print($this->str->greenText("Copying 'seeder.php' to " . $defaultConfigFile, true));
+        copy(SEEDER_CONFIG_PATH, $defaultConfigFile);
     }
 }

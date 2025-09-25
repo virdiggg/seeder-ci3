@@ -155,7 +155,12 @@ class Seeder
 
         $name = $this->str->parseFileName($count . '_seeder_' . $name . '_' . $rand);
         // Create seeder file.
-        $this->fl->printFile($this->getPath(), $name, $print);
+        $result = $this->fl->printFile($this->getPath(), $name, $print);
+        if (!$result) {
+            return;
+        }
+
+        $this->fl->modifyConfig($count);
 
         print('SEEDER CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
@@ -200,7 +205,12 @@ class Seeder
 
         $name = $this->str->parseFileName($count . '_' . $prefix . '_' . $name . '_' . $rand);
         // Create migration file.
-        $this->fl->printFile($this->getPath(), $name, $print);
+        $result = $this->fl->printFile($this->getPath(), $name, $print);
+        if (!$result) {
+            return;
+        }
+
+        $this->fl->modifyConfig($count);
 
         print('MIGRATION CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
@@ -246,7 +256,10 @@ class Seeder
 
         $name = $this->str->parseFileName($name);
         // Create controller file.
-        $this->fl->printFile($this->getPath(), $name, $print);
+        $result = $this->fl->printFile($this->getPath(), $name, $print);
+        if (!$result) {
+            return;
+        }
 
         print('CONTROLLER CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
@@ -292,9 +305,7 @@ class Seeder
 
         $name = $this->str->parseFileName('M_' . $name);
         // Create model file.
-        $this->fl->printFile($this->getPath(), $name, $print);
-
-        print('MODEL CREATED: ' . $this->str->greenText($this->getPath() . $name));
+        $result = $this->fl->printFile($this->getPath(), $name, $print);
 
         if (in_array('--c', $param)) {
             $this->controller($fullName, $param);
@@ -303,6 +314,11 @@ class Seeder
             $this->migration($fullName, $param);
         }
 
+        if (!$result) {
+            return;
+        }
+
+        print('MODEL CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
     }
 

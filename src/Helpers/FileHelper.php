@@ -23,6 +23,49 @@ class FileHelper
     }
 
     /**
+     * Modify migration config file to update 'migration_version' value.
+     *
+     * @param string $currentMigration
+     *
+     * @return void
+     */
+    public function modifyConfig($currentMigration = '001') {
+        $configFile = $this->env->loadConfig('migration');
+        try {
+            if (!$configFile) {
+                throw new \Exception('Config file not found');
+            }
+
+            $contents = file_get_contents($configFile);
+            if ($contents === false) {
+                throw new \Exception("Unable to read {$configFile}");
+            }
+
+            $pieces = explode('$config', $contents);
+            $version = array_filter($pieces, function($piece) {
+                if ($this->str->startsWith($piece, "['migration_version'] = ")) {
+                    return $piece;
+                }
+            });
+
+            if (count($version) === 0) {
+                throw new \Exception("'migration_version' not found in {$configFile}");
+            }
+
+            $version = $this->str->before(array_pop($version), ';');
+            $fixedContents = str_replace($version, "['migration_version'] = {$currentMigration}", $contents);
+
+            if (file_put_contents($configFile, $fixedContents) === false) {
+                throw new \Exception("Unable to write back to {$configFile}");
+            }
+        } catch (\Throwable $th) {
+            log_message('error', '[SeederCI3] Error loading migration config file: ' . $th->getMessage());
+            return;
+        }
+        return;
+    }
+
+    /**
      * Create and write to file.
      *
      * @param string $path

@@ -1,6 +1,7 @@
 <?php
 
 namespace Virdiggg\SeederCi3\Templates;
+
 use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
 
 class ModelTemplate
@@ -36,7 +37,7 @@ class ModelTemplate
         }
 
         $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-        $print .= 'Class M_' . $name . ' extends CI_model {' . PHP_EOL;
+        $print .= 'Class M_' . $name . ' extends CI_Model {' . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Default table name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;

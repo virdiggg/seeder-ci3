@@ -1,6 +1,7 @@
 <?php
 
 namespace Virdiggg\SeederCi3\Templates;
+
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 
 class ControllerTemplate

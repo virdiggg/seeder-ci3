@@ -1,6 +1,7 @@
 <?php
 
 namespace Virdiggg\SeederCi3;
+
 use Virdiggg\SeederCi3\Seeder;
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
@@ -51,6 +52,7 @@ class MY_AppController extends \CI_Controller
             return;
         }
 
+        $this->load->library('database');
         $this->load->library('migration');
 
         if (!$this->migration->current()) {
@@ -69,6 +71,7 @@ class MY_AppController extends \CI_Controller
             return;
         }
 
+        $this->load->library('database');
         $this->load->library('migration');
 
         // Get all arguments passed to this function
@@ -105,6 +108,8 @@ class MY_AppController extends \CI_Controller
             print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
+
+        $this->load->library('database');
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());

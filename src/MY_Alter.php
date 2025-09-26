@@ -69,7 +69,7 @@ class MY_Alter extends \CI_Migration
    */
   protected function prepareName()
   {
-    $this->name = strip_tags(trim(preg_replace('/\xc2\xa0/', '', $this->name)));
+    $this->name = $this->str->normalizeName($this->name);
   }
 
   /**

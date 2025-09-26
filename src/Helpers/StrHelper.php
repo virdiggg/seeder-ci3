@@ -259,6 +259,60 @@ class StrHelper
         return $text . ' ' . $this->OwO[array_rand($this->OwO, 1)];
     }
 
+	/**
+	 * Platform-dependent string escape
+	 *
+	 * @param	string
+	 * @return	string
+	 */
+	public function escape(string $str): string
+	{
+		return "'" . str_replace("'", "''", $this->removeInvisibleCharacters($str, FALSE)) . "'";
+	}
+
+	/**
+	 * Remove Invisible Characters
+	 *
+	 * This prevents sandwiching null characters
+	 * between ascii characters, like Java\0script.
+	 *
+	 * @param	string
+	 * @param	bool
+	 * @return	string
+	 */
+	public function removeInvisibleCharacters(string $str, bool $url_encoded = TRUE): string
+	{
+		$non_displayables = [];
+
+		// every control character except newline (dec 10),
+		// carriage return (dec 13) and horizontal tab (dec 09)
+		if ($url_encoded) {
+			$non_displayables[] = '/%0[0-8bcef]/i';	// url encoded 00-08, 11, 12, 14, 15
+			$non_displayables[] = '/%1[0-9a-f]/i';	// url encoded 16-31
+			$non_displayables[] = '/%7f/i';	// url encoded 127
+		}
+
+		$non_displayables[] = '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/S';	// 00-08, 11, 12, 14-31, 127
+
+		do {
+			$str = preg_replace($non_displayables, '', $str, -1, $count);
+		} while ($count);
+
+		return $str;
+	}
+
+    /**
+     * Normalize name field.
+     *
+     * @param string $text
+     *
+     * @return string
+     */
+    public function normalizeName($text)
+    {
+        return strip_tags(trim($this->removeInvisibleCharacters(preg_replace('/\xc2\xa0/', '', $text))));
+    }
+
     /**
      * Normalize slash.
      *

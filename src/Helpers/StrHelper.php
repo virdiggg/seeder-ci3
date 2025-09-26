@@ -270,4 +270,16 @@ class StrHelper
     {
         return str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $text);
     }
+
+    /**
+     * Normalize migration fields.
+     *
+     * @param string $text
+     *
+     * @return string
+     */
+    public function normalizeField($text)
+    {
+        return str_replace("'", "", preg_replace('/[^a-zA-Z0-9\']/', '_', trim($text)));
+    }
 }

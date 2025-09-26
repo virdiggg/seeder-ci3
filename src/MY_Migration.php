@@ -93,11 +93,6 @@ class MY_Migration extends \CI_Migration
   protected function prepareFields()
   {
     $this->prepareName();
-    $fields = $this->fields;
-    $res = [];
-    foreach ($fields as $key => $f) {
-      $res[$this->str->normalizeField($key)] = $f;
-    }
-    $this->fields = $res;
+    $this->fields = $this->str->normalizeArrayField($this->fields);
   }
 }

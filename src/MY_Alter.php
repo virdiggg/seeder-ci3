@@ -80,17 +80,7 @@ class MY_Alter extends \CI_Migration
   protected function prepareFields()
   {
     $this->prepareName();
-    $fields = $this->fields;
-    $res = [];
-    foreach ($fields as $key => $f) {
-      $res[$this->str->normalizeField($key)] = $f;
-    }
-    $this->fields = $res;
-    $oldFields = $this->oldFields;
-    $res = [];
-    foreach ($oldFields as $key => $f) {
-      $res[$this->str->normalizeField($key)] = $f;
-    }
-    $this->oldFields = $res;
+    $this->fields = $this->str->normalizeArrayField($this->fields);
+    $this->oldFields = $this->str->normalizeArrayField($this->oldFields);
   }
 }

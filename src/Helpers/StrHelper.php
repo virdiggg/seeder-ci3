@@ -280,6 +280,22 @@ class StrHelper
      */
     public function normalizeField($text)
     {
-        return str_replace("'", "", preg_replace('/[^a-zA-Z0-9\']/', '_', trim($text)));
+        return str_replace("'", "", preg_replace('/[^a-zA-Z0-9_\']/', '', trim($text)));
+    }
+
+    /**
+     * Normalize migration fields.
+     *
+     * @param array $fields
+     *
+     * @return string
+     */
+    public function normalizeArrayField($fields)
+    {
+        $res = [];
+        foreach ($fields as $key => $f) {
+            $res[$this->normalizeField($key)] = $f;
+        }
+        return $res;
     }
 }

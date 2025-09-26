@@ -9,8 +9,8 @@ class MY_AppController extends \CI_Controller
 {
     public $seed;
     private $str;
-    private $constructors = [];
     private $env;
+    private $constructors = [];
 
     public function __construct()
     {

@@ -32,16 +32,16 @@ $config['db_conn'] = 'default';
  * List of additional function to be called in constructor. Default to [].
  */
 $config['constructors'] = [
-  'controller' => [
-    '$this->authenticated->isAuthenticated();',
-  ],
-  'model' => [
-    '$this->load->helper("string");',
-  ],
-  'seed' => [
-    '$this->load->helper("string");',
-  ],
-  'migration' => [
-    '$this->load->helper("string");',
-  ],
+  // 'controller' => [
+  //   '$this->authenticated->isAuthenticated();',
+  // ],
+  // 'model' => [
+  //   '$this->load->helper("string");',
+  // ],
+  // 'seed' => [
+  //   '$this->load->helper("string");',
+  // ],
+  // 'migration' => [
+  //   '$this->load->helper("string");',
+  // ],
 ];

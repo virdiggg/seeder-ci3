@@ -45,7 +45,7 @@ class MigrationTemplate
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Primary key.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
-            $print .= '     * @param array $primary' . PHP_EOL;
+            $print .= '     * @param string $primary' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    private $primary;' . PHP_EOL . PHP_EOL;
         }

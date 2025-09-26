@@ -75,7 +75,7 @@ class EnvHelper
      * @return object
      */
     public function getConfig() {
-        include_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'seeder.php';
+        include_once SEEDER_CONFIG_PATH;
 
         $this->loadConfig('migration');
         $this->loadConfig('seeder');

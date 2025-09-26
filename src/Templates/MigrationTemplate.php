@@ -137,7 +137,7 @@ class MigrationTemplate
             $print .= '        // $this->dbforge->modify_column($this->name, $this->fields);' . PHP_EOL;
         } else {
             $print .= '        if ($this->db->table_exists($this->name)) {' . PHP_EOL;
-            $print .= '            $this->dbforge->drop_table($this->name, TRUE);' . PHP_EOL . PHP_EOL;
+            $print .= '            $this->dbforge->drop_table($this->name, TRUE);' . PHP_EOL;
             $print .= '        }' . PHP_EOL . PHP_EOL;
             $print .= '        $this->dbforge->add_key($this->primary, TRUE);' . PHP_EOL;
             $print .= '        $this->dbforge->create_table($this->name);' . PHP_EOL;

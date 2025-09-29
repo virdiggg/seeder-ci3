@@ -1,6 +1,7 @@
-<?php 
+<?php
 
 namespace Virdiggg\SeederCi3;
+
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 use Virdiggg\SeederCi3\Helpers\FileHelper as Fl;
 use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
@@ -10,7 +11,7 @@ use Virdiggg\SeederCi3\Templates\MigrationTemplate as Mig;
 use Virdiggg\SeederCi3\Templates\ModelTemplate as Mod;
 use Virdiggg\SeederCi3\Templates\HelpTemplate as Help;
 
-defined('APPPATH') or define('APPPATH', '..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'application'.DIRECTORY_SEPARATOR);
+defined('APPPATH') or define('APPPATH', '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'application' . DIRECTORY_SEPARATOR);
 defined('SEEDER_CONFIG_PATH') or define('SEEDER_CONFIG_PATH', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'seeder.php');
 defined('CI3_CONFIG_PATH') or define('CI3_CONFIG_PATH', APPPATH . 'config' . DIRECTORY_SEPARATOR);
 
@@ -86,11 +87,11 @@ class Seeder
     private $help;
 
     const APP_PATH = APPPATH;
-    const SEEDER_PATH = self::APP_PATH.'migrations';
+    const SEEDER_PATH = self::APP_PATH . 'migrations';
 
     public function __construct()
     {
-        $this->CI = & get_instance();
+        $this->CI = &get_instance();
         $this->str = new Str();
         $this->fl = new Fl();
         $this->env = new Ev();
@@ -101,7 +102,8 @@ class Seeder
      * 
      * @return void
      */
-    public function copyConfig() {
+    public function copyConfig()
+    {
         $this->fl->copyConfig();
     }
 
@@ -327,7 +329,8 @@ class Seeder
      * 
      * @return void
      */
-    public function help() {
+    public function help()
+    {
         $this->help = new Help();
         $this->help->template();
     }
@@ -340,7 +343,8 @@ class Seeder
      * 
      * @return array
      */
-    private function querySeeder($tableName, $limit = null) {
+    private function querySeeder($tableName, $limit = null)
+    {
         $this->db->select();
         $this->db->from(trim($tableName));
         if (!empty($limit)) {
@@ -410,8 +414,7 @@ class Seeder
     {
         // Path shouldn't have trailing slash or backslash.
         // We'are going to add DIRECTORY_SEPARATOR after the path ourself.
-        $path = rtrim($path, '\\/');
-        $this->path = $path . DIRECTORY_SEPARATOR;
+        $this->path = rtrim($path, '\\/') . DIRECTORY_SEPARATOR;
     }
 
     /**

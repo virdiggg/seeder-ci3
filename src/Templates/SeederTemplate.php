@@ -2,10 +2,14 @@
 
 namespace Virdiggg\SeederCi3\Templates;
 
+use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+
 class SeederTemplate
 {
     private $conn;
     private $driver;
+    private $str;
+
     /**
      * Date time fields.
      *
@@ -25,6 +29,7 @@ class SeederTemplate
         $this->conn = $conn;
         $this->addDateTime($dateTime);
         $this->driver = $driver;
+        $this->str = new Str();
     }
 
     /**
@@ -43,27 +48,27 @@ class SeederTemplate
         $keys = $res['keys'];
         $results = $res['results'];
 
-        $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-        $print .= 'Class Migration_Seeder_' . $name . '_' . $rand . ' extends CI_Migration {' . PHP_EOL;
+        $print = '<?php' . PHP_EOL . PHP_EOL;
+        $print .= 'use Virdiggg\SeederCi3\MY_Seeder;' . PHP_EOL . PHP_EOL;
+        $print .= 'Class Migration_Seeder_' . $name . '_' . $rand . ' extends MY_Seeder {' . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @param object ${{conn}}' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    private ${{conn}};' . PHP_EOL . PHP_EOL;
-        $print .= '    /**' . PHP_EOL;
-        $print .= '     * Table name.' . PHP_EOL;
-        $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param string $name' . PHP_EOL;
-        $print .= '     */' . PHP_EOL;
-        $print .= '    private $name;' . PHP_EOL . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;
         $print .= '        parent::__construct();' . PHP_EOL;
-        $print .= '        $this->{{conn}} = $this->load->database(\'{{conn}}\', TRUE);' . PHP_EOL;
+        $print .= '        /**' . PHP_EOL;
+        $print .= '         * Table name.' . PHP_EOL;
+        $print .= '         * ' . PHP_EOL;
+        $print .= '         * @param string $name' . PHP_EOL;
+        $print .= '         */' . PHP_EOL;
         $print .= '        $this->name = \'' . $name . '\';' . PHP_EOL;
         foreach ($constructors as $constructor) {
             $print .= '        ' . $constructor . PHP_EOL;
         }
+        $print .= '        $this->{{conn}} = $this->load->database(\'{{conn}}\', TRUE);' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Run migration.' . PHP_EOL;
@@ -71,6 +76,7 @@ class SeederTemplate
         $print .= '     * @return void' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function up() {' . PHP_EOL;
+        $print .= '        parent::up();' . PHP_EOL;
         $print .= '        $param = [];' . PHP_EOL . PHP_EOL;
         foreach ($results as $res) {
             $print .= $this->row($res, $keys);
@@ -87,20 +93,13 @@ class SeederTemplate
         $print .= '     * @return void' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function down() {' . PHP_EOL;
+        $print .= '        parent::down();' . PHP_EOL;
         if ($this->driver === 'postgre') {
-            $print .= '        $this->{{conn}}->query("TRUNCATE TABLE " . $this->name . " RESTART IDENTITY");' . PHP_EOL;
+            $print .= '        $this->{{conn}}->query("TRUNCATE TABLE ${$this->name} RESTART IDENTITY");' . PHP_EOL;
         } else {
             $print .= '        $this->{{conn}}->truncate($this->name);' . PHP_EOL;
         }
         $print .= '    }' . PHP_EOL; // end public function down()
-        $print .= '    /**' . PHP_EOL;
-        $print .= '     * Preparing array keys.' . PHP_EOL;
-        $print .= '     * ' . PHP_EOL;
-        $print .= '     * @return array $this' . PHP_EOL;
-        $print .= '     */' . PHP_EOL;
-        $print .= '    public function handleFields() {' . PHP_EOL;
-        $print .= '        $this->name = strip_tags(trim(preg_replace(\'/\xc2\xa0/\', \'\', $this->name)));' . PHP_EOL;
-        $print .= '    }' . PHP_EOL . PHP_EOL; // end public function handleFields()
         $print .= '}'; // end class
 
         return str_replace('{{conn}}', $this->conn, $print);
@@ -128,10 +127,10 @@ class SeederTemplate
         $print = '        $param[] = [' . PHP_EOL;
         foreach ($keys as $k) {
             // Replace ALL ' (single quote) with " (double quote) from the value.
-            $r = !is_null($res[$k]) ? $this->db->escape($res[$k]) : "NULL";
+            $r = !is_null($res[$k]) ? $this->str->escape($res[$k]) : 'NULL';
 
             // For DateTime value
-            if (in_array($k, $this->dateTime) && $r !== "NULL") {
+            if (in_array($k, $this->dateTime) && $r !== 'NULL') {
                 $r = 'date("Y-m-d H:i:s.", strtotime('.$r.')).gettimeofday()["usec"]';
             }
             // Trim values

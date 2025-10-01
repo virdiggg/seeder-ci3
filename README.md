@@ -158,6 +158,10 @@ cd c:/xampp/htdocs/codeigniter && php index.php app help
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app publish
 ```
+#### Tidying migration folder: `php index.php <your controller name> tidy`.
+```bash
+cd c:/xampp/htdocs/codeigniter && php index.php app tidy
+```
 #### How to run migration: `php index.php <your controller name> migrate`.
 ```bash
 cd c:/xampp/htdocs/codeigniter && php index.php app migrate

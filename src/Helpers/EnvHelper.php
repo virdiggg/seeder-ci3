@@ -75,16 +75,19 @@ class EnvHelper
      * @return object
      */
     public function getConfig() {
-        include_once SEEDER_CONFIG_PATH;
+        try {
+            include_once SEEDER_CONFIG_PATH;
 
-        $this->loadConfig('migration');
-        $this->loadConfig('seeder');
+            $this->loadConfig('migration');
+            $this->loadConfig('seeder');
 
-        $migrationType = $config['migration_type'];
-        $migrationPath = $config['migration_path'];
-        $dateTime = $config['date_time'];
-        $dbConn = $config['db_conn'];
-        $constructors = $config['constructors'];
+            $migrationType = $config['migration_type'];
+            $migrationPath = $config['migration_path'];
+            $dateTime = $config['date_time'];
+            $dbConn = $config['db_conn'];
+            $constructors = $config['constructors'];
+        } catch (\Throwable $th) {
+        }
 
         return (object) [
             'migrationType' => $migrationType,

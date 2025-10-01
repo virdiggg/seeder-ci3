@@ -23,6 +23,41 @@ class FileHelper
     }
 
     /**
+     * Move all migration files inside 'migrated' folder.
+     * If the folder does not exists, create a new one.
+     * 
+     * @param string $path
+     * 
+     * @return void
+     */
+    public function tidyingFiles($path) {
+        try {
+            $migratedDir = $path . 'migrated' . DIRECTORY_SEPARATOR;
+            $this->folderPermission($migratedDir, 0755, 'apache');
+
+            $files = glob($path . '*.php');
+
+            if (empty($files)) {
+                throw new \Exception('No migration file found.');
+            }
+
+            foreach ($files as $file) {
+                $fileName = basename($file);
+                $destination = $migratedDir . $fileName;
+
+                if (rename($file, $destination)) {
+                    log_message('info', "[SeederCI3] Migration file moved: $fileName -> migrated");
+                } else {
+                    throw new \Exception("Failed to move: $fileName");
+                }
+            }
+        } catch (\Throwable $th) {
+            log_message('error', '[SeederCI3] Error tidying migration files: ' . $th->getMessage());
+            return;
+        }
+    }
+
+    /**
      * Modify migration config file to update 'migration_version' value.
      *
      * @param string $currentMigration
@@ -66,7 +101,7 @@ class FileHelper
     }
 
     /**
-     * Create and write to file.
+     * Create and write to file. If exists, do nothing.
      *
      * @param string $path
      * @param string $fileName
@@ -92,7 +127,7 @@ class FileHelper
     }
 
     /**
-     * Create seeder file. Drop if already exists, then create a new one.
+     * Create a new pointer file.
      *
      * @param string $path
      * @param string $name
@@ -166,5 +201,16 @@ class FileHelper
         // Copy the seeder.php file from package to config folder
         print($this->str->greenText("Copying 'seeder.php' to " . $defaultConfigFile, true));
         copy(SEEDER_CONFIG_PATH, $defaultConfigFile);
+    }
+
+    /**
+     * Normalize path
+     * 
+     * @param string $path
+     * 
+     * @return string
+     */
+    public function normalizePath($path) {
+        return rtrim($path, '\\/') . DIRECTORY_SEPARATOR;
     }
 }

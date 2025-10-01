@@ -25,6 +25,14 @@ class HelpTemplate
                 'cmd' => 'php index.php app help',
             ],
             [
+                'label' => 'Move all migration files inside \'migrated\' folder',
+                'cmd' => 'php index.php app tidy',
+            ],
+            [
+                'label' => 'Copy example of config file',
+                'cmd' => 'php index.php app publish',
+            ],
+            [
                 'label' => 'To run migration',
                 'cmd' => 'php index.php app migrate',
             ],

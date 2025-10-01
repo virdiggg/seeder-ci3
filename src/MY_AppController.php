@@ -52,7 +52,6 @@ class MY_AppController extends \CI_Controller
             return;
         }
 
-        $this->load->library('database');
         $this->load->library('migration');
 
         if (!$this->migration->current()) {
@@ -71,7 +70,6 @@ class MY_AppController extends \CI_Controller
             return;
         }
 
-        $this->load->library('database');
         $this->load->library('migration');
 
         // Get all arguments passed to this function
@@ -108,8 +106,6 @@ class MY_AppController extends \CI_Controller
             print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
             return;
         }
-
-        $this->load->library('database');
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
@@ -188,6 +184,16 @@ class MY_AppController extends \CI_Controller
         }
 
         $this->seed->copyConfig();
+        return;
+    }
+
+    public function tidy() {
+        if (!is_cli()) {
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+            return;
+        }
+
+        $this->seed->tidyingFiles();
         return;
     }
 }

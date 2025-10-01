@@ -108,6 +108,16 @@ class Seeder
     }
 
     /**
+     * Move all migration files inside 'migrated' folder
+     * 
+     * @return void
+     */
+    public function tidyingFiles()
+    {
+        $this->fl->tidyingFiles($this->path);
+    }
+
+    /**
      * Create a simple seeder file.
      *
      * @param string $fullName     Table name
@@ -414,7 +424,7 @@ class Seeder
     {
         // Path shouldn't have trailing slash or backslash.
         // We'are going to add DIRECTORY_SEPARATOR after the path ourself.
-        $this->path = rtrim($path, '\\/') . DIRECTORY_SEPARATOR;
+        $this->path = $this->fl->normalizePath($path);
     }
 
     /**

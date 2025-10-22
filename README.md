@@ -188,7 +188,7 @@ cd c:/xampp/htdocs/codeigniter && php index.php app controller Admin/Dashboard/T
 ```
 #### How to create Model file: `php index.php <your controller name> model <filename> [--args]`.
 - Add `--r` to generate resources. Optional.
-When using [--r], you will have a function to create or update a row (storeOrUpdate), please read the comment before you decide to use them. Example:
+When using [--r] and your DB is PostgreSQL, you will have a function to create or update a row (storeOrUpdate), please read the comment before you decide to use them. Example:
 ```php
 // In this code, we will insert a new user $param,
 // only if there is no user with $conditions in the table

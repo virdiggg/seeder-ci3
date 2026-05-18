@@ -1,61 +1,116 @@
-# A Simple Library Seeder from Existing Database for CodeIgniter 3
+# Seeder CI3
+
+A development utility library for CodeIgniter 3 inspired by Laravel Artisan and `orangehill/iseed`, designed to simplify migration, seeding, and boilerplate generation workflows in legacy CodeIgniter applications.
+
+This package provides a lightweight CLI-style development toolkit for generating:
+
+- Database seeders from existing tables
+- Migration files
+- Controllers
+- Models
+- Resource scaffolding
+
+while maintaining compatibility with traditional CodeIgniter 3 project structures.
+
+---
 
 <img src="https://img.shields.io/packagist/php-v/virdiggg/seeder-ci3" /> <img src="https://img.shields.io/badge/codeigniter--version-3-green" /> <img src="https://img.shields.io/github/license/virdiggg/seeder-ci3" />
 
-## Inspired from Laravel Artisan and [orangehill/iseed](https://github.com/orangehill/iseed) for Laravel.
+---
 
-### UPGRADE FROM 1.x to 2.x
-- Modify your controller that host all the function from this library to something like this:
-```php
-<?php defined('BASEPATH') or exit('No direct script access allowed');
+## Overview
 
-use Virdiggg\SeederCi3\MY_AppController;
+CodeIgniter 3 lacks a native development workflow comparable to modern frameworks such as Laravel.
 
-class App extends MY_AppController
-{
-    /**
-     * Hooks for migrate() function.
-     * If you want to run a callback after migrating a table,
-     * ex.: create a log file after migration or run grant privileges query for a role.
-     * 
-     * @return bool $this
-     */
-    private $migrateCalled = false;
-    public function __construct()
-    {
-        parent::__construct();
-    }
+Seeder CI3 bridges that gap by introducing:
 
-    public function migrate()
-    {
-        parent::migrate();
-        $this->migrateCalled = true;
-    }
+- Seeder generation from existing database data
+- Migration management helpers
+- Resource generators
+- Automated boilerplate scaffolding
+- CLI-style commands through CodeIgniter controllers
 
-    // If you don't wish to have rollback function
-    public function rollback() {
-        return;
-    }
+The library is particularly useful for:
 
-    // The rest of your code
+- Legacy enterprise applications
+- Internal business systems
+- Teams maintaining long-lived CI3 projects
+- Faster database replication for development/testing
+- Rapid CRUD scaffolding
 
-    public function __destruct()
-    {
-        if ($this->migrateCalled) {
-            // $this->db->query("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myrole");
-            // $this->db->query("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO myrole");
-            // log_message('error', 'PREVILEGES GRANTED');
-        }
-    }
-}
-```
+---
 
-### HOW TO USE
-- Install this library with composer
+## Features
+
+### Seeder Generation
+
+Generate database seeders directly from existing table contents.
+
+Useful for:
+
+- Development environments
+- QA datasets
+- Staging replication
+- Reference/master tables
+
+---
+
+### Migration Utilities
+
+Includes migration helpers similar to Laravel Artisan workflows:
+
+- Create migration files
+- Run migrations
+- Rollback migrations
+- Organize migration directories
+
+Supports both:
+
+- Sequential migrations
+- Timestamp migrations
+
+---
+
+### Resource Scaffolding
+
+Generate:
+
+- Controllers
+- Models
+- CRUD resources
+- Soft delete support
+- PostgreSQL-friendly helper methods
+
+---
+
+### PostgreSQL-Friendly Utilities
+
+Includes helper methods such as:
+
+- `storeOrUpdate()`
+
+to simplify UPSERT-like workflows for PostgreSQL environments.
+
+---
+
+## Installation
+
+Install via Composer:
+
 ```bash
 composer require virdiggg/seeder-ci3 --dev
 ```
-- Create a controller to host all the function from this library. Example is `application/controller/App.php`
+
+---
+
+# Basic Setup
+
+Create a controller to host Seeder CI3 commands.
+
+Example:
+
+`application/controllers/App.php`
+
 ```php
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -63,14 +118,8 @@ use Virdiggg\SeederCi3\MY_AppController;
 
 class App extends MY_AppController
 {
-    /**
-     * Hooks for migrate() function.
-     * If you want to run a callback after migrating a table,
-     * ex.: create a log file after migration or run grant privileges query for a role.
-     * 
-     * @return bool $this
-     */
     private $migrateCalled = false;
+
     public function __construct()
     {
         parent::__construct();
@@ -79,61 +128,61 @@ class App extends MY_AppController
     public function migrate()
     {
         parent::migrate();
+
         $this->migrateCalled = true;
     }
 
-    // If you don't wish to have rollback function
-    public function rollback() {
+    public function rollback()
+    {
         return;
     }
 
     public function __destruct()
     {
         if ($this->migrateCalled) {
+
+            // Example post-migration hooks
+
             // $this->db->query("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myrole");
+
             // $this->db->query("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO myrole");
-            // log_message('error', 'PREVILEGES GRANTED');
+
         }
     }
 }
 ```
-- Create a config file named `seeder.php` or run `php index.php <your controller name> publish`
+
+---
+
+# Publish Configuration
+
+Generate the default configuration file:
+
 ```bash
 php index.php app publish
 ```
-File should contains
+
+This will generate:
+
+```bash
+application/config/seeder.php
+```
+
+---
+
+# Configuration Example
+
 ```php
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
-/**
- * Type of migration, sequential or timestamp. Default to 'timestamp'.
- * 
- * Optional, we will take the value from migration.php if not present
- */
 $config['migration_type'] = 'timestamp';
 
-/**
- * Path of migration file. Default to 'ROOT/application/migrations'.
- * 
- * Optional, we will take the value from migration.php if not present
- */
 $config['migration_path'] = APPPATH . 'migrations' . DIRECTORY_SEPARATOR;
 
-/**
- * List of additional table rows with datetime data type.
- * 
- * Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
- */
 $config['date_time'] = [];
 
-/**
- * Name of database connection. Default to 'default'.
- */
 $config['db_conn'] = 'default';
 
-/**
- * List of additional function to be called in constructor. Default to [].
- */
 $config['constructors'] = [
     'controller' => [
         '$this->authenticated->isAuthenticated();',
@@ -150,84 +199,220 @@ $config['constructors'] = [
 ];
 ```
 
-#### Help options: `php index.php <your controller name> help`.
+---
+
+# Available Commands
+
+## Show Help
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app help
+php index.php app help
 ```
-#### Publish config file: `php index.php <your controller name> publish`.
+
+---
+
+## Publish Configuration
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app publish
+php index.php app publish
 ```
-#### Tidying migration folder: `php index.php <your controller name> tidy`.
+
+---
+
+## Organize Migration Files
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app tidy
+php index.php app tidy
 ```
-#### How to run migration: `php index.php <your controller name> migrate`.
+
+---
+
+## Run Migrations
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app migrate
+php index.php app migrate
 ```
-#### How to run rollback migration: `php index.php <your controller name> rollback [--args]`.
-- Add `--to=1` to run migration number <args>. Optional. Default is the latest number in your database min 1.
+
+---
+
+## Rollback Migration
+
+Rollback to a specific migration version:
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app rollback --to=1
+php index.php app rollback --to=1
 ```
-#### How to create Seeder file: `php index.php <your controller name> <your function name> seed [--args]`.
-- Add `--limit=5` to limit the query result. Optional.
+
+---
+
+## Generate Seeder From Existing Table
+
+Example:
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app seed users --limit=10
+php index.php app seed users --limit=10
 ```
-#### How to create Migration file: `php index.php <your controller name> <your function name> migration [--args]`.
-- Add `--soft-delete` to add soft delete parameter. Optional.
+
+Options:
+
+- `--limit=10` → Limit generated rows
+
+---
+
+## Generate Migration File
+
+Example:
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app migration users --soft-delete
+php index.php app migration users --soft-delete
 ```
-#### How to create Controller file: `php index.php <your controller name> controller <filename> [--args]`.
-- Add `--r` to generate resources. Optional.
+
+Options:
+
+- `--soft-delete` → Add soft delete fields
+
+---
+
+## Generate Controller
+
+Example:
+
 ```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app controller Admin/Dashboard/Table --r
+php index.php app controller Admin/Dashboard/Table --r
 ```
-#### How to create Model file: `php index.php <your controller name> model <filename> [--args]`.
-- Add `--r` to generate resources. Optional.
-When using [--r] and your DB is PostgreSQL, you will have a function to create or update a row (storeOrUpdate), please read the comment before you decide to use them. Example:
+
+Options:
+
+- `--r` → Generate resource methods
+
+---
+
+## Generate Model
+
+Example:
+
+```bash
+php index.php app model Admin/Users --r --c --m --soft-delete
+```
+
+Options:
+
+- `--r` → Generate resource methods
+- `--c` → Generate controller
+- `--m` → Generate migration
+- `--soft-delete` → Enable soft delete support
+
+---
+
+# PostgreSQL Helper: storeOrUpdate()
+
+When using generated resource models with PostgreSQL, Seeder CI3 includes helper methods such as:
+
 ```php
-// In this code, we will insert a new user $param,
-// only if there is no user with $conditions in the table
-// So, insert into table when there is no row with name = 'myname'
-// and username = 'myusername'
+storeOrUpdate()
+```
+
+This helper simplifies conditional insert/update workflows.
+
+---
+
+## Example With Explicit Conditions
+
+```php
 $param = [
     'name' => 'myname',
     'username' => 'myusername',
     'password' => password_hash('password1', PASSWORD_BCRYPT),
-    'created_at' => date('Y-m-d H:i:s'),
-    'updated_at' => date('Y-m-d H:i:s'),
-    'created_by' => 'admin',
-    'updated_by' => 'admin',
 ];
+
 $conditions = [
     'name' => 'myname',
     'username' => 'myusername',
 ];
+
 $res = $this->mymodel->storeOrUpdate($param, $conditions);
-// In this code, we will insert a new user $param,
-// but since we don't pass the second parameters,
-// then we will use the first parameters as $conditions
-// but only if they're not in list of $this->exceptions
-// So, insert into table when there is no row with name = 'myname'
-// and username = 'myusername' and password = hashed string, etc...
+```
+
+This will:
+
+- Insert a row if no matching record exists
+- Update the existing row otherwise
+
+---
+
+## Example Using Automatic Conditions
+
+```php
 $param = [
     'name' => 'myname',
     'username' => 'myusername',
     'password' => password_hash('password1', PASSWORD_BCRYPT),
-    'created_at' => date('Y-m-d H:i:s'),
-    'updated_at' => date('Y-m-d H:i:s'),
-    'created_by' => 'admin',
-    'updated_by' => 'admin',
 ];
+
 $res = $this->mymodel->storeOrUpdate($param);
 ```
-- Add `--c` to generate its controller file as well. Optional.
-- Add `--m` to generate its migration file as well. Optional.
-- Add `--soft-delete` if your model using soft delete. Optional. When used along with `--m`, migration will have soft delete fields too.
-```bash
-cd c:/xampp/htdocs/codeigniter && php index.php app model Admin/Users --r --c --m --soft-delete
+
+If no explicit conditions are provided:
+
+- The library automatically derives conditions from `$param`
+- Exception fields are excluded automatically
+
+---
+
+# Upgrade Guide: 1.x → 2.x
+
+Version 2.x introduces lifecycle hooks for migration execution.
+
+Your command controller should extend:
+
+```php
+MY_AppController
 ```
+
+and optionally implement migration hooks through:
+
+```php
+__destruct()
+```
+
+Example:
+
+```php
+public function __destruct()
+{
+    if ($this->migrateCalled) {
+
+        // Post-migration callbacks
+
+    }
+}
+```
+
+This enables:
+
+- Automatic privilege grants
+- Logging hooks
+- Custom deployment logic
+- Post-migration automation
+
+---
+
+# Recommended Use Cases
+
+Seeder CI3 works especially well for:
+
+- Legacy CodeIgniter 3 projects
+- Enterprise internal systems
+- PostgreSQL-backed CI3 applications
+- Development environment replication
+- Database snapshot seeding
+- Rapid CRUD scaffolding
+- Long-term maintenance projects
+
+---
+
+# Notes
+
+This library focuses on improving developer experience for CodeIgniter 3 without fundamentally changing the framework architecture.
+
+The goal is to provide modern development conveniences while remaining compatible with traditional CI3 application structures.

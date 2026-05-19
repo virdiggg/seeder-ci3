@@ -321,10 +321,14 @@ class Seeder
         $result = $this->fl->printFile($this->getPath(), $name, $print);
 
         if (in_array('--c', $param)) {
-            $this->controller($fullName, $param);
+            $this->controller($fullName, $param, $constructors);
         }
         if (in_array('--m', $param)) {
-            $this->migration($fullName, $param);
+            $this->migration($fullName, $param, $constructors);
+        }
+        if (in_array('--faker', $param)) {
+            sleep(1);
+            $this->faker($fullName, $param, $constructors);
         }
 
         if (!$result) {
@@ -358,15 +362,27 @@ class Seeder
         // Set path to migrations folder
         $this->setPath(self::APP_PATH . 'migrations');
 
-        if (!$this->db->table_exists($fullName)) {
-            print($this->str->redText('TABLE "' . $fullName . '" NOT FOUND IN YOUR DATABASE ╰(*°▽°*)╯'));
-            return;
+        if ($this->db->table_exists($fullName)) {
+            // Get all fields in this table
+            $fields = $this->db->field_data($fullName);
+        } else {
+            print($this->str->yellowText('TABLE "' . $fullName . '" NOT FOUND, USING DUMMY FIELDS (❁´◡`❁)'));
+
+            $fields = [
+                (object) [
+                    'name' => 'username',
+                    'type' => 'varchar',
+                    'primary_key' => 0,
+                ],
+                (object) [
+                    'name' => 'full_name',
+                    'type' => 'varchar',
+                    'primary_key' => 0,
+                ],
+            ];
         }
 
         $rand = $this->str->rand(4);
-
-        // Get all fields in this table
-        $fields = $this->db->field_data($fullName);
 
         // Normalize slash.
         $fullName = $this->str->normalizeSlash($fullName);

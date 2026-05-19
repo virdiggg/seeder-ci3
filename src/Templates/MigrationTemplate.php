@@ -43,7 +43,7 @@ class MigrationTemplate
     public function createTable($name, $rand, $prefix, $param, $constructors = [])
     {
         $softDelete = $this->softDelete($param);
-        $print = '<?php' . PHP_EOL . PHP_EOL;
+        $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
         $print .= 'use Virdiggg\SeederCi3\MY_Migration;' . PHP_EOL . PHP_EOL;
         $print .= 'Class Migration_' . ucwords($prefix) . '_' . $name . '_' . $rand . ' extends MY_Migration {' . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;

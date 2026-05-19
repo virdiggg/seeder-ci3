@@ -33,7 +33,7 @@ class MigrationTemplate
      * Prepare create table template
      * 
      * @param string $name
-     * @param string $rand
+     * @param string $rand         Random string
      * @param string $prefix
      * @param array  $param
      * @param array  $constructors List of additional function to be called in constructor.

@@ -137,6 +137,24 @@ class MY_AppController extends \CI_Controller
         $this->seed->migration($name, $args, $constructors);
     }
 
+    public function faker() {
+        if (!is_cli()) {
+            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+            return;
+        }
+
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        $args = $result->args;
+
+        $constructors = [];
+        if (isset($this->constructors['seed'])) {
+            $constructors = (array) $this->constructors['seed'];
+        }
+        $this->seed->faker($name, $args, $constructors);
+    }
+
     public function controller() {
         if (!is_cli()) {
             print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));

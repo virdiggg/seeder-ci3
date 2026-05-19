@@ -44,7 +44,8 @@ class FakerTemplate
         }
 
         $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-        $print .= 'use Virdiggg\SeederCi3\MY_Seeder;' . PHP_EOL . PHP_EOL;
+        $print .= 'use Virdiggg\SeederCi3\MY_Seeder;' . PHP_EOL;
+        $print .= 'use Faker\Factory as FakerFactory;' . PHP_EOL . PHP_EOL;
         $print .= 'Class Migration_Faker_' . ucwords($name) . '_' . $rand . ' extends MY_Seeder {' . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection name.' . PHP_EOL;
@@ -72,7 +73,7 @@ class FakerTemplate
         $print .= '     */' . PHP_EOL;
         $print .= '    public function up() {' . PHP_EOL;
         $print .= '        parent::up();' . PHP_EOL;
-        $print .= '        $faker = \Faker\Factory::create();' . PHP_EOL;
+        $print .= '        $faker = FakerFactory::create();' . PHP_EOL;
         $print .= '        for ($i = 0; $i < ' . $count . '; $i++) {' . PHP_EOL;
         $print .= '            $param[] = [' . PHP_EOL;
         foreach ($fields as $field) {
@@ -144,10 +145,19 @@ class FakerTemplate
 
         /*
         |--------------------------------------------------------------------------
+        | Common Limited Constraint Columns
+        |--------------------------------------------------------------------------
+        */
+        if (strpos($name, 'otp') !== false || strpos($name, 'pin') !== false) {
+            return true;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | UUID columns
         |--------------------------------------------------------------------------
         */
-        if (strpos($name, 'uuid') !== false) {
+        if (strpos($name, 'uuid') !== false || $field->type == 'uuid') {
             return true;
         }
 
@@ -196,6 +206,10 @@ class FakerTemplate
 
         if (strpos($name, 'password') !== false) {
             return 'password_hash("password", PASSWORD_BCRYPT)';
+        }
+
+        if (strpos($name, 'date') !== false) {
+            return 'date("Y-m-d")';
         }
 
         if (strpos($name, 'created_at') !== false) {

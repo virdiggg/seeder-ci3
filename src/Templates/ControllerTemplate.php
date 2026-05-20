@@ -31,7 +31,8 @@ class ControllerTemplate
         }
 
         $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-        $print .= 'Class ' . $name . ' extends CI_Controller {' . PHP_EOL;
+        $print .= 'use Virdiggg\SeederCi3\MY_Controller;' . PHP_EOL . PHP_EOL;
+        $print .= 'Class ' . $name . ' extends MY_Controller {' . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Page title.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
@@ -54,7 +55,7 @@ class ControllerTemplate
         $print .= '        $data = [' . PHP_EOL;
         $print .= '            \'title\' => $this->title,' . PHP_EOL;
         $print .= '        ];' . PHP_EOL . PHP_EOL; // end $data
-        $print .= '        return $this->load->view(\'layout/wrapper\', $data);' . PHP_EOL;
+        $print .= '        return $this->withData($data)->asView(\'layout/wrapper\');' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function index()
         if ($withResources) {
             $print .= '    /**' . PHP_EOL;
@@ -139,8 +140,7 @@ class ControllerTemplate
         $print .= '            // \'iTotalDisplayRecords\' => $totalRecordsWithFilter,' . PHP_EOL;
         $print .= '            // \'iTotalRecords\' => $totalRecords,' . PHP_EOL;
         $print .= '        ];' . PHP_EOL;
-        $print .= '        echo json_encode($return);' . PHP_EOL;
-        $print .= '        return;' . PHP_EOL;
+        $print .= '        return $this->asJson($return);' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function datatables()
         $print .= '}'; // end class
 

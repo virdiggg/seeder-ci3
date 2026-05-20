@@ -3,12 +3,14 @@
 namespace Virdiggg\SeederCi3;
 
 use Virdiggg\SeederCi3\Seeder;
+use Virdiggg\SeederCi3\Router;
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
 
 class MY_AppController extends \CI_Controller
 {
     public $seed;
+    public $router;
     private $str;
     private $env;
     private $constructors = [];
@@ -16,14 +18,20 @@ class MY_AppController extends \CI_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->str = new Str();
         $this->seed = new Seeder();
+        $this->router = new Router();
+        $this->str = new Str();
         $this->env = new Ev();
         $config = $this->env->getConfig();
 
         $this->seed->setMigrationType($config->migrationType);
         $this->seed->setConn($config->dbConn);
         $this->seed->setPath($config->migrationPath);
+
+        if (!is_cli()) {
+            show_404();
+            return;
+        }
 
         // $config->dateTime should be an array
         if (count((array) $config->dateTime) > 0) {
@@ -37,20 +45,20 @@ class MY_AppController extends \CI_Controller
     }
 
     public function help() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
-        }
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         $this->seed->help();
         return;
     }
 
     public function migrate() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
-        }
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         $this->load->library('migration');
 
@@ -65,10 +73,10 @@ class MY_AppController extends \CI_Controller
     }
 
     public function rollback() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
-        }
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         $this->load->library('migration');
 
@@ -102,10 +110,10 @@ class MY_AppController extends \CI_Controller
     }
 
     public function seed() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
-        }
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
@@ -120,10 +128,10 @@ class MY_AppController extends \CI_Controller
     }
 
     public function migration() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
-        }
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
@@ -137,11 +145,29 @@ class MY_AppController extends \CI_Controller
         $this->seed->migration($name, $args, $constructors);
     }
 
-    public function controller() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
+    public function faker() {
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
+
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        $args = $result->args;
+
+        $constructors = [];
+        if (isset($this->constructors['seed'])) {
+            $constructors = (array) $this->constructors['seed'];
         }
+        $this->seed->faker($name, $args, $constructors);
+    }
+
+    public function controller() {
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
@@ -158,10 +184,10 @@ class MY_AppController extends \CI_Controller
     }
 
     public function model() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
-        }
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
@@ -177,23 +203,53 @@ class MY_AppController extends \CI_Controller
         return;
     }
 
-    public function publish() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+    public function router() {
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
+
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        $args = $result->args;
+
+        if (count($args) > 0 && $args[0] === '--postman') {
+            $this->router->export();
             return;
         }
+
+        $this->str->renderTable($this->router->parse());
+        return;
+    }
+
+    public function publish() {
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         $this->seed->copyConfig();
         return;
     }
 
     public function tidy() {
-        if (!is_cli()) {
-            print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-            return;
-        }
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
 
         $this->seed->tidyingFiles();
+        return;
+    }
+
+    public function version() {
+        // if (!is_cli()) {
+        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
+        //     return;
+        // }
+
+        print('Seeder CI3 Version ' . $this->str->greenText($this->env->getVersion(), false));
         return;
     }
 }

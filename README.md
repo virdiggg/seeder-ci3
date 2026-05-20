@@ -83,6 +83,91 @@ Generate:
 
 ---
 
+### Base Controller Utilities
+
+Seeder CI3 now includes a lightweight base controller:
+
+```php
+Virdiggg\SeederCi3\MY_Controller
+```
+
+designed to simplify common response and rendering workflows in CodeIgniter 3 applications.
+
+Included helper methods:
+
+- `asJson()` → JSON response helper
+- `pretty()` → Pretty-print JSON responses
+- `withData()` → Shared view data injection
+- `asView()` → Standard view rendering
+- `asHtml()` → Render views as HTML strings
+
+Example:
+
+```php
+class Api extends MY_Controller
+{
+    public function users()
+    {
+        return $this
+            ->pretty(true)
+            ->asJson([
+                'status' => true,
+                'message' => 'Success'
+            ]);
+    }
+}
+```
+
+This controller is intentionally lightweight and framework-native, making it suitable for:
+
+- REST APIs
+- AJAX endpoints
+- Internal dashboards
+- Shared template rendering
+- JSON response standardization
+
+---
+
+### Faker Generator
+
+Seeder CI3 now includes a built-in faker generator for rapidly creating development and testing datasets.
+
+Generate fake records directly from existing database tables:
+
+```bash
+php index.php app faker users
+```
+
+The generator automatically analyzes the table structure and generates contextual fake data based on detected field names.
+
+If the table structure cannot be resolved, Seeder CI3 falls back to default fields such as:
+
+- `username`
+- `full_name`
+
+to ensure faker generation remains functional in minimal environments.
+
+---
+
+#### Generate Models With Faker Support
+
+Seeder-enabled models can also be generated with built-in faker support:
+
+```bash
+php index.php app model Users --faker
+```
+
+Useful for:
+
+- Development environments
+- QA datasets
+- Frontend pagination testing
+- UI prototyping
+- Local demo systems
+- Automated testing workflows
+
+---
+
 ### PostgreSQL-Friendly Utilities
 
 Includes helper methods such as:
@@ -208,6 +293,50 @@ $config['constructors'] = [
 ```bash
 php index.php app help
 ```
+
+---
+
+## Print Route List
+
+Print all registered application routes directly in the terminal.
+
+Example:
+
+```bash
+php index.php app router
+```
+
+Currently, route discovery only supports controllers located inside:
+
+```text
+application/controllers/api/*
+```
+
+Useful for:
+
+- API debugging
+- Route auditing
+- Endpoint discovery
+- Internal documentation
+- Legacy project maintenance
+
+---
+
+### Export Postman-Compatible Route List
+
+Generate route output compatible with Postman import workflows:
+
+```bash
+php index.php app router --postman
+```
+
+This is useful for:
+
+- API testing
+- Team collaboration
+- QA workflows
+- Rapid API onboarding
+- Documentation generation
 
 ---
 

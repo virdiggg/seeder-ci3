@@ -48,7 +48,7 @@ class SeederTemplate
         $keys = $res['keys'];
         $results = $res['results'];
 
-        $print = '<?php' . PHP_EOL . PHP_EOL;
+        $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
         $print .= 'use Virdiggg\SeederCi3\MY_Seeder;' . PHP_EOL . PHP_EOL;
         $print .= 'Class Migration_Seeder_' . $name . '_' . $rand . ' extends MY_Seeder {' . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
@@ -82,10 +82,14 @@ class SeederTemplate
             $print .= $this->row($res, $keys);
         }
         $print .= PHP_EOL;
-        $print .= '        $chunk = array_chunk($param, 10000);' . PHP_EOL;
-        $print .= '        foreach ($chunk as $c) {' . PHP_EOL;
-        $print .= '            $this->{{conn}}->insert_batch($this->name, $c);' . PHP_EOL;
-        $print .= '        }' . PHP_EOL;
+        if (count($results) > 10000) {
+            $print .= '        $chunk = array_chunk($param, 10000);' . PHP_EOL;
+            $print .= '        foreach ($chunk as $c) {' . PHP_EOL;
+            $print .= '            $this->{{conn}}->insert_batch($this->name, $c);' . PHP_EOL;
+            $print .= '        }' . PHP_EOL;
+        } else {
+            $print .= '        $this->{{conn}}->insert_batch($this->name, $param);' . PHP_EOL;
+        }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Rollback migration.' . PHP_EOL;
@@ -95,7 +99,7 @@ class SeederTemplate
         $print .= '    public function down() {' . PHP_EOL;
         $print .= '        parent::down();' . PHP_EOL;
         if ($this->driver === 'postgre') {
-            $print .= '        $this->{{conn}}->query("TRUNCATE TABLE ${$this->name} RESTART IDENTITY");' . PHP_EOL;
+            $print .= '        $this->{{conn}}->query("TRUNCATE TABLE " + $this->name + " RESTART IDENTITY");' . PHP_EOL;
         } else {
             $print .= '        $this->{{conn}}->truncate($this->name);' . PHP_EOL;
         }

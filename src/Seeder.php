@@ -10,8 +10,10 @@ use Virdiggg\SeederCi3\Templates\SeederTemplate as Se;
 use Virdiggg\SeederCi3\Templates\MigrationTemplate as Mig;
 use Virdiggg\SeederCi3\Templates\ModelTemplate as Mod;
 use Virdiggg\SeederCi3\Templates\HelpTemplate as Help;
+use Virdiggg\SeederCi3\Templates\FakerTemplate as Fk;
 
 defined('APPPATH') or define('APPPATH', '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'application' . DIRECTORY_SEPARATOR);
+defined('SEEDER_ROOT_PATH') or define('SEEDER_ROOT_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
 defined('SEEDER_CONFIG_PATH') or define('SEEDER_CONFIG_PATH', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'seeder.php');
 defined('CI3_CONFIG_PATH') or define('CI3_CONFIG_PATH', APPPATH . 'config' . DIRECTORY_SEPARATOR);
 
@@ -320,10 +322,14 @@ class Seeder
         $result = $this->fl->printFile($this->getPath(), $name, $print);
 
         if (in_array('--c', $param)) {
-            $this->controller($fullName, $param);
+            $this->controller($fullName, $param, $constructors);
         }
         if (in_array('--m', $param)) {
-            $this->migration($fullName, $param);
+            $this->migration($fullName, $param, $constructors);
+        }
+        if (in_array('--faker', $param)) {
+            sleep(1);
+            $this->faker($fullName, $param, $constructors);
         }
 
         if (!$result) {
@@ -331,6 +337,84 @@ class Seeder
         }
 
         print('MODEL CREATED: ' . $this->str->greenText($this->getPath() . $name));
+        return;
+    }
+
+    /**
+     * Create a simple faker file.
+     *
+     * @param string $fullName     Table name
+     * @param array  $param        Optional parameter
+     * @param array  $constructors List of additional function to be called in constructor.
+     *
+     * @return void
+     */
+    public function faker($fullName = '', $param = [], $constructors = [])
+    {
+        if (!$fullName) {
+            print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
+            return;
+        }
+
+        // This is a different connection.
+        // So don't be confused with the one we are going to print in migration file.
+        $this->db = $this->CI->load->database($this->getConn(), TRUE);
+
+        // Set path to migrations folder
+        $this->setPath(self::APP_PATH . 'migrations');
+
+        if ($this->db->table_exists($fullName)) {
+            // Get all fields in this table
+            $fields = $this->db->field_data($fullName);
+        } else {
+            print($this->str->yellowText('TABLE "' . $fullName . '" NOT FOUND, USING DUMMY FIELDS (❁´◡`❁)'));
+
+            $fields = [
+                (object) [
+                    'name' => 'username',
+                    'type' => 'varchar',
+                    'primary_key' => 0,
+                ],
+                (object) [
+                    'name' => 'full_name',
+                    'type' => 'varchar',
+                    'primary_key' => 0,
+                ],
+            ];
+        }
+
+        $rand = $this->str->rand(4);
+
+        // Normalize slash.
+        $fullName = $this->str->normalizeSlash($fullName);
+
+        // File name is after the last slash \.
+        $name = $this->str->afterLast($fullName, DIRECTORY_SEPARATOR);
+
+        // Ucfirst for file and class name
+        $name = strtolower(trim($name));
+
+        // Parse input as printable string.
+        $this->fk = new Fk($this->getConn(), $this->driver);
+        $print = $this->fk->template($fields, $name, $rand, $param, $constructors);
+
+        // Ucfirst for file and class name
+        $name = ucfirst($name);
+
+        // Get the latest migration file order.
+        $count = $this->str->latest($this->migrationType, $this->getPath());
+
+        $name = $this->str->parseFileName($count . '_faker_' . $name . '_' . $rand);
+        // Create faker file.
+        $result = $this->fl->printFile($this->getPath(), $name, $print);
+
+        if (!$result) {
+            return;
+        }
+
+        $this->fl->modifyConfig($count);
+
+        print('FAKER CREATED: ' . $this->str->greenText($this->getPath() . $name));
         return;
     }
 

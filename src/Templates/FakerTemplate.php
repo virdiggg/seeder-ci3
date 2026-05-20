@@ -36,10 +36,10 @@ class FakerTemplate
      */
     public function template($fields, $name, $rand, $param, $constructors = [])
     {
-        $count = 10;
+        $limit = 10;
         if (count($param) > 0) {
-            if (in_array('--count', $param)) {
-                $count = (int) $param['--count'];
+            if (in_array('--limit', $param)) {
+                $limit = (int) $param['--limit'];
             }
         }
 
@@ -74,7 +74,7 @@ class FakerTemplate
         $print .= '    public function up() {' . PHP_EOL;
         $print .= '        parent::up();' . PHP_EOL;
         $print .= '        $faker = FakerFactory::create();' . PHP_EOL;
-        $print .= '        for ($i = 0; $i < ' . $count . '; $i++) {' . PHP_EOL;
+        $print .= '        for ($i = 0; $i < ' . $limit . '; $i++) {' . PHP_EOL;
         $print .= '            $param[] = [' . PHP_EOL;
         foreach ($fields as $field) {
             if ($this->shouldSkipField($field)) {
@@ -87,7 +87,7 @@ class FakerTemplate
         }
         $print .= '            ];' . PHP_EOL;
         $print .= '        }' . PHP_EOL;
-        if ($count > 10000) {
+        if ($limit > 10000) {
             $print .= '        $chunk = array_chunk($param, 10000);' . PHP_EOL;
             $print .= '        foreach ($chunk as $c) {' . PHP_EOL;
             $print .= '            $this->{{conn}}->insert_batch($this->name, $c);' . PHP_EOL;

@@ -25,12 +25,16 @@ class HelpTemplate
                 'cmd' => 'php index.php app help',
             ],
             [
-                'label' => 'Move all migration files inside \'migrated\' folder',
-                'cmd' => 'php index.php app tidy',
+                'label' => 'To check current version of Seeder CI3',
+                'cmd' => 'php index.php app version',
             ],
             [
                 'label' => 'Copy example of config file',
                 'cmd' => 'php index.php app publish',
+            ],
+            [
+                'label' => 'Move all migration files inside \'migrated\' folder',
+                'cmd' => 'php index.php app tidy',
             ],
             [
                 'label' => 'To run migration',
@@ -50,11 +54,23 @@ class HelpTemplate
             ],
             [
                 'label' => 'To create model file',
-                'cmd' => 'php index.php app model [dir/model_name] [--r] [--c] [--m] [--soft-delete]',
+                'cmd' => 'php index.php app model [dir/model_name] [--r] [--c] [--m] [--soft-delete] [--faker]',
             ],
             [
                 'label' => 'To create controller file',
                 'cmd' => 'php index.php app controller [dir/controller_name] [--r]',
+            ],
+            [
+                'label' => 'To create faker seeder file',
+                'cmd' => 'php index.php app faker [table_name] [--limit=number]',
+            ],
+            [
+                'label' => 'To print API route list in terminal',
+                'cmd' => 'php index.php app router',
+            ],
+            [
+                'label' => 'To export API route list in JSON format compatible with Postman',
+                'cmd' => 'php index.php app postman',
             ],
         ];
 

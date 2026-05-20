@@ -55,7 +55,7 @@ class ControllerTemplate
         $print .= '        $data = [' . PHP_EOL;
         $print .= '            \'title\' => $this->title,' . PHP_EOL;
         $print .= '        ];' . PHP_EOL . PHP_EOL; // end $data
-        $print .= '        return $this->withData(\'layout/wrapper\', $data);' . PHP_EOL;
+        $print .= '        return $this->withData($data)->asView(\'layout/wrapper\');' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function index()
         if ($withResources) {
             $print .= '    /**' . PHP_EOL;

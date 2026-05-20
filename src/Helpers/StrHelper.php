@@ -352,4 +352,139 @@ class StrHelper
         }
         return $res;
     }
+
+    /**
+     * Stringify value to normalize data.
+     * 
+     * @param mixed $value
+     * 
+     * @return string JSON
+     */
+    private function stringify($value) {
+        if (is_array($value)) {
+            return json_encode(
+                $value,
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            );
+        }
+
+        if (is_object($value)) {
+            return json_encode(
+                $value,
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            );
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if ($value === null) {
+            return 'null';
+        }
+
+        return (string) $value;
+    }
+
+    /**
+     * Render table for CLI.
+     * 
+     * @param array $rows
+     * 
+     * @return void
+     */
+    public function renderTable($rows) {
+        if (count($rows) === 0) {
+            return;
+        }
+
+        $headers = array_keys($rows[0]);
+
+        $widths = [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Header width
+        |--------------------------------------------------------------------------
+        */
+        foreach ($headers as $header) {
+            $widths[$header] = strlen($header);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Detect max width
+        |--------------------------------------------------------------------------
+        */
+        foreach ($rows as $row) {
+
+            foreach ($row as $key => $value) {
+                $length = strlen($this->stringify($value));
+
+                if ($length > $widths[$key]) {
+                    $widths[$key] = $length;
+                }
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Separator
+        |--------------------------------------------------------------------------
+        */
+        $separator = '+';
+
+        foreach ($headers as $header) {
+            $separator .= str_repeat('-', $widths[$header] + 2) . '+';
+        }
+
+        echo $separator . PHP_EOL;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Header
+        |--------------------------------------------------------------------------
+        */
+        echo '|';
+
+        foreach ($headers as $header) {
+
+            echo ' ' .
+                str_pad(
+                    strtoupper($header),
+                    $widths[$header]
+                ) .
+                ' |';
+        }
+
+        echo PHP_EOL;
+
+        echo $separator . PHP_EOL;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Rows
+        |--------------------------------------------------------------------------
+        */
+        foreach ($rows as $row) {
+
+            echo '|';
+
+            foreach ($headers as $header) {
+
+                echo ' ' .
+                    str_pad(
+                        $this->stringify($row[$header]),
+                        $widths[$header]
+                    ) .
+                    ' |';
+            }
+
+            echo PHP_EOL;
+        }
+
+        echo $separator . PHP_EOL;
+    }
 }

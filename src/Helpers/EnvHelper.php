@@ -97,4 +97,29 @@ class EnvHelper
             'constructors' => $constructors,
         ];
     }
+
+    /**
+     * Get version from version.php
+     * 
+     * @return string
+     */
+    public function getVersion() {
+        $versionFile = SEEDER_ROOT_PATH . 'composer.json';
+        if (!file_exists($versionFile)) {
+            return 'unknown';
+        }
+
+        $json = file_get_contents($versionFile);
+
+        $data = json_decode($json, true);
+
+        if (
+            !is_array($data) ||
+            !isset($data['version'])
+        ) {
+            return 'unknown';
+        }
+
+        return $data['version'];
+    }
 }

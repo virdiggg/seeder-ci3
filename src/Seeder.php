@@ -13,6 +13,7 @@ use Virdiggg\SeederCi3\Templates\HelpTemplate as Help;
 use Virdiggg\SeederCi3\Templates\FakerTemplate as Fk;
 
 defined('APPPATH') or define('APPPATH', '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'application' . DIRECTORY_SEPARATOR);
+defined('SEEDER_ROOT_PATH') or define('SEEDER_ROOT_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
 defined('SEEDER_CONFIG_PATH') or define('SEEDER_CONFIG_PATH', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'seeder.php');
 defined('CI3_CONFIG_PATH') or define('CI3_CONFIG_PATH', APPPATH . 'config' . DIRECTORY_SEPARATOR);
 

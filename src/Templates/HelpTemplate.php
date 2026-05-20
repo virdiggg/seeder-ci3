@@ -66,11 +66,7 @@ class HelpTemplate
             ],
             [
                 'label' => 'To print API route list in terminal',
-                'cmd' => 'php index.php app router',
-            ],
-            [
-                'label' => 'To export API route list in JSON format compatible with Postman',
-                'cmd' => 'php index.php app postman',
+                'cmd' => 'php index.php app router [--postman]',
             ],
         ];
 

@@ -296,6 +296,50 @@ php index.php app help
 
 ---
 
+## Print Route List
+
+Print all registered application routes directly in the terminal.
+
+Example:
+
+```bash
+php index.php app router
+```
+
+Currently, route discovery only supports controllers located inside:
+
+```text
+application/controllers/api/*
+```
+
+Useful for:
+
+- API debugging
+- Route auditing
+- Endpoint discovery
+- Internal documentation
+- Legacy project maintenance
+
+---
+
+### Export Postman-Compatible Route List
+
+Generate route output compatible with Postman import workflows:
+
+```bash
+php index.php app router --postman
+```
+
+This is useful for:
+
+- API testing
+- Team collaboration
+- QA workflows
+- Rapid API onboarding
+- Documentation generation
+
+---
+
 ## Publish Configuration
 
 ```bash

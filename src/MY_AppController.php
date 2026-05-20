@@ -209,17 +209,17 @@ class MY_AppController extends \CI_Controller
         //     return;
         // }
 
+        // Get all arguments passed to this function
+        $result = $this->seed->parseParam(func_get_args());
+        $name = $result->name;
+        $args = $result->args;
+
+        if (count($args) > 0 && $args[0] === '--postman') {
+            $this->router->export();
+            return;
+        }
+
         $this->str->renderTable($this->router->parse());
-        return;
-    }
-
-    public function postman() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
-        $this->router->export();
         return;
     }
 

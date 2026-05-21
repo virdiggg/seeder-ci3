@@ -90,4 +90,29 @@ class PostmanExporter
             'item' => $items,
         ];
     }
+
+    /**
+     * Export Postman Environment.
+     *
+     * @param string $baseUrl
+     *
+     * @return array
+     */
+    public function exportEnvironment($baseUrl)
+    {
+        return [
+            'id' => md5($baseUrl),
+            'name' => 'Seeder CI3 Environment',
+            'values' => [
+                [
+                    'key' => 'base_url',
+                    'value' => $baseUrl,
+                    'enabled' => true,
+                ]
+            ],
+            '_postman_variable_scope' => 'environment',
+            '_postman_exported_at' => date('c'),
+            '_postman_exported_using' => 'Seeder CI3',
+        ];
+    }
 }

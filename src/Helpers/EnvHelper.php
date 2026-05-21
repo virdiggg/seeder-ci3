@@ -4,8 +4,15 @@ namespace Virdiggg\SeederCi3\Helpers;
 
 class EnvHelper
 {
+    /**
+     * Instance CI.
+     *
+     * @param object
+     */
+    private $CI;
     public function __construct()
     {
+        $this->CI = &get_instance();
     }
 
     /**
@@ -96,6 +103,21 @@ class EnvHelper
             'dbConn' => $dbConn,
             'constructors' => $constructors,
         ];
+    }
+
+    /**
+     * Get cofigured base url
+     * 
+     * @return string
+     */
+    public function getBaseUrl() {
+        $baseUrl = $this->CI->config->item('base_url');
+
+        if (!$baseUrl) {
+            return 'http://localhost';
+        }
+
+        return rtrim($baseUrl, '/');
     }
 
     /**

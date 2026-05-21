@@ -15,11 +15,6 @@
             "email": "virdigunawann@gmail.com"
         }
     ],
-	"scripts": {
-		"post-install-cmd": [
-            "@php -r \"copy('vendor/virdiggg/seeder-ci3/example/App.php', 'controllers/App.php');\""
-		]
-	},
     "require": {
         "php": ">=7.3",
         "fakerphp/faker": "^1.20"

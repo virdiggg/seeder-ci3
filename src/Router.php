@@ -99,13 +99,33 @@ class Router {
             $this->parse();
         }
 
-        $collection = $this->exporter->export($this->routeParsed);
-
         $storagePath = APPPATH . 'storage' . DIRECTORY_SEPARATOR;
 
         if (!is_dir($storagePath)) {
             mkdir($storagePath, 0777, true);
         }
+
+        $collectionFile = $this->exportCollection($storagePath);
+        $environmentFile = $this->exportEnv($storagePath);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Console output
+        |--------------------------------------------------------------------------
+        */
+        echo PHP_EOL;
+        echo '======================================' . PHP_EOL;
+        echo ' POSTMAN COLLECTION GENERATED ' . PHP_EOL;
+        echo '======================================' . PHP_EOL;
+        echo PHP_EOL;
+        echo 'FILE: ' . $this->str->greenText($collectionFile);
+        echo 'ENV: ' . $this->str->greenText($environmentFile);
+        echo 'TOTAL ROUTES: ' . $this->str->greenText(count($this->routeParsed), false);
+        echo PHP_EOL;
+    }
+
+    private function exportCollection($storagePath) {
+        $collection = $this->exporter->export($this->routeParsed);
 
         $file = $storagePath . 'postman_collection.json';
 
@@ -118,18 +138,23 @@ class Router {
             )
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Console output
-        |--------------------------------------------------------------------------
-        */
-        echo PHP_EOL;
-        echo '======================================' . PHP_EOL;
-        echo ' POSTMAN COLLECTION GENERATED ' . PHP_EOL;
-        echo '======================================' . PHP_EOL;
-        echo PHP_EOL;
-        echo 'FILE: ' . $this->str->greenText($file);
-        echo 'TOTAL ROUTES: ' . $this->str->greenText(count($this->routeParsed), false);
-        echo PHP_EOL;
+        return $file;
+    }
+
+    private function exportEnv($storagePath) {
+        $baseUrl = $this->env->getBaseUrl();
+        $environment = $this->exporter->exportEnvironment($baseUrl);
+        $file = $storagePath . 'postman_environment.json';
+
+        file_put_contents($file,
+            json_encode(
+                $environment,
+                JSON_PRETTY_PRINT |
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            )
+        );
+
+        return $file;
     }
 }

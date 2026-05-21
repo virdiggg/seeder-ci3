@@ -213,25 +213,24 @@ class App extends MY_AppController
     public function migrate()
     {
         parent::migrate();
-
         $this->migrateCalled = true;
     }
 
-    public function rollback()
+    ppublic function rollback()
     {
-        return;
+        if (ENVIRONMENT === "production") {
+            return;
+        }
+
+        parent::rollback();
     }
 
     public function __destruct()
     {
         if ($this->migrateCalled) {
-
-            // Example post-migration hooks
-
             // $this->db->query("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myrole");
-
             // $this->db->query("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO myrole");
-
+            // log_message('debug', 'PREVILEGES GRANTED');
         }
     }
 }
@@ -344,6 +343,8 @@ This is useful for:
 
 ```bash
 php index.php app publish
+or
+php index.php app init
 ```
 
 ---

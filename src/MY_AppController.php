@@ -44,6 +44,12 @@ class MY_AppController extends \CI_Controller
         }
     }
 
+    public function init()
+    {
+        require_once __DIR__ . '/../bootstrap/install.php';
+        return;
+    }
+
     public function help() {
         // if (!is_cli()) {
         //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));

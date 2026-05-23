@@ -161,9 +161,9 @@ class Str
 
   /**
    * Count latest migration. Return 3 digit number by default.
-   * 
+   *
    * @param int $latest
-   * 
+   *
    * @return int
    */
   public function countLatest($latest)
@@ -244,7 +244,8 @@ class Str
    * Platform-dependent string escape
    *
    * @param	string
-   * @return	string
+   *
+   * @return string
    */
   public function escape(string $str): string
   {
@@ -259,7 +260,8 @@ class Str
    *
    * @param	string
    * @param	bool
-   * @return	string
+   *
+   * @return string
    */
   public function removeInvisibleCharacters(string $str, bool $url_encoded = TRUE): string
   {
@@ -336,9 +338,9 @@ class Str
 
   /**
    * Stringify value to normalize data.
-   * 
+   *
    * @param mixed $value
-   * 
+   *
    * @return string JSON
    */
   private function stringify($value)
@@ -372,9 +374,9 @@ class Str
 
   /**
    * Render table for CLI.
-   * 
+   *
    * @param array $rows
-   * 
+   *
    * @return void
    */
   public function renderTable($rows)
@@ -498,5 +500,56 @@ class Str
   public function emoticon($text)
   {
     return $text . ' ' . $this->OwO[array_rand($this->OwO, 1)];
+  }
+
+  /**
+   * Parse file name with .php extension.
+   *
+   * @param string $name
+   *
+   * @return string
+   * 
+   * @deprecated
+   */
+  public function parseFileName($name)
+  {
+    return $name . '.php';
+  }
+
+  /**
+   * Get latest migration order.
+   * Default is sequential, if there is no migration file exist.
+   *
+   * @param string $migrationType
+   * @param string $path
+   *
+   * @return string
+   * 
+   * @deprecated
+   */
+  public function oldLatest($migrationType, $path)
+  {
+    if ($migrationType === 'timestamp') {
+      return date('YmdHis');
+    }
+
+    print($this->redText('WARNING: CODEIGNITER 3 MIGRATION CANNOT HANDLE MIGRATION NUMBER 1000 OR ABOVE, PLEASE USE TIMESTAMP INSTEAD ╰(*°▽°*)╯'));
+
+    // Get all migration files.
+    $seeders = $path . '*.php';
+    $globs = array_filter(glob($seeders), 'is_file');
+    if (count($globs) > 0) {
+      // Reverse the array.
+      rsort($globs);
+
+      // Get the latest array order.
+      $latestMigration = (int) $this->before($this->afterLast($globs[0], '\\'), '_');
+      $count = str_pad($latestMigration + 1, $this->countLatest($latestMigration), '0', STR_PAD_LEFT);
+    } else {
+      // Default is sequential order, not timestamp.
+      $count = '001';
+    }
+
+    return $count;
   }
 }

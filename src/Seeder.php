@@ -2,15 +2,10 @@
 
 namespace Virdiggg\SeederCi3;
 
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
-use Virdiggg\SeederCi3\Helpers\FileHelper as Fl;
-use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
+use Virdiggg\SeederCi3\Utils\{Env, Str, File};
 use Virdiggg\SeederCi3\Templates\ControllerTemplate as Cont;
-use Virdiggg\SeederCi3\Templates\SeederTemplate as Se;
-use Virdiggg\SeederCi3\Templates\MigrationTemplate as Mig;
 use Virdiggg\SeederCi3\Templates\ModelTemplate as Mod;
-use Virdiggg\SeederCi3\Templates\HelpTemplate as Help;
-use Virdiggg\SeederCi3\Templates\FakerTemplate as Fk;
+use Virdiggg\SeederCi3\Templates\Deprecated\MigrationOldTemplate as Mig;
 
 defined('APPPATH') or define('APPPATH', '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'application' . DIRECTORY_SEPARATOR);
 defined('SEEDER_ROOT_PATH') or define('SEEDER_ROOT_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
@@ -95,8 +90,8 @@ class Seeder
   {
     $this->CI = &get_instance();
     $this->str = new Str();
-    $this->fl = new Fl();
-    $this->env = new Ev();
+    $this->fl = new File();
+    $this->env = new Env();
   }
 
   /**
@@ -117,117 +112,6 @@ class Seeder
   public function tidyingFiles()
   {
     $this->fl->tidyingFiles($this->path);
-  }
-
-  /**
-   * Create a simple seeder file.
-   *
-   * @param string $fullName     Table name
-   * @param array  $param        Optional parameter
-   * @param array  $constructors List of additional function to be called in constructor.
-   *
-   * @return void
-   */
-  public function seed($name = '', $param = [], $constructors = [])
-  {
-    if (!$name) {
-      print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
-      return;
-    }
-
-    // This is a different connection.
-    // So don't be confused with the one we are going to print in seeder file.
-    $this->db = $this->CI->load->database($this->getConn(), TRUE);
-
-    if (!$this->db->table_exists($name)) {
-      print($this->str->redText('TABLE "' . $name . '" NOT FOUND IN YOUR DATABASE ╰(*°▽°*)╯'));
-      return;
-    }
-
-    $limit = null;
-    foreach ($param as $arg) {
-      if (strpos($arg, '--limit=') !== false) {
-        $limit = substr($arg, strpos($arg, '--to=') + 8);
-      }
-    }
-
-    $results = $this->querySeeder($name, $limit);
-
-    if (count($results) === 0) {
-      print($this->str->redText('NO RECORDS IN TABLE "' . $name . '" ╰(*°▽°*)╯'));
-      return;
-    }
-
-    $rand = $this->str->rand(4);
-
-    $this->se = new Se($this->getConn(), $this->dateTime, $this->driver);
-    // Parse input as printable string.
-    $print = $this->se->template($name, $rand, $results, $constructors);
-
-    // Get the latest migration file order.
-    $count = $this->str->latest($this->migrationType, $this->getPath());
-
-    $name = $this->str->parseFileName($count . '_seeder_' . $name . '_' . $rand);
-    // Create seeder file.
-    $result = $this->fl->printFile($this->getPath(), $name, $print);
-    if (!$result) {
-      return;
-    }
-
-    $this->fl->modifyConfig($count);
-
-    print('SEEDER CREATED: ' . $this->str->greenText($this->getPath() . $name));
-    return;
-  }
-
-  /**
-   * Create a simple migration file.
-   *
-   * @param string $fullName     Table name
-   * @param array  $param        Optional parameter
-   * @param array  $constructors List of additional function to be called in constructor.
-   *
-   * @return void
-   */
-  public function migration($name = '', $param = [], $constructors = [])
-  {
-    if (!$name) {
-      print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
-      return;
-    }
-
-    // This is a different connection.
-    // So don't be confused with the one we are going to print in migration file.
-    $this->db = $this->CI->load->database($this->getConn(), TRUE);
-
-    // Set path to migrations folder
-    $this->setPath(self::APP_PATH . 'migrations');
-
-    $prefix = 'create';
-    if ($this->db->table_exists($name)) {
-      $prefix = 'alter';
-    }
-
-    $rand = $this->str->rand(4);
-
-    $this->mig = new Mig($this->driver);
-    // Parse input as printable string.
-    $print = $this->mig->template($name, $rand, $prefix, $param, $constructors);
-
-    // Get the latest migration file order.
-    $count = $this->str->latest($this->migrationType, $this->getPath());
-
-    $name = $this->str->parseFileName($count . '_' . $prefix . '_' . $name . '_' . $rand);
-    // Create migration file.
-    $result = $this->fl->printFile($this->getPath(), $name, $print);
-    if (!$result) {
-      return;
-    }
-
-    $this->fl->modifyConfig($count);
-
-    print('MIGRATION CREATED: ' . $this->str->greenText($this->getPath() . $name));
-    return;
   }
 
   /**
@@ -327,10 +211,6 @@ class Seeder
     if (in_array('--m', $param)) {
       $this->migration($fullName, $param, $constructors);
     }
-    if (in_array('--faker', $param)) {
-      sleep(1);
-      $this->faker($fullName, $param, $constructors);
-    }
 
     if (!$result) {
       return;
@@ -341,7 +221,7 @@ class Seeder
   }
 
   /**
-   * Create a simple faker file.
+   * Create a simple migration file.
    *
    * @param string $fullName     Table name
    * @param array  $param        Optional parameter
@@ -349,9 +229,9 @@ class Seeder
    *
    * @return void
    */
-  public function faker($fullName = '', $param = [], $constructors = [])
+  public function migration($name = '', $param = [], $constructors = [])
   {
-    if (!$fullName) {
+    if (!$name) {
       print($this->str->redText('PARAMETER NOT FOUND ╰(*°▽°*)╯'));
       return;
     }
@@ -363,70 +243,31 @@ class Seeder
     // Set path to migrations folder
     $this->setPath(self::APP_PATH . 'migrations');
 
-    if ($this->db->table_exists($fullName)) {
-      // Get all fields in this table
-      $fields = $this->db->field_data($fullName);
-    } else {
-      print($this->str->yellowText('TABLE "' . $fullName . '" NOT FOUND, USING DUMMY FIELDS (❁´◡`❁)'));
-
-      $fields = [
-        (object) [
-          'name' => 'username',
-          'type' => 'varchar',
-          'primary_key' => 0,
-        ],
-        (object) [
-          'name' => 'full_name',
-          'type' => 'varchar',
-          'primary_key' => 0,
-        ],
-      ];
+    $prefix = 'create';
+    if ($this->db->table_exists($name)) {
+      $prefix = 'alter';
     }
 
     $rand = $this->str->rand(4);
 
-    // Normalize slash.
-    $fullName = $this->str->normalizeSlash($fullName);
-
-    // File name is after the last slash \.
-    $name = $this->str->afterLast($fullName, DIRECTORY_SEPARATOR);
-
-    // Ucfirst for file and class name
-    $name = strtolower(trim($name));
-
+    $this->mig = new Mig($this->driver);
     // Parse input as printable string.
-    $this->fk = new Fk($this->getConn(), $this->driver);
-    $print = $this->fk->template($fields, $name, $rand, $param, $constructors);
-
-    // Ucfirst for file and class name
-    $name = ucfirst($name);
+    $print = $this->mig->template($name, $rand, $prefix, $param, $constructors);
 
     // Get the latest migration file order.
-    $count = $this->str->latest($this->migrationType, $this->getPath());
+    $count = $this->str->oldLatest($this->migrationType, $this->getPath());
 
-    $name = $this->str->parseFileName($count . '_faker_' . $name . '_' . $rand);
-    // Create faker file.
+    $name = $this->str->parseFileName($count . '_' . $prefix . '_' . $name . '_' . $rand);
+    // Create migration file.
     $result = $this->fl->printFile($this->getPath(), $name, $print);
-
     if (!$result) {
       return;
     }
 
     $this->fl->modifyConfig($count);
 
-    print('FAKER CREATED: ' . $this->str->greenText($this->getPath() . $name));
+    print('MIGRATION CREATED: ' . $this->str->greenText($this->getPath() . $name));
     return;
-  }
-
-  /**
-   * Help options
-   * 
-   * @return void
-   */
-  public function help()
-  {
-    $this->help = new Help();
-    $this->help->template();
   }
 
   /**

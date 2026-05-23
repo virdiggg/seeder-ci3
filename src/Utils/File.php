@@ -7,6 +7,15 @@ use Virdiggg\SeederCi3\Utils\Env;
 class File
 {
   /**
+   * File Pointer.
+   *
+   * @param object $filePointer
+   * 
+   * @deprecated
+   */
+  public $filePointer;
+
+  /**
    * Move all migration files inside 'migrated' folder.
    * If the folder does not exists, create a new one.
    * 
@@ -113,5 +122,98 @@ class File
     }
 
     return true;
+  }
+
+  /**
+   * Copy seeder.php config file to config folder.
+   *
+   * @return void
+   * 
+   * @deprecated
+   */
+  public function copyConfig()
+  {
+    $defaultConfigFile = CI3_CONFIG_PATH . 'seeder.php';
+    $envConfigFile = CI3_CONFIG_PATH . ENVIRONMENT . DIRECTORY_SEPARATOR . 'seeder.php';
+    if (file_exists($defaultConfigFile)) {
+      $msg = $this->str->yellowText($defaultConfigFile) . $this->str->redText('already exists in your config folder. ╰(*°▽°*)╯') . "\n";
+      print("\n" . $msg);
+      return;
+    }
+
+    if (file_exists($envConfigFile)) {
+      $msg = $this->str->yellowText($envConfigFile) . $this->str->redText('already exists in your config folder. ╰(*°▽°*)╯') . "\n";
+      print("\n" . $msg);
+      return;
+    }
+
+    // Copy the seeder.php file from package to config folder
+    print($this->str->greenText("Copying 'seeder.php' to " . $defaultConfigFile, true));
+    copy(SEEDER_CONFIG_PATH, $defaultConfigFile);
+  }
+
+  /**
+   * Create and write to file. If exists, do nothing.
+   *
+   * @param string $path
+   * @param string $fileName
+   * @param string $str
+   *
+   * @return bool
+   * 
+   * @deprecated
+   */
+  public function printFile($path, $fileName, $str)
+  {
+    $this->ensureDirectoryExists($path, 0755, 'apache');
+
+    $fullPath = $path . $fileName;
+    // If file exists, stop the process.
+    if (file_exists($fullPath)) {
+      print("FILE EXISTS: " . $this->str->yellowText($fullPath));
+      return false;
+    }
+
+    $this->createFile($path, $fileName);
+    // Write to newly created migration file.
+    fwrite($this->filePointer, $str . PHP_EOL);
+    return true;
+  }
+
+  /**
+   * Create a new pointer file.
+   *
+   * @param string $path
+   * @param string $name
+   *
+   * @return void
+   * 
+   * @deprecated
+   */
+  private function createFile($path, $name)
+  {
+    $fullPath = $path . $name;
+
+    $old = umask(0);
+
+    $file = $fullPath;
+    $file = fopen($fullPath, 'a') or exit("Can't open $fullPath!");
+    umask($old);
+
+    $this->filePointer = $file;
+  }
+
+  /**
+   * Normalize path
+   * 
+   * @param string $path
+   * 
+   * @return string
+   * 
+   * @deprecated
+   */
+  public function normalizePath($path)
+  {
+    return rtrim($path, '\\/') . DIRECTORY_SEPARATOR;
   }
 }

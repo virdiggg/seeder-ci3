@@ -2,10 +2,8 @@
 
 namespace Virdiggg\SeederCi3;
 
-use Virdiggg\SeederCi3\Seeder;
-use Virdiggg\SeederCi3\Router;
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
-use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
+use Virdiggg\SeederCi3\{Router, Seeder};
+use Virdiggg\SeederCi3\Utils\{Env, Str};
 
 class MY_AppController extends \CI_Controller
 {
@@ -21,7 +19,7 @@ class MY_AppController extends \CI_Controller
         $this->seed = new Seeder();
         $this->router = new Router();
         $this->str = new Str();
-        $this->env = new Ev();
+        $this->env = new Env();
         $config = $this->env->getConfig();
 
         $this->seed->setMigrationType($config->migrationType);
@@ -59,21 +57,11 @@ class MY_AppController extends \CI_Controller
     }
 
     public function help() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
-        $this->seed->help();
-        return;
+        echo $this->str->yellowText("[WARNING] You are using deprecated function.");
+        echo $this->str->yellowText("[WARNING] Please initialize the new CLI instance with 'php ci3 init'.");
     }
 
     public function migrate() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
         $this->load->library('migration');
 
         if (!$this->migration->current()) {
@@ -81,17 +69,15 @@ class MY_AppController extends \CI_Controller
             return;
         }
 
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to migrate.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 migrate' instead as this function will be benched in the next major release.");
         $res = $this->db->select('version')->from('migrations')->get()->row();
         print($this->str->greenText('MIGRATE NUMBER ' . $res->version . ' SUCCESS'));
         return;
     }
 
     public function rollback() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
         $this->load->library('migration');
 
         // Get all arguments passed to this function
@@ -118,35 +104,21 @@ class MY_AppController extends \CI_Controller
             return;
         }
 
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to rollback.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 rollback' instead as this function will be benched in the next major release.");
         $res = $this->db->select('version')->from('migrations')->get()->row();
         print($this->str->redText('ROLLBACK MIGRATION TO NUMBER ' . $res->version . ' SUCCESS'));
         return;
     }
 
     public function seed() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
-        // Get all arguments passed to this function
-        $result = $this->seed->parseParam(func_get_args());
-        $name = $result->name;
-        $args = $result->args;
-
-        $constructors = [];
-        if (isset($this->constructors['seed'])) {
-            $constructors = (array) $this->constructors['seed'];
-        }
-        $this->seed->seed($name, $args, $constructors);
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to create seeder file.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 make:seeder' instead as this function will be benched in the next major release.");
     }
 
     public function migration() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;
@@ -156,33 +128,19 @@ class MY_AppController extends \CI_Controller
         if (isset($this->constructors['migration'])) {
             $constructors = (array) $this->constructors['migration'];
         }
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to create migration file.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 make:migration' instead as this function will be benched in the next major release.");
         $this->seed->migration($name, $args, $constructors);
     }
 
     public function faker() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
-        // Get all arguments passed to this function
-        $result = $this->seed->parseParam(func_get_args());
-        $name = $result->name;
-        $args = $result->args;
-
-        $constructors = [];
-        if (isset($this->constructors['seed'])) {
-            $constructors = (array) $this->constructors['seed'];
-        }
-        $this->seed->faker($name, $args, $constructors);
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to create faker file.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 make:faker' instead as this function will be benched in the next major release.");
     }
 
     public function controller() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;
@@ -193,16 +151,14 @@ class MY_AppController extends \CI_Controller
         if (isset($this->constructors['controller'])) {
             $constructors = (array) $this->constructors['controller'];
         }
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to create controller file.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 make:controller' instead as this function will be benched in the next major release.");
         $this->seed->controller($name, $args, $constructors);
         return;
     }
 
     public function model() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
         // Get all arguments passed to this function
         $result = $this->seed->parseParam(func_get_args());
         $name = $result->name;
@@ -213,56 +169,36 @@ class MY_AppController extends \CI_Controller
         if (isset($this->constructors['model'])) {
             $constructors = (array) $this->constructors['model'];
         }
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to create model file.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 make:model' instead as this function will be benched in the next major release.");
         $this->seed->model($name, $args, $constructors);
         return;
     }
 
     public function router() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
-        // Get all arguments passed to this function
-        $result = $this->seed->parseParam(func_get_args());
-        $name = $result->name;
-        $args = $result->args;
-
-        if (count($args) > 0 && $args[0] === '--postman') {
-            $this->router->export();
-            return;
-        }
-
-        $this->str->renderTable($this->router->parse());
-        return;
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to print routes.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 router:list' instead as this function will be benched in the next major release.");
     }
 
     public function publish() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to publish configuration files.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 init' instead as this function will be benched in the next major release.");
         $this->seed->copyConfig();
         return;
     }
 
     public function tidy() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
-        $this->seed->tidyingFiles();
-        return;
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to tidy migration files.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 tidy' instead as this function will be benched in the next major release.");
     }
 
     public function version() {
-        // if (!is_cli()) {
-        //     print($this->str->redText("CANNOT BE ACCESSED OUTSIDE COMMAND PROMP ╰(*°▽°*)╯\n"));
-        //     return;
-        // }
-
+        echo $this->str->yellowText("[WARNING] You are using deprecated function to print version.");
+        echo $this->str->yellowText("[WARNING] Please use initialize the new CLI instance with 'php ci3 init'.");
+        echo $this->str->yellowText("[WARNING] Please use 'php ci3 version' instead as this function will be benched in the next major release.");
         print('Seeder CI3 Version ' . $this->str->greenText($this->env->getVersion(), false));
         return;
     }

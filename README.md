@@ -216,7 +216,7 @@ class App extends MY_AppController
         $this->migrateCalled = true;
     }
 
-    ppublic function rollback()
+    public function rollback()
     {
         if (ENVIRONMENT === "production") {
             return;
@@ -509,11 +509,8 @@ Example:
 
 ```php
 public function __destruct()
-{
     if ($this->migrateCalled) {
-
         // Post-migration callbacks
-
     }
 }
 ```

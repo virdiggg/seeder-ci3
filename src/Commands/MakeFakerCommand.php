@@ -68,12 +68,12 @@ class MakeFakerCommand extends Command
 
       $fields = [
         (object) [
-          'name' => 'username',
+          'name' => 'created_by',
           'type' => 'varchar',
           'primary_key' => 0,
         ],
         (object) [
-          'name' => 'full_name',
+          'name' => 'updated_by',
           'type' => 'varchar',
           'primary_key' => 0,
         ],

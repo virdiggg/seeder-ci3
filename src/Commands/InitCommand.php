@@ -114,6 +114,7 @@ class InitCommand extends Command
         $updated = false;
 
         $required = [
+            'allow_rollback' => "ENVIRONMENT !== 'production'",
             'migration_type' => "'timestamp'",
             'migration_path' => "APPPATH . 'migrations' . DIRECTORY_SEPARATOR",
             'date_time' => '[]',

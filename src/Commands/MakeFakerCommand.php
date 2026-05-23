@@ -64,7 +64,7 @@ class MakeFakerCommand extends Command
       // Get all fields in this table
       $fields = $db->field_data($tableName);
     } else {
-      echo $this->str->yellowText('TABLE "' . $tableName . '" NOT FOUND, USING DUMMY FIELDS (❁´◡`❁)');
+      echo $this->str->yellowText('Table "' . $tableName . '" not found in database, creating faker using dummy fields (❁´◡`❁)');
 
       $fields = [
         (object) [
@@ -81,8 +81,6 @@ class MakeFakerCommand extends Command
     }
 
     $rand = $this->str->rand(4);
-
-    $migrationType = $this->config->migrationType ?? 'timestamp';
 
     $migrationPath = $this->config->migrationPath;
 

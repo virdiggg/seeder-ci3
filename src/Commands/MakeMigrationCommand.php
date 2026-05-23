@@ -65,8 +65,6 @@ class MakeMigrationCommand extends Command
 
     $rand = $this->str->rand(4);
 
-    $migrationType = $this->config->migrationType ?? 'timestamp';
-
     $migrationPath = $this->config->migrationPath;
 
     $count = $this->str->latest($this->config);

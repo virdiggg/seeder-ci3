@@ -2,16 +2,16 @@
 
 namespace Virdiggg\SeederCi3\Templates;
 
-use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
+use Virdiggg\SeederCi3\Utils\Env;
 
 class ModelTemplate
 {
-  private $env; // Environment
+  private $env;
   private $driver;
 
   public function __construct($driver = 'mysqli')
   {
-    $this->env = new Ev();
+    $this->env = new Env();
     $this->driver = $driver;
   }
 

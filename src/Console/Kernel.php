@@ -71,13 +71,13 @@ class Kernel
       'deprecated' => false,
       'deprecated_message' => '',
     ],
-    // 'router' => [
-    //   'class' => RouterCommand::class,
-    //   'description' => 'Generate router files',
-    //   'example' => 'php ci3 router:list [--postman]',
-    //   'deprecated' => false,
-    //   'deprecated_message' => '',
-    // ],
+    'router:list' => [
+      'class' => RouterCommand::class,
+      'description' => 'Generate router files',
+      'example' => 'php ci3 router:list [--postman]',
+      'deprecated' => false,
+      'deprecated_message' => '',
+    ],
     'make:model' => [
       'class' => MakeModelCommand::class,
       'description' => 'Create a new model',

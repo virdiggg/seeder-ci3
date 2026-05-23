@@ -42,7 +42,7 @@ class MakeControllerCommand extends Command
 
       echo "Controller created: " . $this->str->greenText($_params['path']);
     } catch (\Throwable $th) {
-      echo $this->str->redText($th->getMessage());
+      echo $this->str->redText('Failed to create controller: ' . $th->getMessage());
       return;
     }
   }

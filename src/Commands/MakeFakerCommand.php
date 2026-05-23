@@ -49,7 +49,7 @@ class MakeFakerCommand extends Command
 
       $this->postEvents($_params['count']);
     } catch (\Throwable $th) {
-      echo $this->str->redText($th->getMessage());
+      echo $this->str->redText('Failed to create faker: ' . $th->getMessage());
       return;
     }
   }

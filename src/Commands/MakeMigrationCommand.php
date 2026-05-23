@@ -47,7 +47,7 @@ class MakeMigrationCommand extends Command
 
       $this->postEvents($_params['count']);
     } catch (\Throwable $th) {
-      echo $this->str->redText($th->getMessage());
+      echo $this->str->redText('Failed to create migration: ' . $th->getMessage());
       return;
     }
   }

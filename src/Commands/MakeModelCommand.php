@@ -53,7 +53,7 @@ class MakeModelCommand extends Command
 
       $this->postEvents($_params['name'], $_params['className']);
     } catch (\Throwable $th) {
-      echo $this->str->redText($th->getMessage());
+      echo $this->str->redText('Failed to create model: ' . $th->getMessage());
       return;
     }
   }

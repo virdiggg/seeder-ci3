@@ -9,6 +9,7 @@ use Virdiggg\SeederCi3\Commands\{
   MakeSeederCommand,
   MakeFakerCommand,
   InitCommand,
+  MigrateCommand,
 };
 use Virdiggg\SeederCi3\Console\Input;
 
@@ -17,6 +18,7 @@ class Kernel
   protected $env;
   protected $commands = [
     'init' => InitCommand::class,
+    'migrate' => MigrateCommand::class,
     'make:model' => MakeModelCommand::class,
     'make:controller' => MakeControllerCommand::class,
     'make:migration' => MakeMigrationCommand::class,
@@ -49,11 +51,8 @@ class Kernel
     }
 
     $class = $this->commands[$commandName];
-
     $input = new Input($arguments);
-
     $command = new $class($input, $this->env, $this);
-
     $command->handle();
   }
 }

@@ -8,156 +8,136 @@ use Virdiggg\SeederCi3\Utils\Str;
 
 class InitCommand extends Command
 {
-    protected $input;
-    protected $fl;
-    protected $str;
-    protected $env;
+  protected $input;
+  protected $fl;
+  protected $str;
+  protected $env;
 
-    public function __construct($input, $env)
-    {
-        $this->input = $input;
-        $this->env = $env;
+  public function __construct($input, $env)
+  {
+    $this->input = $input;
+    $this->env = $env;
 
-        $this->fl = new File();
-        $this->str = new Str();
+    $this->fl = new File();
+    $this->str = new Str();
+  }
+
+  public function handle()
+  {
+    try {
+      $this->publishAppController();
+      $this->publishCli();
+      $this->publishConfig();
+
+      echo $this->str->greenText("Seeder CI3 initialized");
+    } catch (\Throwable $th) {
+      echo $this->str->redText('Seeder CI3 initialization failed: ' . $th->getMessage());
+      return;
+    }
+  }
+
+  private function publishAppController()
+  {
+    $appPath = APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'App.php';
+
+    $templatePath = APPPATH . 'vendor' . DIRECTORY_SEPARATOR . 'virdiggg' . DIRECTORY_SEPARATOR
+      . 'seeder-ci3' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'App.php';
+
+    if (!file_exists($appPath)) {
+      copy($templatePath, $appPath);
+      echo $this->str->greenText("Successfully created: " . $appPath);
+      return;
     }
 
-    public function handle()
-    {
-        $this->publishAppController();
+    $content = file_get_contents($appPath);
 
-        $this->publishCli();
-
-        $this->publishConfig();
-
-        echo $this->str->greenText("Seeder CI3 initialized");
+    if (strpos($content, 'Virdiggg\\SeederCi3\\MY_AppController') !== false) {
+      return;
     }
 
-    private function publishAppController()
-    {
-        $appPath = APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'App.php';
+    $content = preg_replace(
+      '/class\s+App\s+extends\s+CI_AppController/',
+      "use Virdiggg\\SeederCi3\\MY_AppController;\n\nclass App extends MY_AppController",
+      $content
+    );
 
-        $templatePath = APPPATH . 'vendor' . DIRECTORY_SEPARATOR . 'virdiggg' . DIRECTORY_SEPARATOR
-            . 'seeder-ci3' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'App.php';
+    file_put_contents($appPath, $content);
 
-        if (!file_exists($appPath)) {
-            copy($templatePath, $appPath);
-            echo $this->str->greenText("Successfully created: " . $appPath);
-            return;
-        }
+    echo $this->str->greenText("Successfully updated: " . $appPath);
+  }
 
-        $content = file_get_contents($appPath);
+  private function publishCli()
+  {
+    $target = FCPATH . 'ci3';
 
-        if (strpos($content, 'Virdiggg\\SeederCi3\\MY_AppController') !== false) {
-            return;
-        }
+    $source = APPPATH . 'vendor' . DIRECTORY_SEPARATOR . 'virdiggg' . DIRECTORY_SEPARATOR
+      . 'seeder-ci3' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'ci3';
 
-        $content = preg_replace(
-            '/class\s+App\s+extends\s+CI_AppController/',
-            "use Virdiggg\\SeederCi3\\MY_AppController;\n\nclass App extends MY_AppController",
-            $content
-        );
+    $shouldCopy = true;
 
-        file_put_contents($appPath, $content);
+    if (file_exists($target)) {
+      $old = md5_file($target);
+      $new = md5_file($source);
 
-        echo $this->str->greenText("Successfully updated: " . $appPath);
+      if ($old === $new) {
+        $shouldCopy = false;
+      }
     }
 
-    private function publishCli()
-    {
-        $target = FCPATH . 'ci3';
+    if ($shouldCopy) {
+      copy($source, $target);
+      @chmod($target, 0755);
+      echo $this->str->greenText("Successfully created: " . $target);
+    }
+  }
 
-        $source = APPPATH . 'vendor' . DIRECTORY_SEPARATOR . 'virdiggg' . DIRECTORY_SEPARATOR
-            . 'seeder-ci3' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'ci3';
+  private function publishConfig()
+  {
+    $defaultConfigFile = APPPATH . 'config' . DIRECTORY_SEPARATOR . 'seeder.php';
+    $envConfigFile = APPPATH . 'config' . DIRECTORY_SEPARATOR . ENVIRONMENT . DIRECTORY_SEPARATOR . 'seeder.php';
 
-        $shouldCopy = true;
-
-        if (file_exists($target)) {
-            $old = md5_file($target);
-            $new = md5_file($source);
-
-            if ($old === $new) {
-                $shouldCopy = false;
-            }
-        }
-
-        if ($shouldCopy) {
-            copy($source, $target);
-            @chmod($target, 0755);
-            echo $this->str->greenText("Successfully created: " . $target);
-        }
+    if (file_exists($envConfigFile)) {
+      $target = $envConfigFile;
+    } elseif (file_exists($defaultConfigFile)) {
+      $target = $defaultConfigFile;
+    } else {
+      $target = null;
     }
 
-    private function publishConfig()
-    {
-        $defaultConfigFile = APPPATH . 'config' . DIRECTORY_SEPARATOR . 'seeder.php';
-        $envConfigFile = APPPATH . 'config' . DIRECTORY_SEPARATOR . ENVIRONMENT . DIRECTORY_SEPARATOR . 'seeder.php';
+    $defaultConfig = SEEDER_ROOT_PATH . 'bootstrap' . DIRECTORY_SEPARATOR . 'seeder.php';
 
-        if (file_exists($envConfigFile)) {
-            $target = $envConfigFile;
-        } elseif (file_exists($defaultConfigFile)) {
-            $target = $defaultConfigFile;
-        } else {
-            $target = null;
-        }
-
-        $defaultConfig = SEEDER_ROOT_PATH . 'bootstrap' . DIRECTORY_SEPARATOR . 'seeder.php';
-
-        if (!file_exists($target)) {
-            file_put_contents($target, $defaultConfig);
-            echo $this->str->greenText("Successfully created: " . $target);
-            return;
-        }
-
-        include $target;
-
-        $updated = false;
-
-        $required = [
-            'allow_rollback' => "ENVIRONMENT !== 'production'",
-            'migration_type' => "'timestamp'",
-            'migration_path' => "APPPATH . 'migrations' . DIRECTORY_SEPARATOR",
-            'date_time' => '[]',
-            'db_conn' => "'default'",
-            'limit_seed' => '10',
-            'constructors' => '[]',
-        ];
-
-        $content = file_get_contents($target);
-
-        foreach ($required as $key => $default) {
-            if (strpos($content, "\$config['{$key}']") === false) {
-                $content .= PHP_EOL . "\$config['{$key}'] = {$default};" . PHP_EOL;
-                $updated = true;
-            }
-        }
-
-        if ($updated) {
-            file_put_contents($target, $content);
-            echo $this->str->greenText("Successfully adjusted: " . $target);
-        }
+    if (!file_exists($target)) {
+      file_put_contents($target, $defaultConfig);
+      echo $this->str->greenText("Successfully created: " . $target);
+      return;
     }
 
-    private function defaultConfig()
-    {
-        return <<<'PHP'
-<?php
+    include $target;
 
-defined('BASEPATH') or exit('No direct script access allowed');
+    $updated = false;
 
-$config['migration_type'] = 'timestamp';
+    $required = [
+      'allow_rollback' => "ENVIRONMENT !== 'production'",
+      'migration_type' => "'timestamp'",
+      'migration_path' => "APPPATH . 'migrations' . DIRECTORY_SEPARATOR",
+      'date_time' => '[]',
+      'db_conn' => "'default'",
+      'limit_seed' => '10',
+      'constructors' => '[]',
+    ];
 
-$config['migration_path'] =
-    APPPATH . 'migrations' . DIRECTORY_SEPARATOR;
+    $content = file_get_contents($target);
 
-$config['date_time'] = [];
-
-$config['db_conn'] = 'default';
-
-$config['limit_seed'] = 10;
-
-$config['constructors'] = [];
-
-PHP;
+    foreach ($required as $key => $default) {
+      if (strpos($content, "\$config['{$key}']") === false) {
+        $content .= PHP_EOL . "\$config['{$key}'] = {$default};" . PHP_EOL;
+        $updated = true;
+      }
     }
+
+    if ($updated) {
+      file_put_contents($target, $content);
+      echo $this->str->greenText("Successfully adjusted: " . $target);
+    }
+  }
 }

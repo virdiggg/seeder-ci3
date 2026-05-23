@@ -48,7 +48,7 @@ class InitCommand extends Command
 
         $content = file_get_contents($appPath);
 
-        if (strpos($content,'Virdiggg\\SeederCi3\\MY_AppController') !== false) {
+        if (strpos($content, 'Virdiggg\\SeederCi3\\MY_AppController') !== false) {
             return;
         }
 
@@ -125,7 +125,7 @@ class InitCommand extends Command
         $content = file_get_contents($target);
 
         foreach ($required as $key => $default) {
-            if (strpos($content,"\$config['{$key}']") === false) {
+            if (strpos($content, "\$config['{$key}']") === false) {
                 $content .= PHP_EOL . "\$config['{$key}'] = {$default};" . PHP_EOL;
                 $updated = true;
             }

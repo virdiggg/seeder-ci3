@@ -10,80 +10,80 @@ use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 
 class SwaggerCommand
 {
-    private $routeParser;
-    private $controllerParser;
-    private $inputParser;
-    private $exporter;
-    private $str;
+  private $routeParser;
+  private $controllerParser;
+  private $inputParser;
+  private $exporter;
+  private $str;
 
-    public function __construct()
-    {
-        $this->routeParser = new RouteParser();
-        $this->controllerParser = new ControllerParser();
-        $this->inputParser = new InputParser();
-        $this->exporter = new PostmanExporter();
-        $this->str = new Str();
-    }
+  public function __construct()
+  {
+    $this->routeParser = new RouteParser();
+    $this->controllerParser = new ControllerParser();
+    $this->inputParser = new InputParser();
+    $this->exporter = new PostmanExporter();
+    $this->str = new Str();
+  }
 
-    /**
-     * Generate Postman collection.
-     *
-     * @return void
-     */
-    public function handle()
-    {
-        $routes = $this->routeParser->parse(
-            APPPATH . 'config' . DIRECTORY_SEPARATOR . 'routes.php'
+  /**
+   * Generate Postman collection.
+   *
+   * @return void
+   */
+  public function handle()
+  {
+    $routes = $this->routeParser->parse(
+      APPPATH . 'config' . DIRECTORY_SEPARATOR . 'routes.php'
+    );
+
+    $parsed = [];
+
+    foreach ($routes as $route) {
+
+      $content =
+        $this->controllerParser
+        ->parseMethodContent(
+          $route['target']
         );
 
-        $parsed = [];
+      $params =
+        $this->inputParser
+        ->parse($content);
 
-        foreach ($routes as $route) {
+      $parsed[] = [
+        'uri' => $route['uri'],
+        'method' => $route['method'],
+        'target' => $route['target'],
+        'params' => $params,
+      ];
+    }
 
-            $content =
-                $this->controllerParser
-                    ->parseMethodContent(
-                        $route['target']
-                    );
+    $collection =
+      $this->exporter
+      ->export($parsed);
 
-            $params =
-                $this->inputParser
-                    ->parse($content);
+    $path =
+      APPPATH . 'storage' . DIRECTORY_SEPARATOR . 'postman_collection.json';
 
-            $parsed[] = [
-                'uri' => $route['uri'],
-                'method' => $route['method'],
-                'target' => $route['target'],
-                'params' => $params,
-            ];
-        }
-
-        $collection =
-            $this->exporter
-                ->export($parsed);
-
-        $path =
-            APPPATH . 'storage' . DIRECTORY_SEPARATOR . 'postman_collection.json';
-
-        /*
+    /*
         |--------------------------------------------------------------------------
         | Create storage folder
         |--------------------------------------------------------------------------
         */
-        if (!is_dir(APPPATH . 'storage')) {
-            mkdir(APPPATH . 'storage', 0777, true);
-        }
-
-        file_put_contents(
-            $path,
-            json_encode(
-                $collection,
-                JSON_PRETTY_PRINT |
-                JSON_UNESCAPED_SLASHES |
-                JSON_UNESCAPED_UNICODE
-            )
-        );
-
-        print($this->str->greenText('POSTMAN COLLECTION GENERATED: ' . $path . ' ヾ(•ω•`)o'));
+    if (!is_dir(APPPATH . 'storage')) {
+      mkdir(APPPATH . 'storage', 0777, true);
     }
+
+    file_put_contents(
+      $path,
+      json_encode(
+        $collection,
+        JSON_PRETTY_PRINT |
+          JSON_UNESCAPED_SLASHES |
+          JSON_UNESCAPED_UNICODE
+      )
+    );
+
+    print($this->str->greenText('POSTMAN COLLECTION GENERATED: ' . $path . ' ヾ(•ω•`)o'));
+  }
 }

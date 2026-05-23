@@ -8,148 +8,148 @@ use Virdiggg\SeederCi3\Utils\{File, Str};
 
 class MakeFakerCommand extends Command
 {
-    protected $input;
-    protected $env;
-    protected $fl;
-    protected $str;
-    protected $config;
-    protected $prefix;
+  protected $input;
+  protected $env;
+  protected $fl;
+  protected $str;
+  protected $config;
+  protected $prefix;
 
-    public function __construct($input, $env)
-    {
-        $this->input = $input;
-        $this->env = $env;
-        $this->fl = new File();
-        $this->str = new Str();
-        $this->config = $env->getConfig();
-        $this->prefix = 'faker';
+  public function __construct($input, $env)
+  {
+    $this->input = $input;
+    $this->env = $env;
+    $this->fl = new File();
+    $this->str = new Str();
+    $this->config = $env->getConfig();
+    $this->prefix = 'faker';
+  }
+
+  public function handle()
+  {
+    try {
+      $name = $this->input->argument(0);
+
+      if (!$name) {
+        throw new \Exception('Faker table name required');
+      }
+
+      $dbConn = $this->input->option('db') ?? $this->config->dbConn;
+
+      $databases = $this->config->databases ?? [];
+      if (!isset($databases[$dbConn])) {
+        throw new \Exception('Database connection not found: ' . $dbConn);
+      }
+
+      $_params = $this->parsingParams($dbConn, $databases, $name);
+
+      file_put_contents($_params['path'], $_params['content']);
+
+      echo "Faker created: " . $this->str->greenText($_params['path']);
+
+      $this->postEvents($_params['count']);
+    } catch (\Throwable $th) {
+      echo $this->str->redText($th->getMessage());
+      return;
+    }
+  }
+
+  private function parseName($dbConn, $name)
+  {
+    $tableName = strtolower(str_replace('\\', '_', $name));
+
+    $db = get_instance()->load->database($dbConn, true);
+
+    if ($db->table_exists($tableName)) {
+      // Get all fields in this table
+      $fields = $db->field_data($tableName);
+    } else {
+      echo $this->str->yellowText('TABLE "' . $tableName . '" NOT FOUND, USING DUMMY FIELDS (❁´◡`❁)');
+
+      $fields = [
+        (object) [
+          'name' => 'username',
+          'type' => 'varchar',
+          'primary_key' => 0,
+        ],
+        (object) [
+          'name' => 'full_name',
+          'type' => 'varchar',
+          'primary_key' => 0,
+        ],
+      ];
     }
 
-    public function handle()
-    {
-        try {
-            $name = $this->input->argument(0);
+    $rand = $this->str->rand(4);
 
-            if (!$name) {
-                throw new \Exception('Faker table name required');
-            }
+    $migrationType = $this->config->migrationType ?? 'timestamp';
 
-            $dbConn = $this->input->option('db') ?? $this->config->dbConn;
+    $migrationPath = $this->config->migrationPath;
 
-            $databases = $this->config->databases ?? [];
-            if (!isset($databases[$dbConn])) {
-                throw new \Exception('Database connection not found: ' . $dbConn);
-            }
+    $count = $this->str->latest($this->config);
 
-            $_params = $this->parsingParams($dbConn, $databases, $name);
+    return [
+      'tableName' => $tableName,
+      'migrationPath' => $migrationPath,
+      'count' => $count,
+      'class' => ucwords($this->prefix) . '_' . $tableName . '_' . $rand,
+      'file' => $count . '_' . $this->prefix . '_' . $tableName . '_' . $rand,
+      'fields' => $fields,
+    ];
+  }
 
-            file_put_contents($_params['path'], $_params['content']);
+  private function parsingParams($dbConn, $databases, $name)
+  {
+    $driver = $databases[$dbConn]['dbdriver'] ?? 'mysqli';
 
-            echo "Faker created: " . $this->str->greenText($_params['path']);
-
-            $this->postEvents($_params['count']);
-        } catch (\Throwable $th) {
-            echo $this->str->redText($th->getMessage());
-            return;
-        }
+    $params = $this->input->options();
+    if (!isset($params['limit'])) {
+      $params['limit'] = (int) $this->config->limitSeed;
+    } else {
+      $params['limit'] = (int) $params['limit'];
     }
 
-    private function parseName($dbConn, $name)
-    {
-        $tableName = strtolower(str_replace('\\', '_', $name));
+    $parsedName = $this->parseName($dbConn, $name);
 
-        $db = get_instance()->load->database($dbConn, true);
+    $constructors = $this->config->constructors['migration'] ?? [];
 
-        if ($db->table_exists($tableName)) {
-            // Get all fields in this table
-            $fields = $db->field_data($tableName);
-        } else {
-            echo $this->str->yellowText('TABLE "' . $tableName . '" NOT FOUND, USING DUMMY FIELDS (❁´◡`❁)');
+    $template = new SeederTemplate($dbConn, $driver, $this->config->dateTime);
 
-            $fields = [
-                (object) [
-                    'name' => 'username',
-                    'type' => 'varchar',
-                    'primary_key' => 0,
-                ],
-                (object) [
-                    'name' => 'full_name',
-                    'type' => 'varchar',
-                    'primary_key' => 0,
-                ],
-            ];
-        }
+    $content = $template->template(
+      $parsedName['class'],
+      $parsedName['tableName'],
+      $parsedName['fields'],
+      $params,
+      $constructors
+    );
 
-        $rand = $this->str->rand(4);
+    $fileName = $parsedName['file'] . '.php';
 
-        $migrationType = $this->config->migrationType ?? 'timestamp';
+    $path = rtrim($parsedName['migrationPath'], DIRECTORY_SEPARATOR);
 
-        $migrationPath = $this->config->migrationPath;
+    $this->fl->ensureDirectoryExists($path);
 
-        $count = $this->str->latest($this->config);
+    return [
+      'path' => $path . DIRECTORY_SEPARATOR . $fileName,
+      'content' => $content,
+      'name' => $name,
+      'count' => $parsedName['count'],
+    ];
+  }
 
-        return [
-            'tableName' => $tableName,
-            'migrationPath' => $migrationPath,
-            'count' => $count,
-            'class' => ucwords($this->prefix) . '_' . $tableName . '_' . $rand,
-            'file' => $count . '_' . $this->prefix . '_' . $tableName . '_' . $rand,
-            'fields' => $fields,
-        ];
+  private function fetchResults($db, $tableName, $limit)
+  {
+    $db->select();
+    $db->from(trim($tableName));
+    if (!empty($limit)) {
+      $db->limit($limit);
     }
 
-    private function parsingParams($dbConn, $databases, $name)
-    {
-        $driver = $databases[$dbConn]['dbdriver'] ?? 'mysqli';
+    return $db->get()->result_array();
+  }
 
-        $params = $this->input->options();
-        if (!isset($params['limit'])) {
-            $params['limit'] = (int) $this->config->limitSeed;
-        } else {
-            $params['limit'] = (int) $params['limit'];
-        }
-
-        $parsedName = $this->parseName($dbConn, $name);
-
-        $constructors = $this->config->constructors['migration'] ?? [];
-
-        $template = new SeederTemplate($dbConn, $driver, $this->config->dateTime);
-
-        $content = $template->template(
-            $parsedName['class'],
-            $parsedName['tableName'],
-            $parsedName['fields'],
-            $params,
-            $constructors
-        );
-
-        $fileName = $parsedName['file'] . '.php';
-
-        $path = rtrim($parsedName['migrationPath'], DIRECTORY_SEPARATOR);
-
-        $this->fl->ensureDirectoryExists($path);
-
-        return [
-            'path' => $path . DIRECTORY_SEPARATOR . $fileName,
-            'content' => $content,
-            'name' => $name,
-            'count' => $parsedName['count'],
-        ];
-    }
-
-    private function fetchResults($db, $tableName, $limit)
-    {
-        $db->select();
-        $db->from(trim($tableName));
-        if (!empty($limit)) {
-            $db->limit($limit);
-        }
-
-        return $db->get()->result_array();
-    }
-
-    private function postEvents($count)
-    {
-        $this->fl->modifyConfig($count);
-    }
+  private function postEvents($count)
+  {
+    $this->fl->modifyConfig($count);
+  }
 }

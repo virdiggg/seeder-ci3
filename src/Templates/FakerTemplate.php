@@ -181,7 +181,8 @@ class FakerTemplate
         return false;
     }
 
-    private function fakeExpression($field) {
+    private function fakeExpression($field)
+    {
         $name = strtolower($field->name);
 
         if (strpos($name, 'email') !== false) {

@@ -9,152 +9,159 @@ use Virdiggg\SeederCi3\Exporters\PostmanExporter;
 use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
 use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
 
-class Router {
-    /**
-     * Instance CI.
-     *
-     * @param object
-     */
-    private $CI;
+class Router
+{
+  /**
+   * Instance CI.
+   *
+   * @param object
+   */
+  private $CI;
 
-    /**
-     * Route parser.
-     *
-     * @var RouteParser
-     */
-    private $routeParser;
+  /**
+   * Route parser.
+   *
+   * @var RouteParser
+   */
+  private $routeParser;
 
-    /**
-     * Controller parser.
-     *
-     * @var ControllerParser
-     */
-    private $controllerParser;
+  /**
+   * Controller parser.
+   *
+   * @var ControllerParser
+   */
+  private $controllerParser;
 
-    /**
-     * Input parser.
-     *
-     * @var InputParser
-     */
-    private $inputParser;
+  /**
+   * Input parser.
+   *
+   * @var InputParser
+   */
+  private $inputParser;
 
-    /**
-     * Exporter.
-     *
-     * @var PostmanExporter
-     */
-    private $exporter;
+  /**
+   * Exporter.
+   *
+   * @var PostmanExporter
+   */
+  private $exporter;
 
-    private $routeParsed = [];
-    private $str;
-    private $env;
+  private $routeParsed = [];
+  private $str;
+  private $env;
 
-    public function __construct()
-    {
-        $this->CI = &get_instance();
-        $this->str = new Str();
-        $this->env = new Ev();
-        $this->routeParser = new RouteParser();
-        $this->controllerParser = new ControllerParser();
-        $this->inputParser = new InputParser();
-        $this->exporter = new PostmanExporter();
-    }
+  public function __construct()
+  {
+    $this->CI = &get_instance();
+    $this->str = new Str();
+    $this->env = new Ev();
+    $this->routeParser = new RouteParser();
+    $this->controllerParser = new ControllerParser();
+    $this->inputParser = new InputParser();
+    $this->exporter = new PostmanExporter();
+  }
 
-    public function parse() {
-        $routes = $this->routeParser->parse($this->env->loadConfig('routes'));
-        $parsed = [];
+  public function parse()
+  {
+    $routes = $this->routeParser->parse($this->env->loadConfig('routes'));
+    $parsed = [];
 
-        foreach ($routes as $route) {
-            /*
+    foreach ($routes as $route) {
+      /*
             |--------------------------------------------------------------------------
             | Parse controller method body
             |--------------------------------------------------------------------------
             */
-            $content = $this->controllerParser->parseMethodContent($route['target']);
+      $content = $this->controllerParser->parseMethodContent($route['target']);
 
-            /*
+      /*
             |--------------------------------------------------------------------------
             | Parse GET/POST params
             |--------------------------------------------------------------------------
             */
-            $params = $this->inputParser->parse($content);
+      $params = $this->inputParser->parse($content);
 
-            $parsed[] = [
-                'uri' => $route['uri'],
-                'method' => $route['method'],
-                'target' => $route['target'],
-                'controller' => $route['controller'],
-                'action' => $route['action'],
-                'uri_params' => $route['uri_params'],
-                'params' => $params,
-            ];
-        }
-
-        $this->routeParsed = $parsed;
-        return $parsed;
+      $parsed[] = [
+        'uri' => $route['uri'],
+        'method' => $route['method'],
+        'target' => $route['target'],
+        'controller' => $route['controller'],
+        'action' => $route['action'],
+        'uri_params' => $route['uri_params'],
+        'params' => $params,
+      ];
     }
 
-    public function export() {
-        if (count($this->routeParsed) === 0) {
-            $this->parse();
-        }
+    $this->routeParsed = $parsed;
+    return $parsed;
+  }
 
-        $storagePath = APPPATH . 'storage' . DIRECTORY_SEPARATOR;
+  public function export()
+  {
+    if (count($this->routeParsed) === 0) {
+      $this->parse();
+    }
 
-        if (!is_dir($storagePath)) {
-            mkdir($storagePath, 0777, true);
-        }
+    $storagePath = APPPATH . 'storage' . DIRECTORY_SEPARATOR;
 
-        $collectionFile = $this->exportCollection($storagePath);
-        $environmentFile = $this->exportEnv($storagePath);
+    if (!is_dir($storagePath)) {
+      mkdir($storagePath, 0777, true);
+    }
 
-        /*
+    $collectionFile = $this->exportCollection($storagePath);
+    $environmentFile = $this->exportEnv($storagePath);
+
+    /*
         |--------------------------------------------------------------------------
         | Console output
         |--------------------------------------------------------------------------
         */
-        echo PHP_EOL;
-        echo '======================================' . PHP_EOL;
-        echo ' POSTMAN COLLECTION GENERATED ' . PHP_EOL;
-        echo '======================================' . PHP_EOL;
-        echo PHP_EOL;
-        echo 'FILE: ' . $this->str->greenText($collectionFile);
-        echo 'ENV: ' . $this->str->greenText($environmentFile);
-        echo 'TOTAL ROUTES: ' . $this->str->greenText(count($this->routeParsed), false);
-        echo PHP_EOL;
-    }
+    echo PHP_EOL;
+    echo '======================================' . PHP_EOL;
+    echo ' POSTMAN COLLECTION GENERATED ' . PHP_EOL;
+    echo '======================================' . PHP_EOL;
+    echo PHP_EOL;
+    echo 'FILE: ' . $this->str->greenText($collectionFile);
+    echo 'ENV: ' . $this->str->greenText($environmentFile);
+    echo 'TOTAL ROUTES: ' . $this->str->greenText(count($this->routeParsed), false);
+    echo PHP_EOL;
+  }
 
-    private function exportCollection($storagePath) {
-        $collection = $this->exporter->export($this->routeParsed);
+  private function exportCollection($storagePath)
+  {
+    $collection = $this->exporter->export($this->routeParsed);
 
-        $file = $storagePath . 'postman_collection.json';
+    $file = $storagePath . 'postman_collection.json';
 
-        file_put_contents($file,
-            json_encode(
-                $collection,
-                JSON_PRETTY_PRINT |
-                JSON_UNESCAPED_UNICODE |
-                JSON_UNESCAPED_SLASHES
-            )
-        );
+    file_put_contents(
+      $file,
+      json_encode(
+        $collection,
+        JSON_PRETTY_PRINT |
+          JSON_UNESCAPED_UNICODE |
+          JSON_UNESCAPED_SLASHES
+      )
+    );
 
-        return $file;
-    }
+    return $file;
+  }
 
-    private function exportEnv($storagePath) {
-        $baseUrl = $this->env->getBaseUrl();
-        $environment = $this->exporter->exportEnvironment($baseUrl);
-        $file = $storagePath . 'postman_environment.json';
+  private function exportEnv($storagePath)
+  {
+    $baseUrl = $this->env->getBaseUrl();
+    $environment = $this->exporter->exportEnvironment($baseUrl);
+    $file = $storagePath . 'postman_environment.json';
 
-        file_put_contents($file,
-            json_encode(
-                $environment,
-                JSON_PRETTY_PRINT |
-                JSON_UNESCAPED_UNICODE |
-                JSON_UNESCAPED_SLASHES
-            )
-        );
+    file_put_contents(
+      $file,
+      json_encode(
+        $environment,
+        JSON_PRETTY_PRINT |
+          JSON_UNESCAPED_UNICODE |
+          JSON_UNESCAPED_SLASHES
+      )
+    );
 
-        return $file;
-    }
+    return $file;
+  }
 }

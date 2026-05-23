@@ -85,7 +85,7 @@ class PostmanExporter
                 'name' => 'Seeder CI3 API',
                 '_postman_id' => md5(time()),
                 'schema' =>
-                    'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+                'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
             ],
             'item' => $items,
         ];

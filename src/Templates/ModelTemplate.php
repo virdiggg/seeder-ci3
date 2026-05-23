@@ -151,29 +151,76 @@ class ModelTemplate
     $print .= '        $this->_database->where($this->primary, $id);' . PHP_EOL;
     $print .= '        return $this->_database->get()->row();' . PHP_EOL;
     $print .= '    }' . PHP_EOL . PHP_EOL; // end public function find()
+    $print .= '    /**' . PHP_EOL;
+    $print .= '     * Insert data to database.' . PHP_EOL;
+    $print .= '     * ' . PHP_EOL;
+    $print .= '     * @param array $param' . PHP_EOL;
+    $print .= '     * ' . PHP_EOL;
+    $print .= '     * @return object' . PHP_EOL;
+    $print .= '     */' . PHP_EOL;
+    $print .= '    public function create($param) {' . PHP_EOL;
+    if ($this->driver === 'postgre') {
+      $print .= '        $var = $val = [];' . PHP_EOL;
+      $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
+      $print .= '            $var[] = \'"\' . $key . \'"\';' . PHP_EOL;
+      $print .= '            $val[] = !is_null($p) ? $this->_database->escape($p) : "NULL";' . PHP_EOL;
+      $print .= '        }' . PHP_EOL . PHP_EOL;
+      $print .= '        $query = "INSERT INTO \"{$this->_table}\" (" . join(\', \', $var) . ") VALUES (" . join(\', \', $val) . ") RETURNING *;";' . PHP_EOL;
+      $print .= '        unset($var, $val);' . PHP_EOL;
+      $print .= '        return $this->_database->query($query)->row();' . PHP_EOL;
+    } else {
+      $print .= '        $this->_database->insert($this->_table, $param);' . PHP_EOL;
+      $print .= '        return $this->find($this->_database->insert_id());' . PHP_EOL;
+    }
+    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function create()
+    $print .= '    /**' . PHP_EOL;
+    $print .= '     * Update data to database based on $id.' . PHP_EOL;
+    $print .= '     * ' . PHP_EOL;
+    $print .= '     * @param string|int $id' . PHP_EOL;
+    $print .= '     * @param array      $param' . PHP_EOL;
+    $print .= '     * ' . PHP_EOL;
+    $print .= '     * @return object|null' . PHP_EOL;
+    $print .= '     */' . PHP_EOL;
+    $print .= '    public function update($id, $param) {' . PHP_EOL;
+    if ($this->driver === 'postgre') {
+      $print .= '        if (count($param) === 0) {' . PHP_EOL;
+      $print .= '            return null;' . PHP_EOL;
+      $print .= '        }' . PHP_EOL . PHP_EOL;
+      $print .= '        $values = [];' . PHP_EOL;
+      $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
+      $print .= '            $val = !is_null($p) ? $this->_database->escape($p) : "NULL";' . PHP_EOL;
+      $print .= '            $values[] = \'"\' . $key . \'" = \' . $val;' . PHP_EOL;
+      $print .= '        }' . PHP_EOL . PHP_EOL;
+      $print .= '        $set = join(", ", $values);' . PHP_EOL . PHP_EOL;
+      $print .= '        $tmpWhere = [];' . PHP_EOL;
+      $print .= '        $tmpWhere[] = "\"{$this->primary}\" = " . $this->_database->escape($id);' . PHP_EOL;
+      $print .= '        // More conditions here' . PHP_EOL . PHP_EOL;
+      $print .= '        $where = "WHERE " . join(" AND ", $tmpWhere);' . PHP_EOL;
+      $print .= '        $query = "UPDATE \"{$this->_table}\" SET $set $where RETURNING *;";' . PHP_EOL;
+      $print .= '        unset($tmpWhere, $values, $where);' . PHP_EOL;
+      $print .= '        return $this->_database->query($query)->row();' . PHP_EOL;
+    } else {
+      $print .= '        $this->_database->where($this->primary, $id);' . PHP_EOL;
+      $print .= '        $this->_database->update($this->_table, $param);' . PHP_EOL;
+      $print .= '        $result = (bool) $this->_database->affected_rows();' . PHP_EOL;
+      $print .= '        if (!$result) {' . PHP_EOL;
+      $print .= '            return $result;' . PHP_EOL;
+      $print .= '        }' . PHP_EOL;
+      $print .= '        return $this->find($id);' . PHP_EOL;
+    }
+    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function update()
+    $print .= '    /**' . PHP_EOL;
+    $print .= '     * Delete data from database based on $id.' . PHP_EOL;
+    $print .= '     * ' . PHP_EOL;
+    $print .= '     * @param string|int $id' . PHP_EOL;
+    $print .= '     * ' . PHP_EOL;
+    $print .= '     * @return bool' . PHP_EOL;
+    $print .= '     */' . PHP_EOL;
+    $print .= '    public function destroy($id) {' . PHP_EOL;
+    $print .= '        $this->_database->where($this->primary, $id)->delete($this->_table);' . PHP_EOL;
+    $print .= '        return (bool) $this->_database->affected_rows();' . PHP_EOL;
+    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function destroy()
     if ($withResources) {
-      $print .= '    /**' . PHP_EOL;
-      $print .= '     * Insert data to database.' . PHP_EOL;
-      $print .= '     * ' . PHP_EOL;
-      $print .= '     * @param array $param' . PHP_EOL;
-      $print .= '     * ' . PHP_EOL;
-      $print .= '     * @return object' . PHP_EOL;
-      $print .= '     */' . PHP_EOL;
-      $print .= '    public function create($param) {' . PHP_EOL;
-      if ($this->driver === 'postgre') {
-        $print .= '        $var = $val = [];' . PHP_EOL;
-        $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
-        $print .= '            $var[] = \'"\' . $key . \'"\';' . PHP_EOL;
-        $print .= '            $val[] = !is_null($p) ? $this->_database->escape($p) : "NULL";' . PHP_EOL;
-        $print .= '        }' . PHP_EOL . PHP_EOL;
-        $print .= '        $query = "INSERT INTO \"{$this->_table}\" (" . join(\', \', $var) . ") VALUES (" . join(\', \', $val) . ") RETURNING *;";' . PHP_EOL;
-        $print .= '        unset($var, $val);' . PHP_EOL;
-        $print .= '        return $this->_database->query($query)->row();' . PHP_EOL;
-      } else {
-        $print .= '        $this->_database->insert($this->_table, $param);' . PHP_EOL;
-        $print .= '        return $this->find($this->_database->insert_id());' . PHP_EOL;
-      }
-      $print .= '    }' . PHP_EOL . PHP_EOL; // end public function create()
       if ($this->driver === 'postgre') {
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Insert data to database if not exists, then select the row.' . PHP_EOL;
@@ -240,53 +287,6 @@ class ModelTemplate
       $print .= '        $this->_database->insert_batch($this->_table, $param);' . PHP_EOL;
       $print .= '        return TRUE;' . PHP_EOL;
       $print .= '    }' . PHP_EOL . PHP_EOL; // end public function insert()
-      $print .= '    /**' . PHP_EOL;
-      $print .= '     * Update data to database based on $id.' . PHP_EOL;
-      $print .= '     * ' . PHP_EOL;
-      $print .= '     * @param string|int $id' . PHP_EOL;
-      $print .= '     * @param array      $param' . PHP_EOL;
-      $print .= '     * ' . PHP_EOL;
-      $print .= '     * @return object|null' . PHP_EOL;
-      $print .= '     */' . PHP_EOL;
-      $print .= '    public function update($id, $param) {' . PHP_EOL;
-      if ($this->driver === 'postgre') {
-        $print .= '        if (count($param) === 0) {' . PHP_EOL;
-        $print .= '            return null;' . PHP_EOL;
-        $print .= '        }' . PHP_EOL . PHP_EOL;
-        $print .= '        $values = [];' . PHP_EOL;
-        $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
-        $print .= '            $val = !is_null($p) ? $this->_database->escape($p) : "NULL";' . PHP_EOL;
-        $print .= '            $values[] = \'"\' . $key . \'" = \' . $val;' . PHP_EOL;
-        $print .= '        }' . PHP_EOL . PHP_EOL;
-        $print .= '        $set = join(", ", $values);' . PHP_EOL . PHP_EOL;
-        $print .= '        $tmpWhere = [];' . PHP_EOL;
-        $print .= '        $tmpWhere[] = "\"{$this->primary}\" = " . $this->_database->escape($id);' . PHP_EOL;
-        $print .= '        // More conditions here' . PHP_EOL . PHP_EOL;
-        $print .= '        $where = "WHERE " . join(" AND ", $tmpWhere);' . PHP_EOL;
-        $print .= '        $query = "UPDATE \"{$this->_table}\" SET $set $where RETURNING *;";' . PHP_EOL;
-        $print .= '        unset($tmpWhere, $values, $where);' . PHP_EOL;
-        $print .= '        return $this->_database->query($query)->row();' . PHP_EOL;
-      } else {
-        $print .= '        $this->_database->where($this->primary, $id);' . PHP_EOL;
-        $print .= '        $this->_database->update($this->_table, $param);' . PHP_EOL;
-        $print .= '        $result = (bool) $this->_database->affected_rows();' . PHP_EOL;
-        $print .= '        if (!$result) {' . PHP_EOL;
-        $print .= '            return $result;' . PHP_EOL;
-        $print .= '        }' . PHP_EOL;
-        $print .= '        return $this->find($id);' . PHP_EOL;
-      }
-      $print .= '    }' . PHP_EOL . PHP_EOL; // end public function update()
-      $print .= '    /**' . PHP_EOL;
-      $print .= '     * Delete data from database based on $id.' . PHP_EOL;
-      $print .= '     * ' . PHP_EOL;
-      $print .= '     * @param string|int $id' . PHP_EOL;
-      $print .= '     * ' . PHP_EOL;
-      $print .= '     * @return bool' . PHP_EOL;
-      $print .= '     */' . PHP_EOL;
-      $print .= '    public function destroy($id) {' . PHP_EOL;
-      $print .= '        $this->_database->where($this->primary, $id)->delete($this->_table);' . PHP_EOL;
-      $print .= '        return (bool) $this->_database->affected_rows();' . PHP_EOL;
-      $print .= '    }' . PHP_EOL . PHP_EOL; // end public function destroy()
       if ($this->driver === 'pdo') {
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Parse string procedures OB.' . PHP_EOL;

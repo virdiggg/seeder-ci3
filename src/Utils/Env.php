@@ -71,6 +71,7 @@ class Env
       'dbConn' => $config['db_conn'] ?? 'default',
       'constructors' => $config['constructors'] ?? [],
       'limitSeed' => $config['limit_seed'] ?? 10,
+      'allowRollback' => $config['allow_rollback'] ?? false,
       'baseUrl' => $config['base_url'] ? rtrim($config['base_url'], '/') : 'http://localhost',
       'databases' => $db,
     ];

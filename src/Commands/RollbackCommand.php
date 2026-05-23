@@ -27,9 +27,15 @@ class RollbackCommand extends Command
     try {
       $this->CI->load->library('migration');
 
+      if (!$this->config->allowRollback) {
+        throw new \Exception('Rollback is not allowed');
+      }
+
       $dbConn = $this->input->option('db') ?? $this->config->dbConn;
 
-      $resOld = $this->CI->db->select('version')->from('migrations')->get()->row();
+      $db = $this->CI->load->database($dbConn, true);
+
+      $resOld = $db->select('version')->from('migrations')->get()->row();
       if (!isset($resOld->version)) {
         throw new \Exception('No migration found');
       }
@@ -100,7 +106,7 @@ class RollbackCommand extends Command
         throw new \Exception($this->CI->migration->error_string());
       }
 
-      $res = $this->CI->db->select('version')->from('migrations')->get()->row();
+      $res = $db->select('version')->from('migrations')->get()->row();
       echo $this->str->greenText('Rollback to number ' . $res->version . ' success');
       return;
     } catch (\Throwable $th) {

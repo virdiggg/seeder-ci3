@@ -2,11 +2,9 @@
 
 namespace Virdiggg\SeederCi3\Commands;
 
-use Virdiggg\SeederCi3\Parsers\RouteParser;
-use Virdiggg\SeederCi3\Parsers\ControllerParser;
-use Virdiggg\SeederCi3\Parsers\InputParser;
+use Virdiggg\SeederCi3\Parsers\{RouteParser, ControllerParser, InputParser};
 use Virdiggg\SeederCi3\Exporters\PostmanExporter;
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Utils\Str;
 
 class SwaggerCommand
 {

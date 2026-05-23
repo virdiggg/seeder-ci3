@@ -11,7 +11,9 @@ use Virdiggg\SeederCi3\Commands\{
   InitCommand,
   MigrateCommand,
   RollbackCommand,
+  TidyCommand,
   RouterCommand,
+  VersionCommand,
 };
 use Virdiggg\SeederCi3\Console\Input;
 use Virdiggg\SeederCi3\Utils\Str;
@@ -28,7 +30,7 @@ class Kernel
       'deprecated_message' => '',
     ],
     'version' => [
-      'class' => null,
+      'class' => VersionCommand::class,
       'description' => 'Display current Seeder CI3 version',
       'example' => 'php ci3 version',
       'deprecated' => false,
@@ -48,13 +50,13 @@ class Kernel
       'deprecated' => true,
       'deprecated_message' => 'Please use "php ci3 init" instead',
     ],
-    // 'tidy' => [
-    //   'class' => TidyCommand::class,
-    //   'description' => 'Move all migration files inside "migrated" folder',
-    //   'example' => 'php ci3 tidy',
-    //   'deprecated' => false,
-    //   'deprecated_message' => '',
-    // ],
+    'tidy' => [
+      'class' => TidyCommand::class,
+      'description' => 'Move all migration files inside "migrated" folder',
+      'example' => 'php ci3 tidy',
+      'deprecated' => false,
+      'deprecated_message' => '',
+    ],
     'migrate' => [
       'class' => MigrateCommand::class,
       'description' => 'Run database migrations',
@@ -134,11 +136,6 @@ class Kernel
       return;
     }
 
-    if ($commandName === 'version') {
-      $this->version();
-      return;
-    }
-
     $this->run($commandName, array_slice($argv, 4));
   }
 
@@ -182,10 +179,5 @@ class Kernel
 
       echo PHP_EOL;
     }
-  }
-
-  private function version()
-  {
-    echo 'Seeder CI3 Version ' . $this->str->greenText($this->env->getVersion(), false);
   }
 }

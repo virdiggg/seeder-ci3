@@ -3,8 +3,7 @@
 namespace Virdiggg\SeederCi3\Commands;
 
 use Virdiggg\SeederCi3\Console\Command;
-use Virdiggg\SeederCi3\Utils\File;
-use Virdiggg\SeederCi3\Utils\Str;
+use Virdiggg\SeederCi3\Utils\{File, Str};
 
 class InitCommand extends Command
 {

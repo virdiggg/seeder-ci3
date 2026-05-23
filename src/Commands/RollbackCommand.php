@@ -54,7 +54,7 @@ class RollbackCommand extends Command
       $rollbackFiles = [];
       foreach ($files as $file) {
         preg_match('/^([0-9]+)/', basename($file), $matches);
-        $fileVersion = (int) ($matches[1] ?? 0);
+        $fileVersion = ($matches[1] ?? 0);
 
         if ($fileVersion < $currentVersion) {
           $rollbackFiles[] = [
@@ -101,7 +101,7 @@ class RollbackCommand extends Command
         throw new \Exception('Unable to parse migration version');
       }
 
-      $version = (int) $matches[1];
+      $version = $matches[1];
       if (!$this->CI->migration->version($version)) {
         throw new \Exception($this->CI->migration->error_string());
       }

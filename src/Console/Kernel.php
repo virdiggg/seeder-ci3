@@ -10,6 +10,7 @@ use Virdiggg\SeederCi3\Commands\{
   MakeFakerCommand,
   InitCommand,
   MigrateCommand,
+  RollbackCommand,
 };
 use Virdiggg\SeederCi3\Console\Input;
 
@@ -19,6 +20,7 @@ class Kernel
   protected $commands = [
     'init' => InitCommand::class,
     'migrate' => MigrateCommand::class,
+    'rollback' => RollbackCommand::class,
     'make:model' => MakeModelCommand::class,
     'make:controller' => MakeControllerCommand::class,
     'make:migration' => MakeMigrationCommand::class,

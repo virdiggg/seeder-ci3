@@ -227,10 +227,12 @@ class MigrationTemplate
    */
   private function softDelete($param)
   {
-    if (count($param) > 0) {
-      if (!isset($param['soft-delete'])) {
-        return '';
-      }
+    if (count($param) === 0) {
+      return '';
+    }
+
+    if (!isset($param['soft-delete'])) {
+      return '';
     }
 
     $softDelete = "            'deleted_by' => [" . PHP_EOL;

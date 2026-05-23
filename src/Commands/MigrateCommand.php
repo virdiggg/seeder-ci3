@@ -16,9 +16,8 @@ class MigrateCommand extends Command
   {
     $this->input = $input;
     $this->env = $env;
-    $this->CI = &get_instance();
-
     $this->str = new Str();
+    $this->CI = &get_instance();
   }
 
   public function handle()

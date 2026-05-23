@@ -9,7 +9,7 @@ class ModelTemplate
     private $env; // Environment
     private $driver;
 
-    public function __construct($driver = 'mysql')
+    public function __construct($driver = 'mysqli')
     {
         $this->env = new Ev();
         $this->driver = $driver;
@@ -26,13 +26,17 @@ class ModelTemplate
      */
     public function template($name, $param = [], $constructors = [])
     {
+        $conn = 'default';
         $withResources = $withSoftDelete = FALSE;
         if (count($param) > 0) {
-            if (in_array('--r', $param)) {
+            if (isset($param['r']) && $param['r']) {
                 $withResources = TRUE;
             }
-            if (in_array('--soft-delete', $param)) {
+            if (isset($param['soft-delete']) && $param['soft-delete']) {
                 $withSoftDelete = TRUE;
+            }
+            if (isset($param['db'])) {
+                $conn = $param['db'];
             }
         }
 
@@ -43,40 +47,40 @@ class ModelTemplate
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @param string $table' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    private $table = "' . strtolower($name) . '";' . PHP_EOL . PHP_EOL;
+        $print .= '    protected $_table = "' . strtolower($name) . '";' . PHP_EOL . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection name.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @param string $conn' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    private $conn = "default";' . PHP_EOL . PHP_EOL;
+        $print .= '    protected $conn = "' . $conn . '";' . PHP_EOL . PHP_EOL;
         $print .= '    /**' . PHP_EOL;
         $print .= '     * DB Connection.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
-        $print .= '     * @param object $db' . PHP_EOL;
+        $print .= '     * @param object $_database' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    private $db;' . PHP_EOL . PHP_EOL;
+        $print .= '    protected $_database;' . PHP_EOL . PHP_EOL;
         if ($this->driver === 'pdo') {
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Another DB Connection.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @param object $ob' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    // private $ob;' . PHP_EOL . PHP_EOL;
+            $print .= '    // protected $ob;' . PHP_EOL . PHP_EOL;
         }
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Primary key.' . PHP_EOL;
         $print .= '     * ' . PHP_EOL;
         $print .= '     * @param string $primary' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
-        $print .= '    private $primary = "id";' . PHP_EOL . PHP_EOL;
+        $print .= '    protected $primary = "id";' . PHP_EOL . PHP_EOL;
         if ($this->driver === 'postgre') {
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Column exceptions when running insert where not exists query.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @param array $exceptions' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    private $exceptions = ["created_by", "created_at", "updated_by", "updated_at", "password"];' . PHP_EOL . PHP_EOL;
+            $print .= '    protected $exceptions = ["created_by", "created_at", "updated_by", "updated_at", "password"];' . PHP_EOL . PHP_EOL;
         }
         if ($withSoftDelete) {
             $print .= '    /**' . PHP_EOL;
@@ -84,18 +88,18 @@ class ModelTemplate
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @param bool $softDelete' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    private $softDelete = FALSE;' . PHP_EOL . PHP_EOL;
+            $print .= '    protected $softDelete = FALSE;' . PHP_EOL . PHP_EOL;
             $print .= '    /**' . PHP_EOL;
             $print .= '     * Soft Delete field names.' . PHP_EOL;
             $print .= '     * ' . PHP_EOL;
             $print .= '     * @param array $softDeleteParams' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
-            $print .= '    private $softDeleteParams = ["deleted_by", "deleted_at"];' . PHP_EOL . PHP_EOL;
+            $print .= '    protected $softDeleteParams = ["deleted_by", "deleted_at"];' . PHP_EOL . PHP_EOL;
         }
         $print .= '    public function __construct() {' . PHP_EOL;
         $print .= '        parent::__construct();' . PHP_EOL;
         $print .= '        // DB Connection, you can use your own db setting name' . PHP_EOL;
-        $print .= '        $this->db = $this->load->database($this->conn, TRUE);' . PHP_EOL;
+        $print .= '        $this->_database = $this->load->database($this->conn, TRUE);' . PHP_EOL;
         foreach ($constructors as $constructor) {
             $print .= '        ' . $constructor . PHP_EOL;
         }
@@ -111,7 +115,7 @@ class ModelTemplate
         // $print .= '        if (empty($query)) {' . PHP_EOL;
         // $print .= '            return null;' . PHP_EOL;
         // $print .= '        }' . PHP_EOL;
-        // $print .= '        return $this->db->query($query)->result();' . PHP_EOL;
+        // $print .= '        return $this->_database->query($query)->result();' . PHP_EOL;
         // $print .= '    }' . PHP_EOL . PHP_EOL; // end public function raw()
         $print .= '    /**' . PHP_EOL;
         $print .= '     * Get all data from database.' . PHP_EOL;
@@ -119,19 +123,19 @@ class ModelTemplate
         $print .= '     * @return array' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function get() {' . PHP_EOL;
-        $print .= '        $this->db->select();' . PHP_EOL;
-        $print .= '        $this->db->from($this->table);' . PHP_EOL;
+        $print .= '        $this->_database->select();' . PHP_EOL;
+        $print .= '        $this->_database->from($this->_table);' . PHP_EOL;
         if ($withSoftDelete) {
             $print .= '        $this->softDelete("clean");' . PHP_EOL;
         }
-        $print .= '        $query = $this->db->get();' . PHP_EOL;
+        $print .= '        $query = $this->_database->get();' . PHP_EOL;
         $print .= '        $result = $query->result();' . PHP_EOL . PHP_EOL;
         $print .= '        if (!$result) {' . PHP_EOL;
         $print .= '            return [];' . PHP_EOL;
         $print .= '        }' . PHP_EOL;
         $print .= '        // Free up memory' . PHP_EOL;
         $print .= '        $query->free_result();' . PHP_EOL;
-        $print .= '        $this->db->close();' . PHP_EOL . PHP_EOL;
+        $print .= '        $this->_database->close();' . PHP_EOL . PHP_EOL;
         $print .= '        return $result;' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function get()
         $print .= '    /**' . PHP_EOL;
@@ -142,10 +146,10 @@ class ModelTemplate
         $print .= '     * @return object|null' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function find($id) {' . PHP_EOL;
-        $print .= '        $this->db->select();' . PHP_EOL;
-        $print .= '        $this->db->from($this->table);' . PHP_EOL;
-        $print .= '        $this->db->where($this->primary, $id);' . PHP_EOL;
-        $print .= '        return $this->db->get()->row();' . PHP_EOL;
+        $print .= '        $this->_database->select();' . PHP_EOL;
+        $print .= '        $this->_database->from($this->_table);' . PHP_EOL;
+        $print .= '        $this->_database->where($this->primary, $id);' . PHP_EOL;
+        $print .= '        return $this->_database->get()->row();' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function find()
         if ($withResources) {
             $print .= '    /**' . PHP_EOL;
@@ -160,14 +164,14 @@ class ModelTemplate
                 $print .= '        $var = $val = [];' . PHP_EOL;
                 $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
                 $print .= '            $var[] = \'"\' . $key . \'"\';' . PHP_EOL;
-                $print .= '            $val[] = !is_null($p) ? $this->db->escape($p) : "NULL";' . PHP_EOL;
+                $print .= '            $val[] = !is_null($p) ? $this->_database->escape($p) : "NULL";' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
-                $print .= '        $query = "INSERT INTO \"{$this->table}\" (" . join(\', \', $var) . ") VALUES (" . join(\', \', $val) . ") RETURNING *;";' . PHP_EOL;
+                $print .= '        $query = "INSERT INTO \"{$this->_table}\" (" . join(\', \', $var) . ") VALUES (" . join(\', \', $val) . ") RETURNING *;";' . PHP_EOL;
                 $print .= '        unset($var, $val);' . PHP_EOL;
-                $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
+                $print .= '        return $this->_database->query($query)->row();' . PHP_EOL;
             } else {
-                $print .= '        $this->db->insert($this->table, $param);' . PHP_EOL;
-                $print .= '        return $this->find($this->db->insert_id());' . PHP_EOL;
+                $print .= '        $this->_database->insert($this->_table, $param);' . PHP_EOL;
+                $print .= '        return $this->find($this->_database->insert_id());' . PHP_EOL;
             }
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function create()
             if ($this->driver === 'postgre') {
@@ -194,12 +198,12 @@ class ModelTemplate
                 $print .= '        if (count($conditions) > 0) {' . PHP_EOL;
                 $print .= '            foreach ($conditions as $index => $c) {' . PHP_EOL;
                 $print .= '                if (!in_array($index, $this->exceptions)) {' . PHP_EOL;
-                $print .= '                    $where[] = \'"\'.$index.\'" = \'.(!is_null($c) ? $this->db->escape($c) : "NULL");' . PHP_EOL;
+                $print .= '                    $where[] = \'"\'.$index.\'" = \'.(!is_null($c) ? $this->_database->escape($c) : "NULL");' . PHP_EOL;
                 $print .= '                }' . PHP_EOL;
                 $print .= '            }' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
                 $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
-                $print .= '            $value = !is_null($p) ? $this->db->escape($p) : "NULL";' . PHP_EOL;
+                $print .= '            $value = !is_null($p) ? $this->_database->escape($p) : "NULL";' . PHP_EOL;
                 $print .= '            $set[] = \'"\'.$key.\'" = \'.$value;' . PHP_EOL;
                 $print .= '            $var[] = \'"\' . $key . \'"\';' . PHP_EOL;
                 $print .= '            $val[] = $value;' . PHP_EOL;
@@ -212,12 +216,12 @@ class ModelTemplate
                 $print .= '                $where[] = \'"\'.$key.\'" \'.($value === \'NULL\' ? \'IS NULL\' : \'= \'.$value);' . PHP_EOL;
                 $print .= '            }' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
-                $print .= '        $checkingStr = "SELECT \"{$this->primary}\" FROM \"{$this->table}\" WHERE " . join(" AND ", $where) . " ORDER BY \"{$this->primary}\" DESC LIMIT 1";' . PHP_EOL;
-                $print .= '        $insertStr = "INSERT INTO \"{$this->table}\" (" . join(\', \', $var) . ") SELECT " . join(", ", $val) . " WHERE NOT EXISTS (SELECT \"{$this->primary}\" FROM checking) RETURNING *";' . PHP_EOL;
-                $print .= '        $updateStr = "UPDATE \"{$this->table}\" SET " . join(\', \', $set) . " WHERE \"{$this->primary}\" = COALESCE((SELECT \"{$this->primary}\" FROM inserted LIMIT 1), (SELECT \"{$this->primary}\" FROM checking LIMIT 1)) AND NOT EXISTS (SELECT \"{$this->primary}\" FROM inserted LIMIT 1) RETURNING *";' . PHP_EOL;
+                $print .= '        $checkingStr = "SELECT \"{$this->primary}\" FROM \"{$this->_table}\" WHERE " . join(" AND ", $where) . " ORDER BY \"{$this->primary}\" DESC LIMIT 1";' . PHP_EOL;
+                $print .= '        $insertStr = "INSERT INTO \"{$this->_table}\" (" . join(\', \', $var) . ") SELECT " . join(", ", $val) . " WHERE NOT EXISTS (SELECT \"{$this->primary}\" FROM checking) RETURNING *";' . PHP_EOL;
+                $print .= '        $updateStr = "UPDATE \"{$this->_table}\" SET " . join(\', \', $set) . " WHERE \"{$this->primary}\" = COALESCE((SELECT \"{$this->primary}\" FROM inserted LIMIT 1), (SELECT \"{$this->primary}\" FROM checking LIMIT 1)) AND NOT EXISTS (SELECT \"{$this->primary}\" FROM inserted LIMIT 1) RETURNING *";' . PHP_EOL;
                 $print .= '        $query = "WITH checking AS ($checkingStr), inserted AS ($insertStr), updated AS ($updateStr) SELECT * FROM inserted UNION SELECT * FROM updated";' . PHP_EOL;
                 $print .= '        unset($var, $val, $where, $set, $checkingStr, $insertStr, $updateStr);' . PHP_EOL;
-                $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
+                $print .= '        return $this->_database->query($query)->row();' . PHP_EOL;
                 $print .= '    }' . PHP_EOL . PHP_EOL; // end public function storeOrUpdate()
             }
             $print .= '    /**' . PHP_EOL;
@@ -233,7 +237,7 @@ class ModelTemplate
             $print .= '        if (count($param) === 0) {' . PHP_EOL;
             $print .= '            return TRUE;' . PHP_EOL;
             $print .= '        }' . PHP_EOL;
-            $print .= '        $this->db->insert_batch($this->table, $param);' . PHP_EOL;
+            $print .= '        $this->_database->insert_batch($this->_table, $param);' . PHP_EOL;
             $print .= '        return TRUE;' . PHP_EOL;
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function insert()
             $print .= '    /**' . PHP_EOL;
@@ -251,21 +255,21 @@ class ModelTemplate
                 $print .= '        }' . PHP_EOL . PHP_EOL;
                 $print .= '        $values = [];' . PHP_EOL;
                 $print .= '        foreach ($param as $key => $p) {' . PHP_EOL;
-                $print .= '            $val = !is_null($p) ? $this->db->escape($p) : "NULL";' . PHP_EOL;
+                $print .= '            $val = !is_null($p) ? $this->_database->escape($p) : "NULL";' . PHP_EOL;
                 $print .= '            $values[] = \'"\' . $key . \'" = \' . $val;' . PHP_EOL;
                 $print .= '        }' . PHP_EOL . PHP_EOL;
                 $print .= '        $set = join(", ", $values);' . PHP_EOL . PHP_EOL;
                 $print .= '        $tmpWhere = [];' . PHP_EOL;
-                $print .= '        $tmpWhere[] = "\"{$this->primary}\" = " . $this->db->escape($id);' . PHP_EOL;
+                $print .= '        $tmpWhere[] = "\"{$this->primary}\" = " . $this->_database->escape($id);' . PHP_EOL;
                 $print .= '        // More conditions here' . PHP_EOL . PHP_EOL;
                 $print .= '        $where = "WHERE " . join(" AND ", $tmpWhere);' . PHP_EOL;
-                $print .= '        $query = "UPDATE \"{$this->table}\" SET $set $where RETURNING *;";' . PHP_EOL;
+                $print .= '        $query = "UPDATE \"{$this->_table}\" SET $set $where RETURNING *;";' . PHP_EOL;
                 $print .= '        unset($tmpWhere, $values, $where);' . PHP_EOL;
-                $print .= '        return $this->db->query($query)->row();' . PHP_EOL;
+                $print .= '        return $this->_database->query($query)->row();' . PHP_EOL;
             } else {
-                $print .= '        $this->db->where($this->primary, $id);' . PHP_EOL;
-                $print .= '        $this->db->update($this->table, $param);' . PHP_EOL;
-                $print .= '        $result = (bool) $this->db->affected_rows();' . PHP_EOL;
+                $print .= '        $this->_database->where($this->primary, $id);' . PHP_EOL;
+                $print .= '        $this->_database->update($this->_table, $param);' . PHP_EOL;
+                $print .= '        $result = (bool) $this->_database->affected_rows();' . PHP_EOL;
                 $print .= '        if (!$result) {' . PHP_EOL;
                 $print .= '            return $result;' . PHP_EOL;
                 $print .= '        }' . PHP_EOL;
@@ -280,8 +284,8 @@ class ModelTemplate
             $print .= '     * @return bool' . PHP_EOL;
             $print .= '     */' . PHP_EOL;
             $print .= '    public function destroy($id) {' . PHP_EOL;
-            $print .= '        $this->db->where($this->primary, $id)->delete($this->table);' . PHP_EOL;
-            $print .= '        return (bool) $this->db->affected_rows();' . PHP_EOL;
+            $print .= '        $this->_database->where($this->primary, $id)->delete($this->_table);' . PHP_EOL;
+            $print .= '        return (bool) $this->_database->affected_rows();' . PHP_EOL;
             $print .= '    }' . PHP_EOL . PHP_EOL; // end public function destroy()
             if ($this->driver === 'pdo') {
                 $print .= '    /**' . PHP_EOL;
@@ -330,25 +334,25 @@ class ModelTemplate
                 }
                 $print .= '    //         switch ($var) {' . PHP_EOL;
                 $print .= '    //             case \'string\':' . PHP_EOL;
-                $print .= '    //                 $temp[] = $this->db->escape($p[$var]);' . PHP_EOL;
+                $print .= '    //                 $temp[] = $this->_database->escape($p[$var]);' . PHP_EOL;
                 $print .= '    //                 break;' . PHP_EOL;
                 $print .= '    //             case \'int\':' . PHP_EOL;
                 $print .= '    //                 $temp[] = $p[$var];' . PHP_EOL;
                 $print .= '    //                 break;' . PHP_EOL;
                 $print .= '    //             case \'date\':' . PHP_EOL;
-                $print .= '    //                 $temp[] = "TO_DATE(".$this->db->escape($p[$var]).", \'YYYY-MM-DD\')";' . PHP_EOL;
+                $print .= '    //                 $temp[] = "TO_DATE(".$this->_database->escape($p[$var]).", \'YYYY-MM-DD\')";' . PHP_EOL;
                 $print .= '    //                 break;' . PHP_EOL;
                 $print .= '    //             case \'stringNullable\':' . PHP_EOL;
-                $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : $this->db->escape($p[$var]);' . PHP_EOL;
+                $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : $this->_database->escape($p[$var]);' . PHP_EOL;
                 $print .= '    //                 break;' . PHP_EOL;
                 $print .= '    //             case \'intNullable\':' . PHP_EOL;
                 $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : $p[$var];' . PHP_EOL;
                 $print .= '    //                 break;' . PHP_EOL;
                 $print .= '    //             case \'dateNullable\':' . PHP_EOL;
-                $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : "TO_DATE(".$this->db->escape($p[$var]).", \'YYYY-MM-DD\')";' . PHP_EOL;
+                $print .= '    //                 $temp[] = empty($p[$var]) ? "NULL" : "TO_DATE(".$this->_database->escape($p[$var]).", \'YYYY-MM-DD\')";' . PHP_EOL;
                 $print .= '    //                 break;' . PHP_EOL;
                 $print .= '    //             default:' . PHP_EOL;
-                $print .= '    //                 $temp[] = $this->db->escape($p[$var]);' . PHP_EOL;
+                $print .= '    //                 $temp[] = $this->_database->escape($p[$var]);' . PHP_EOL;
                 $print .= '    //                 break;' . PHP_EOL;
                 $print .= '    //         }' . PHP_EOL;
                 $print .= '    //     }' . PHP_EOL . PHP_EOL;
@@ -438,40 +442,41 @@ class ModelTemplate
         if (in_array($this->driver, ['pdo', 'sqlsrv'])) {
             $print .= '        /**' . PHP_EOL;
             $print .= '         * Since CodeIgniter 3 default behavior when using LIMIT OFFSET in' . PHP_EOL;
-            $print .= '         * SQL Server 2008 and old Oracle DB always break the query if there exists' . PHP_EOL;
-            $print .= '         * subquery in SELECT statement, we will use this workaround.' . PHP_EOL;
-            $print .= '         * Example query:' . PHP_EOL;
-            $print .= '         * $this->db->select("*,' . PHP_EOL;
+            $print .= '         * SQL Server 2008 and old Oracle DB always break the query' . PHP_EOL;
+            $print .= '         * when subquery exists in SELECT statement, we will use this workaround.' . PHP_EOL;
+            $print .= '         * Example query which will not work:' . PHP_EOL;
+            $print .= '         * $this->_database->select("*,' . PHP_EOL;
             $print .= '         *     (CASE WHEN is_active = 1 THEN \'Active\' ELSE \'Inactive\' END) AS status,' . PHP_EOL;
-            $print .= '         *     COALESCE((SELECT COUNT(*) FROM details), 0) AS count")' . PHP_EOL;
+            $print .= '         *     COALESCE((SELECT COUNT(*) FROM details WHERE details.header_id = header.id), 0) AS count")' . PHP_EOL;
             $print .= '         *     ->from("header")->limit(10, 0)->get()->result();' . PHP_EOL;
             $print .= '         */' . PHP_EOL . PHP_EOL;
-            $print .= '        // Please modify anything below this line according to your needs.' . PHP_EOL . PHP_EOL;
+            $print .= '        // Please modify anything below this line according to your needs.' . PHP_EOL;
             $print .= '        $where = [];' . PHP_EOL;
-            if ($withSoftDelete) {
-                $print .= '        // If you are using soft delete, pass the condition here.' . PHP_EOL;
-                $print .= '        // $where[] = "(is_deleted = 0 AND deleted_by IS NULL)' . PHP_EOL;
-            }
+            $print .= '        // If you are using soft delete, pass the condition here.' . PHP_EOL;
+            $print .= '        // $where[] = "(is_deleted = 0 AND deleted_by IS NULL)"' . PHP_EOL;
             $print .= '        if (!empty($search)) {' . PHP_EOL;
             $print .= '            // Your LIKE query.' . PHP_EOL;
-            $print .= '            // $search = $this->db->escape_like_str(strtolower($search));' . PHP_EOL;
-            $print .= '            // $where[] = "(' . PHP_EOL;
+            $print .= '            // $search = $this->_database->escape_like_str(strtolower($search));' . PHP_EOL;
+            $print .= '            // $q[] = [' . PHP_EOL;
             if ($this->driver === 'sqlsrv') {
-                $print .= '            //     LOWER(CONVERT(VARCHAR(MAX), name)) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
-                $print .= '            //     OR LOWER(CONVERT(VARCHAR(MAX), phone)) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+                $print .= '            //     "LOWER(CONVERT(VARCHAR(MAX), name)) LIKE \'%$search%\' ESCAPE \'!\'",' . PHP_EOL;
+                $print .= '            //     "LOWER(CONVERT(VARCHAR(MAX), phone)) LIKE \'%$search%\' ESCAPE \'!\'",' . PHP_EOL;
             } else {
-                $print .= '            //     LOWER(name) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
-                $print .= '            //     OR LOWER(phone) LIKE \'%$search%\' ESCAPE \'!\'' . PHP_EOL;
+                $print .= '            //     "LOWER(name) LIKE \'%$search%\' ESCAPE \'!\'",' . PHP_EOL;
+                $print .= '            //     "LOWER(phone) LIKE \'%$search%\' ESCAPE \'!\'",' . PHP_EOL;
             }
-            $print .= '            // )";' . PHP_EOL;
+            $print .= '            // ];' . PHP_EOL;
+            $print .= '            // if (count($q) > 0) {' . PHP_EOL;
+            $print .= '            //     $where[] = "(" . join(" OR ", $q) . ")";' . PHP_EOL;
+            $print .= '            // }' . PHP_EOL;
             $print .= '        }' . PHP_EOL . PHP_EOL;
-            $print .= '        // WHERE query only if $where is not empty' . PHP_EOL;
+            $print .= '        // WHERE statement only if $where is not empty' . PHP_EOL;
             $print .= '        $whereStr = count($where) > 0 ? "WHERE " . join(" AND ", $where) : "";' . PHP_EOL;
             $print .= '        $subqStart = $start + $length; // Limit' . PHP_EOL . PHP_EOL;
             $print .= '        // Define what you want to select here.' . PHP_EOL;
             if ($this->driver === 'pdo') { // Oracle DB
                 $print .= '        $subq = "SELECT *' . PHP_EOL;
-                $print .= '            FROM \"{$this->table}\"' . PHP_EOL;
+                $print .= '            FROM \"{$this->_table}\"' . PHP_EOL;
                 $print .= '            $whereStr' . PHP_EOL;
                 $print .= '            ORDER BY \"{$this->primary}\" ASC";' . PHP_EOL . PHP_EOL;
                 $print .= '        // We will wrap your query here.' . PHP_EOL;
@@ -484,7 +489,7 @@ class ModelTemplate
                 $print .= '        // You can use custom order for ROW_NUMBER () here. Example:' . PHP_EOL;
                 $print .= '        // (ORDER BY \"{$this->primary}\" ASC, created_at DESC, code ASC)' . PHP_EOL;
                 $print .= '        $subq = "SELECT *, ROW_NUMBER () OVER (ORDER BY \"{$this->primary}\" ASC) AS rownum' . PHP_EOL;
-                $print .= '            FROM \"{$this->table}\"' . PHP_EOL;
+                $print .= '            FROM \"{$this->_table}\"' . PHP_EOL;
                 $print .= '            $whereStr' . PHP_EOL;
                 $print .= '            ORDER BY \"{$this->primary}\" ASC";' . PHP_EOL . PHP_EOL;
                 $print .= '        // We will wrap your query here.' . PHP_EOL;
@@ -492,33 +497,33 @@ class ModelTemplate
                 $print .= '        // but we will use this as default.' . PHP_EOL;
                 $print .= '        $finalQuery = "SELECT * FROM ($subq) INNERQ WHERE INNERQ.rownum BETWEEN $start AND $subqStart";' . PHP_EOL . PHP_EOL;
             }
-            $print .= '        $query = $this->db->query($finalQuery);' . PHP_EOL;
+            $print .= '        $query = $this->_database->query($finalQuery);' . PHP_EOL;
             $print .= '        $result = $query->result();' . PHP_EOL . PHP_EOL;
             $print .= '        // Free up memory' . PHP_EOL;
             $print .= '        $query->free_result();' . PHP_EOL;
-            $print .= '        $this->db->close();' . PHP_EOL . PHP_EOL;
+            $print .= '        $this->_database->close();' . PHP_EOL . PHP_EOL;
             $print .= '        unset($where, $whereStr, $subq, $subqStart, $finalQuery);' . PHP_EOL;
             $print .= '        return $result;' . PHP_EOL;
         } else {
-            $print .= '        $this->db->select();' . PHP_EOL;
-            $print .= '        $this->db->from($this->table);' . PHP_EOL;
+            $print .= '        $this->_database->select();' . PHP_EOL;
+            $print .= '        $this->_database->from($this->_table);' . PHP_EOL;
             if ($withSoftDelete) {
                 $print .= '        $this->softDelete("clean");' . PHP_EOL;
             }
             $print .= '        if (!empty($search)) {' . PHP_EOL;
             $print .= '            // Your LIKE query.' . PHP_EOL;
             $print .= '            // $search = strtolower($search);' . PHP_EOL;
-            $print .= '            // $this->db->group_start();' . PHP_EOL;
-            $print .= '            //     $this->db->like(\'LOWER(name)\', $search);' . PHP_EOL;
-            $print .= '            //     $this->db->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
-            $print .= '            // $this->db->group_end();' . PHP_EOL;
+            $print .= '            // $this->_database->group_start();' . PHP_EOL;
+            $print .= '            //     $this->_database->like(\'LOWER(name)\', $search);' . PHP_EOL;
+            $print .= '            //     $this->_database->or_like(\'LOWER(phone)\', $search);' . PHP_EOL;
+            $print .= '            // $this->_database->group_end();' . PHP_EOL;
             $print .= '        }' . PHP_EOL;
-            $print .= '        $this->db->limit($length, $start);' . PHP_EOL;
-            $print .= '        $query = $this->db->get();' . PHP_EOL;
+            $print .= '        $this->_database->limit($length, $start);' . PHP_EOL;
+            $print .= '        $query = $this->_database->get();' . PHP_EOL;
             $print .= '        $result = $query->result();' . PHP_EOL . PHP_EOL;
             $print .= '        // Free up memory' . PHP_EOL;
             $print .= '        $query->free_result();' . PHP_EOL;
-            $print .= '        $this->db->close();' . PHP_EOL . PHP_EOL;
+            $print .= '        $this->_database->close();' . PHP_EOL . PHP_EOL;
             $print .= '        return $result;' . PHP_EOL;
         }
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function queryDatatables()
@@ -528,12 +533,12 @@ class ModelTemplate
         $print .= '     * @return int' . PHP_EOL;
         $print .= '     */' . PHP_EOL;
         $print .= '    public function totalRecords() {' . PHP_EOL;
-        $print .= '        $this->db->select();' . PHP_EOL;
-        $print .= '        $this->db->from($this->table);' . PHP_EOL;
+        $print .= '        $this->_database->select();' . PHP_EOL;
+        $print .= '        $this->_database->from($this->_table);' . PHP_EOL;
         if ($withSoftDelete) {
             $print .= '        $this->softDelete("clean");' . PHP_EOL;
         }
-        $print .= '        $result = $this->db->count_all_results();' . PHP_EOL;
+        $print .= '        $result = $this->_database->count_all_results();' . PHP_EOL;
         $print .= '        return $result ? $result : 0;' . PHP_EOL;
         $print .= '    }' . PHP_EOL . PHP_EOL; // end public function totalRecords()
 
@@ -576,27 +581,27 @@ class ModelTemplate
             $print .= '            // Default is "clean"' . PHP_EOL;
             $print .= '            switch ($switchParam) {' . PHP_EOL;
             $print .= '                case "clean":' . PHP_EOL;
-            $print .= '                    $this->db->group_start();' . PHP_EOL;
+            $print .= '                    $this->_database->group_start();' . PHP_EOL;
             $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
-            $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;
+            $print .= '                            $this->_database->where("$param IS NULL");' . PHP_EOL;
             $print .= '                        }' . PHP_EOL;
-            $print .= '                    $this->db->group_end();' . PHP_EOL;
+            $print .= '                    $this->_database->group_end();' . PHP_EOL;
             $print .= '                    break;' . PHP_EOL;
             $print .= '                case "trashed":' . PHP_EOL;
-            $print .= '                    $this->db->group_start();' . PHP_EOL;
+            $print .= '                    $this->_database->group_start();' . PHP_EOL;
             $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
-            $print .= '                            $this->db->where("$param IS NOT NULL");' . PHP_EOL;
+            $print .= '                            $this->_database->where("$param IS NOT NULL");' . PHP_EOL;
             $print .= '                        }' . PHP_EOL;
-            $print .= '                    $this->db->group_end();' . PHP_EOL;
+            $print .= '                    $this->_database->group_end();' . PHP_EOL;
             $print .= '                    break;' . PHP_EOL;
             $print .= '                case "all":' . PHP_EOL;
             $print .= '                    break;' . PHP_EOL;
             $print .= '                default:' . PHP_EOL;
-            $print .= '                    $this->db->group_start();' . PHP_EOL;
+            $print .= '                    $this->_database->group_start();' . PHP_EOL;
             $print .= '                        foreach ($this->softDeleteParams as $param) {' . PHP_EOL;
-            $print .= '                            $this->db->where("$param IS NULL");' . PHP_EOL;
+            $print .= '                            $this->_database->where("$param IS NULL");' . PHP_EOL;
             $print .= '                        }' . PHP_EOL;
-            $print .= '                    $this->db->group_end();' . PHP_EOL;
+            $print .= '                    $this->_database->group_end();' . PHP_EOL;
             $print .= '                    break;' . PHP_EOL;
             $print .= '            }' . PHP_EOL;
             $print .= '        }' . PHP_EOL;

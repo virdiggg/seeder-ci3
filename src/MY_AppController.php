@@ -44,6 +44,14 @@ class MY_AppController extends \CI_Controller
         }
     }
 
+    public function index()
+    {
+        $kernel = new Console\Kernel($this->env->getConfig());
+
+        print_r($_SERVER['argv']);
+        $kernel->handle($_SERVER['argv']);
+    }
+
     public function init()
     {
         require_once __DIR__ . '/../bootstrap/install.php';

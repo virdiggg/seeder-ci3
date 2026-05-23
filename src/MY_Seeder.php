@@ -2,16 +2,16 @@
 
 namespace Virdiggg\SeederCi3;
 
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Utils\Str;
 
 class MY_Seeder extends \CI_Migration
 {
   /**
    * Table name.
    * 
-   * @param string $name
+   * @param string $tableName
    */
-  protected $name;
+  protected $tableName;
 
   private $str;
 
@@ -48,6 +48,6 @@ class MY_Seeder extends \CI_Migration
    */
   protected function prepareName()
   {
-    $this->name = $this->str->normalizeName($this->name);
+    $this->tableName = $this->str->normalizeName($this->tableName);
   }
 }

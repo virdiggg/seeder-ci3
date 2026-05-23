@@ -25,7 +25,7 @@ class ControllerTemplate
     {
         $withResources = FALSE;
         if (count($param) > 0) {
-            if (in_array('--r', $param)) {
+            if (isset($param['r']) && $param['r']) {
                 $withResources = TRUE;
             }
         }

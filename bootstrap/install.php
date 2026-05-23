@@ -25,4 +25,9 @@ if (!file_exists($appPath)) {
     }
 }
 
+$ci3Path = FCPATH . 'ci3';
+
+copy(__DIR__.DIRECTORY_SEPARATOR.'ci3', $ci3Path);
+@chmod($ci3Path, 0755);
+
 echo "Seeder CI3 installed\n";

@@ -2,7 +2,7 @@
 
 namespace Virdiggg\SeederCi3;
 
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Utils\Str;
 
 class MY_Alter extends \CI_Migration
 {

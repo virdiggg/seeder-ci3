@@ -4,7 +4,7 @@ namespace Virdiggg\SeederCi3;
 
 class MY_Controller extends \CI_Controller
 {
-    protected bool $jsonPretty = false;
+    protected bool  $jsonPretty = false;
     protected array $data = [];
 
     public function __construct()

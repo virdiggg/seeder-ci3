@@ -3,7 +3,7 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
- * Type of migration, sequential or timestamp. Default to 'timestamp'.
+ * Type of migration, 'sequential' or 'timestamp'. Default to 'timestamp'.
  * 
  * Optional, we will take the value from migration.php if not present
  */
@@ -27,6 +27,11 @@ $config['date_time'] = [];
  * Name of database connection. Default to 'default'.
  */
 $config['db_conn'] = 'default';
+
+/**
+ * Limit of rows to be fetched from database or faker generated rows for seeding. Default to 10.
+ */
+$config['limit_seed'] = 10;
 
 /**
  * List of additional function to be called in constructor. Default to [].

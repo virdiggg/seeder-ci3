@@ -2,50 +2,52 @@
 
 namespace Virdiggg\SeederCi3\Templates;
 
+use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+
 class MigrationTemplate
 {
     private $driver;
+    private $str;
 
-    public function __construct($driver = 'mysql')
+    public function __construct($driver = 'mysqli')
     {
         $this->driver = $driver;
+        $this->str = new Str();
     }
 
     /**
      * Parse input as printable string for migration file.
      *
      * @param string $name
-     * @param string $rand
-     * @param string $prefix
+     * @param string $tableName
      * @param array  $param
      * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return string
      */
-    public function template($name, $rand, $prefix, $param, $constructors = [])
+    public function template($name, $tableName, $param, $constructors = [])
     {
-        return $prefix === 'alter'
-            ? $this->alterTable($name, $rand, $prefix, $param, $constructors)
-            : $this->createTable($name, $rand, $prefix, $param, $constructors);
+        return $this->str->startsWith($name, 'Alter_')
+            ? $this->alterTable($name, $tableName, $param, $constructors)
+            : $this->createTable($name, $tableName, $param, $constructors);
     }
 
     /**
      * Prepare create table template
      * 
      * @param string $name
-     * @param string $rand         Random string
-     * @param string $prefix
+     * @param string $tableName
      * @param array  $param
      * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return string
      */
-    public function createTable($name, $rand, $prefix, $param, $constructors = [])
+    public function createTable($name, $tableName, $param, $constructors = [])
     {
         $softDelete = $this->softDelete($param);
         $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
         $print .= 'use Virdiggg\SeederCi3\MY_Migration;' . PHP_EOL . PHP_EOL;
-        $print .= 'Class Migration_' . ucwords($prefix) . '_' . $name . '_' . $rand . ' extends MY_Migration {' . PHP_EOL;
+        $print .= 'Class Migration_' . $name . ' extends MY_Migration {' . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;
         $print .= '        parent::__construct();' . PHP_EOL . PHP_EOL;
         $print .= '        /**' . PHP_EOL;
@@ -53,7 +55,7 @@ class MigrationTemplate
         $print .= '         * ' . PHP_EOL;
         $print .= '         * @param string $name' . PHP_EOL;
         $print .= '         */' . PHP_EOL;
-        $print .= '        $this->name = "' . $name . '";' . PHP_EOL . PHP_EOL;
+        $print .= '        $this->name = "' . $tableName . '";' . PHP_EOL . PHP_EOL;
         $print .= '        /**' . PHP_EOL;
         $print .= '         * Primary key.' . PHP_EOL;
         $print .= '         * ' . PHP_EOL;
@@ -125,19 +127,18 @@ class MigrationTemplate
      * Prepare alter table template
      *
      * @param string $name
-     * @param string $rand
-     * @param string $prefix
+     * @param string $tableName
      * @param array  $param
      * @param array  $constructors List of additional function to be called in constructor.
      *
      * @return string
      */
-    public function alterTable($name, $rand, $prefix, $param, $constructors = [])
+    public function alterTable($name, $tableName, $param, $constructors = [])
     {
         $softDelete = $this->softDelete($param);
         $print = '<?php' . PHP_EOL . PHP_EOL;
         $print .= 'use Virdiggg\SeederCi3\MY_Alter;' . PHP_EOL . PHP_EOL;
-        $print .= 'Class Migration_' . ucwords($prefix) . '_' . $name . '_' . $rand . ' extends MY_Alter {' . PHP_EOL;
+        $print .= 'Class Migration_' . $name . ' extends MY_Alter {' . PHP_EOL;
         $print .= '    public function __construct() {' . PHP_EOL;
         $print .= '        parent::__construct();' . PHP_EOL . PHP_EOL;
         $print .= '        /**' . PHP_EOL;
@@ -145,7 +146,7 @@ class MigrationTemplate
         $print .= '         * ' . PHP_EOL;
         $print .= '         * @param string $name' . PHP_EOL;
         $print .= '         */' . PHP_EOL;
-        $print .= '        $this->name = "' . $name . '";' . PHP_EOL . PHP_EOL;
+        $print .= '        $this->name = "' . $tableName . '";' . PHP_EOL . PHP_EOL;
         $print .= '        /**' . PHP_EOL;
         $print .= '         * Array table fields.' . PHP_EOL;
         $print .= '         * ' . PHP_EOL;
@@ -220,13 +221,15 @@ class MigrationTemplate
     /**
      * Param soft delete
      * 
-     * @param string $name
+     * @param array $param
      * 
      * @return string
      */
     private function softDelete($param) {
-        if (!in_array('--soft-delete', $param)) {
-            return '';
+        if (count($param) > 0) {
+            if (!isset($param['soft-delete'])) {
+                return '';
+            }
         }
 
         $softDelete = "            'deleted_by' => [" . PHP_EOL;

@@ -2,7 +2,7 @@
 
 namespace Virdiggg\SeederCi3\Templates;
 
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Utils\Str;
 
 class FakerTemplate
 {
@@ -16,7 +16,7 @@ class FakerTemplate
      * @param string $conn
      * @param string $driver
      */
-    public function __construct($conn = 'default', $driver = 'mysql')
+    public function __construct($conn = 'default', $driver = 'mysqli')
     {
         $this->conn = $conn;
         $this->driver = $driver;

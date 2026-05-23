@@ -27,6 +27,13 @@ class Kernel
       'deprecated' => false,
       'deprecated_message' => '',
     ],
+    'version' => [
+      'class' => null,
+      'description' => 'Display current Seeder CI3 version',
+      'example' => 'php ci3 version',
+      'deprecated' => false,
+      'deprecated_message' => '',
+    ],
     'init' => [
       'class' => InitCommand::class,
       'description' => 'Initialize Seeder CI3 in your CodeIgniter 3 project',
@@ -41,6 +48,13 @@ class Kernel
       'deprecated' => true,
       'deprecated_message' => 'Please use "php ci3 init" instead',
     ],
+    // 'tidy' => [
+    //   'class' => TidyCommand::class,
+    //   'description' => 'Move all migration files inside "migrated" folder',
+    //   'example' => 'php ci3 tidy',
+    //   'deprecated' => false,
+    //   'deprecated_message' => '',
+    // ],
     'migrate' => [
       'class' => MigrateCommand::class,
       'description' => 'Run database migrations',
@@ -55,13 +69,13 @@ class Kernel
       'deprecated' => false,
       'deprecated_message' => '',
     ],
-    'router' => [
-      'class' => RouterCommand::class,
-      'description' => 'Generate router files',
-      'example' => 'php ci3 router:list [--postman]',
-      'deprecated' => false,
-      'deprecated_message' => '',
-    ],
+    // 'router' => [
+    //   'class' => RouterCommand::class,
+    //   'description' => 'Generate router files',
+    //   'example' => 'php ci3 router:list [--postman]',
+    //   'deprecated' => false,
+    //   'deprecated_message' => '',
+    // ],
     'make:model' => [
       'class' => MakeModelCommand::class,
       'description' => 'Create a new model',
@@ -120,6 +134,11 @@ class Kernel
       return;
     }
 
+    if ($commandName === 'version') {
+      $this->version();
+      return;
+    }
+
     $this->run($commandName, array_slice($argv, 4));
   }
 
@@ -141,7 +160,7 @@ class Kernel
     $command->handle();
   }
 
-  public function help()
+  private function help()
   {
     echo PHP_EOL;
     echo "Seeder CI3 Command Line Tool";
@@ -163,5 +182,10 @@ class Kernel
 
       echo PHP_EOL;
     }
+  }
+
+  private function version()
+  {
+    echo 'Seeder CI3 Version ' . $this->str->greenText($this->env->getVersion(), false);
   }
 }

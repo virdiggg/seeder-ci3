@@ -27,7 +27,6 @@ class MY_Controller extends \CI_Controller
     }
 
     echo json_encode($res, $flags);
-
     return;
   }
 

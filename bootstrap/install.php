@@ -1,8 +1,7 @@
 <?php
 
 $appPath = APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'App.php';
-
-$templatePath = 'vendor/virdiggg/seeder-ci3/example/App.php';
+$templatePath = __DIR__ . DIRECTORY_SEPARATOR . 'App.php';
 
 if (!file_exists($appPath)) {
     copy($templatePath, $appPath);
@@ -10,9 +9,7 @@ if (!file_exists($appPath)) {
 } else {
     $content = file_get_contents($appPath);
 
-    if (
-        strpos($content, 'Virdiggg\\SeederCi3\\MY_AppController') === false
-    ) {
+    if (strpos($content, 'Virdiggg\\SeederCi3\\MY_AppController') === false) {
 
         $content = preg_replace(
             '/class\s+App\s+extends\s+CI_AppController/',
@@ -27,7 +24,7 @@ if (!file_exists($appPath)) {
 
 $ci3Path = FCPATH . 'ci3';
 
-copy(__DIR__.DIRECTORY_SEPARATOR.'ci3', $ci3Path);
+copy(__DIR__ . DIRECTORY_SEPARATOR . 'ci3', $ci3Path);
 @chmod($ci3Path, 0755);
 
 echo "Seeder CI3 installed\n";

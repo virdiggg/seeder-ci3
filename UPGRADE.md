@@ -38,12 +38,6 @@ Run:
 php index.php app init
 ```
 
-or:
-
-```bash
-php ci3 init
-```
-
 This command will automatically:
 
 * Create CLI bootstrap file
@@ -51,6 +45,14 @@ This command will automatically:
 * Publish migration hooks
 * Publish new entry point controller
 * Migrate compatible legacy migration hooks
+
+---
+
+In case you want to update the config, entry point, or bootstrapping to latest version available:
+
+```bash
+php ci3 init
+```
 
 ---
 
@@ -134,7 +136,7 @@ class App_ci3 extends MY_AppController
 Run:
 
 ```bash
-php index.php app init
+php index.php app_ci3 init
 ```
 
 or:
@@ -220,7 +222,7 @@ This command is still supported to simplify legacy project upgrades.
 The old:
 
 ```bash
-php ci3 publish
+php index.php app publish
 ```
 
 command is deprecated.

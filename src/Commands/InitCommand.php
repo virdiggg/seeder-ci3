@@ -143,10 +143,21 @@ class InitCommand extends Command
 
   private function publishMigrationHooks()
   {
+    $hooksPath = APPPATH . 'hooks' . DIRECTORY_SEPARATOR;
 
-    $postMigrationPath = APPPATH . 'hooks' . DIRECTORY_SEPARATOR . 'PostMigration.php';
-    $preMigrationPath = APPPATH . 'hooks' . DIRECTORY_SEPARATOR . 'PreMigration.php';
+    $this->fl->ensureDirectoryExists($hooksPath);
+
+    $postMigrationPath = $hooksPath . 'PostMigration.php';
     $postMigration = SEEDER_ROOT_PATH . 'bootstrap' . DIRECTORY_SEPARATOR . 'PostMigration.php';
+
+    if (!file_exists($postMigrationPath)) {
+      copy($postMigration, $postMigrationPath);
+      echo "Post Migration hooks created\n";
+    } else {
+      echo "Post Migration hooks already exists\n";
+    }
+
+    $preMigrationPath = $hooksPath . 'PreMigration.php';
     $preMigration = SEEDER_ROOT_PATH . 'bootstrap' . DIRECTORY_SEPARATOR . 'PreMigration.php';
 
     if (!file_exists($preMigrationPath)) {
@@ -156,11 +167,100 @@ class InitCommand extends Command
       echo "Pre Migration hooks already exists\n";
     }
 
-    if (!file_exists($postMigrationPath)) {
-      copy($postMigration, $postMigrationPath);
-      echo "Post Migration hooks created\n";
-    } else {
-      echo "Post Migration hooks already exists\n";
+    $this->migrateLegacyHooks($postMigrationPath);
+  }
+
+  private function migrateLegacyHooks($postMigrationPath)
+  {
+    $legacyApp = APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'App.php';
+
+    if (!file_exists($legacyApp)) {
+      return;
     }
+
+    $content = file_get_contents($legacyApp);
+
+    if (!$content) {
+      return;
+    }
+
+    /**
+     * Match:
+     * if ($this->migrateCalled) {
+     *     ...
+     * }
+     */
+    preg_match(
+      '/if\s*\(\s*\$this->migrateCalled\s*\)\s*\{(.*?)\n\s*\}/s',
+      $content,
+      $matches
+    );
+
+    if (!isset($matches[1])) {
+      return;
+    }
+
+    $legacyHookContent = trim($matches[1]);
+
+    if (!$legacyHookContent) {
+      return;
+    }
+
+    /**
+     * Convert $this to $CI
+     */
+    $replacements = [
+      '$this->db' => '$CI->db',
+      '$this->load' => '$CI->load',
+      '$this->logger' => '$CI->logger',
+      '$this->config' => '$CI->config',
+      '$this->session' => '$CI->session',
+      '$this->input' => '$CI->input',
+    ];
+
+    $legacyHookContent = str_replace(
+      array_keys($replacements),
+      array_values($replacements),
+      $legacyHookContent
+    );
+
+    $templateContent = file_get_contents($postMigrationPath);
+
+    if (!$templateContent) {
+      return;
+    }
+
+    /**
+     * Prevent duplicate migration
+     */
+    if (strpos($templateContent, $legacyHookContent) !== false) {
+      return;
+    }
+
+    /**
+     * Inject below:
+     * $CI = &get_instance();
+     */
+    $injectedContent =
+      PHP_EOL
+      . PHP_EOL
+      . '        // Migrated from legacy App::__destruct()'
+      . PHP_EOL
+      . preg_replace(
+        '/^/m',
+        '        ',
+        $legacyHookContent
+      );
+
+    $templateContent = preg_replace(
+      '/\$CI\s*=\s*&get_instance\(\);/',
+      '$0' . $injectedContent,
+      $templateContent,
+      1
+    );
+
+    file_put_contents($postMigrationPath, $templateContent);
+
+    echo $this->str->greenText("Legacy migration hooks migrated to PostMigration.php");
   }
 }

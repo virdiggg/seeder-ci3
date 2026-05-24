@@ -9,8 +9,6 @@ class PreMigration
         // example
         // $CI->db->query("GRANT SELECT ON ALL TABLES IN SCHEMA public TO myrole");
 
-        $CI->load->library('Logger');
-        $CI->logger->setLogPath('queries');
-        $CI->logger->write_log('debug','User run migration.');
+        log_message('info', 'Migrate will be executed');
     }
 }

@@ -42,10 +42,26 @@ composer require virdiggg/seeder-ci3
 
 # Quick Start
 
+Create a controller new `application/controllers/App_ci3.php` for entry point:
+
+```php
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+
+use Virdiggg\SeederCi3\MY_AppController;
+
+class App_ci3 extends MY_AppController
+{
+    public function __construct()
+    {
+        parent::__construct();
+    }
+}
+```
+
 Initialize Seeder CI3 inside your project:
 
 ```bash
-php ci3 init
+php index.php app_ci3 init
 ```
 
 The initialization command will automatically:

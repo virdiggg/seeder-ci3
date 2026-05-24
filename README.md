@@ -1,16 +1,10 @@
 # Seeder CI3
 
-A development utility library for CodeIgniter 3 inspired by Laravel Artisan and `orangehill/iseed`, designed to simplify migration, seeding, and boilerplate generation workflows in legacy CodeIgniter applications.
+Seeder CI3 is a modern CLI-style development toolkit for CodeIgniter 3 inspired by Laravel Artisan and `orangehill/iseed`.
 
-This package provides a lightweight CLI-style development toolkit for generating:
+It provides migration management, database seeding, CRUD scaffolding, faker generation, route inspection, and development helpers while remaining fully compatible with traditional CodeIgniter 3 applications.
 
-- Database seeders from existing tables
-- Migration files
-- Controllers
-- Models
-- Resource scaffolding
-
-while maintaining compatibility with traditional CodeIgniter 3 project structures.
+Seeder CI3 is designed for developers maintaining legacy systems who still want modern development workflows without migrating away from CodeIgniter 3.
 
 ---
 
@@ -18,88 +12,133 @@ while maintaining compatibility with traditional CodeIgniter 3 project structure
 
 ---
 
-## Overview
+# Features
 
-CodeIgniter 3 lacks a native development workflow comparable to modern frameworks such as Laravel.
+Seeder CI3 includes:
 
-Seeder CI3 bridges that gap by introducing:
-
-- Seeder generation from existing database data
-- Migration management helpers
-- Resource generators
-- Automated boilerplate scaffolding
-- CLI-style commands through CodeIgniter controllers
-
-The library is particularly useful for:
-
-- Legacy enterprise applications
-- Internal business systems
-- Teams maintaining long-lived CI3 projects
-- Faster database replication for development/testing
-- Rapid CRUD scaffolding
+* Database seeder generation from existing tables
+* Migration generation and execution
+* Migration rollback support
+* CRUD scaffolding
+* Model and controller generators
+* Built-in faker generation
+* Route listing utilities
+* Post-migration hooks
+* PostgreSQL-friendly helpers
+* Lightweight response wrapper controller
+* CLI-style development workflow for CodeIgniter 3
 
 ---
 
-## Features
+# Installation
 
-### Seeder Generation
+Install Seeder CI3 via Composer:
 
-Generate database seeders directly from existing table contents.
-
-Useful for:
-
-- Development environments
-- QA datasets
-- Staging replication
-- Reference/master tables
+```bash
+composer require virdiggg/seeder-ci3
+```
 
 ---
 
-### Migration Utilities
+# Quick Start
 
-Includes migration helpers similar to Laravel Artisan workflows:
+Initialize Seeder CI3 inside your project:
 
-- Create migration files
-- Run migrations
-- Rollback migrations
-- Organize migration directories
+```bash
+php ci3 init
+```
 
-Supports both:
+The initialization command will automatically:
 
-- Sequential migrations
-- Timestamp migrations
-
----
-
-### Resource Scaffolding
-
-Generate:
-
-- Controllers
-- Models
-- CRUD resources
-- Soft delete support
-- PostgreSQL-friendly helper methods
+* Create `App_ci3.php`
+* Create CLI bootstrap file `ci3`
+* Publish Seeder CI3 configuration
+* Publish migration hooks
+* Migrate legacy migration hooks automatically
 
 ---
 
-### Base Controller Utilities
+# Generated Files
 
-Seeder CI3 now includes a lightweight base controller:
+Initialization may generate:
+
+```bash
+application/controllers/App_ci3.php
+application/config/seeder.php
+application/hooks/PostMigration.php
+application/hooks/PreMigration.php
+ci3
+```
+
+---
+
+# Basic Usage
+
+Show available commands:
+
+```bash
+php ci3 help
+```
+
+Check installed version:
+
+```bash
+php ci3 version
+```
+
+Run migrations:
+
+```bash
+php ci3 migrate
+```
+
+Rollback migrations:
+
+```bash
+php ci3 rollback
+```
+
+Generate a model:
+
+```bash
+php ci3 make:model Admin/Users --r --c --m --soft-delete --faker
+```
+
+Generate a seeder:
+
+```bash
+php ci3 make:seeder users --soft-delete
+```
+
+Generate fake data:
+
+```bash
+php ci3 make:faker users
+```
+
+List application routes:
+
+```bash
+php ci3 router:list --postman
+```
+
+---
+
+# Wrapper Controller
+
+Seeder CI3 includes:
 
 ```php
 Virdiggg\SeederCi3\MY_Controller
 ```
 
-designed to simplify common response and rendering workflows in CodeIgniter 3 applications.
+A lightweight wrapper controller designed to simplify:
 
-Included helper methods:
-
-- `asJson()` → JSON response helper
-- `pretty()` → Pretty-print JSON responses
-- `withData()` → Shared view data injection
-- `asView()` → Standard view rendering
-- `asHtml()` → Render views as HTML strings
+* JSON responses
+* Pretty JSON formatting
+* Shared view data
+* HTML rendering
+* View rendering
 
 Example:
 
@@ -118,428 +157,90 @@ class Api extends MY_Controller
 }
 ```
 
-This controller is intentionally lightweight and framework-native, making it suitable for:
-
-- REST APIs
-- AJAX endpoints
-- Internal dashboards
-- Shared template rendering
-- JSON response standardization
-
 ---
 
-### Faker Generator
+# Migration Hooks
 
-Seeder CI3 now includes a built-in faker generator for rapidly creating development and testing datasets.
+Seeder CI3 supports:
 
-Generate fake records directly from existing database tables:
-
-```bash
-php index.php app faker users
-```
-
-The generator automatically analyzes the table structure and generates contextual fake data based on detected field names.
-
-If the table structure cannot be resolved, Seeder CI3 falls back to default fields such as:
-
-- `username`
-- `full_name`
-
-to ensure faker generation remains functional in minimal environments.
-
----
-
-#### Generate Models With Faker Support
-
-Seeder-enabled models can also be generated with built-in faker support:
-
-```bash
-php index.php app model Users --faker
-```
+* Pre-migration hooks
+* Post-migration hooks
+* Legacy hook migration from old controller destructors
 
 Useful for:
 
-- Development environments
-- QA datasets
-- Frontend pagination testing
-- UI prototyping
-- Local demo systems
-- Automated testing workflows
+* Grant privilege automation
+* Deployment workflows
+* Logging
+* Database synchronization
+* Environment preparation
 
 ---
 
-### PostgreSQL-Friendly Utilities
+# Faker Support
 
-Includes helper methods such as:
-
-- `storeOrUpdate()`
-
-to simplify UPSERT-like workflows for PostgreSQL environments.
-
----
-
-## Installation
-
-Install via Composer:
-
-```bash
-composer require virdiggg/seeder-ci3 --dev
-```
-
----
-
-# Basic Setup
-
-Create a controller to host Seeder CI3 commands.
-
-Example:
-
-`application/controllers/App.php`
-
-```php
-<?php defined('BASEPATH') or exit('No direct script access allowed');
-
-use Virdiggg\SeederCi3\MY_AppController;
-
-class App extends MY_AppController
-{
-    private $migrateCalled = false;
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    public function migrate()
-    {
-        parent::migrate();
-        $this->migrateCalled = true;
-    }
-
-    public function rollback()
-    {
-        if (ENVIRONMENT === "production") {
-            return;
-        }
-
-        parent::rollback();
-    }
-
-    public function __destruct()
-    {
-        if ($this->migrateCalled) {
-            // $this->db->query("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO myrole");
-            // $this->db->query("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO myrole");
-            // log_message('debug', 'PREVILEGES GRANTED');
-        }
-    }
-}
-```
-
----
-
-# Publish Configuration
-
-Generate the default configuration file:
-
-```bash
-php index.php app publish
-```
-
-This will generate:
-
-```bash
-application/config/seeder.php
-```
-
----
-
-# Configuration Example
-
-```php
-<?php defined('BASEPATH') or exit('No direct script access allowed');
-
-$config['migration_type'] = 'timestamp';
-
-$config['migration_path'] = APPPATH . 'migrations' . DIRECTORY_SEPARATOR;
-
-$config['date_time'] = [];
-
-$config['db_conn'] = 'default';
-
-$config['constructors'] = [
-    'controller' => [
-        '$this->authenticated->isAuthenticated();',
-    ],
-    'model' => [
-        '$this->load->helper("string");',
-    ],
-    'seed' => [
-        '$this->load->helper("string");',
-    ],
-    'migration' => [
-        '$this->load->helper("string");',
-    ],
-];
-```
-
----
-
-# Available Commands
-
-## Show Help
-
-```bash
-php index.php app help
-```
-
----
-
-## Print Route List
-
-Print all registered application routes directly in the terminal.
+Seeder CI3 can generate fake datasets directly from existing table structures.
 
 Example:
 
 ```bash
-php index.php app router
+php ci3 make:faker users
 ```
 
-Currently, route discovery only supports controllers located inside:
+Supports:
 
-```text
+* Table-based faker generation
+* Default fallback fields
+* Faker-enabled model scaffolding
+
+---
+
+# Route Utilities
+
+Seeder CI3 can inspect routes directly from terminal:
+
+```bash
+php ci3 router:list
+```
+
+Supports:
+
+* API route inspection
+* Route auditing
+* Endpoint discovery
+* Postman export
+
+Example:
+
+```bash
+php ci3 router:list --postman
+```
+
+Currently optimized for:
+
+```bash
 application/controllers/api/*
 ```
 
-Useful for:
-
-- API debugging
-- Route auditing
-- Endpoint discovery
-- Internal documentation
-- Legacy project maintenance
-
----
-
-### Export Postman-Compatible Route List
-
-Generate route output compatible with Postman import workflows:
+Generated files are stored in"
 
 ```bash
-php index.php app router --postman
-```
-
-This is useful for:
-
-- API testing
-- Team collaboration
-- QA workflows
-- Rapid API onboarding
-- Documentation generation
-
----
-
-## Publish Configuration
-
-```bash
-php index.php app publish
-or
-php index.php app init
+application/storage/
 ```
 
 ---
 
-## Organize Migration Files
+# Documentation
 
-```bash
-php index.php app tidy
-```
+Additional documentation:
 
----
-
-## Run Migrations
-
-```bash
-php index.php app migrate
-```
+* [Usage Guide](./USAGE.md)
+* [Upgrade Guide](./UPGRADE.md)
 
 ---
 
-## Rollback Migration
+# Philosophy
 
-Rollback to a specific migration version:
+Seeder CI3 aims to modernize the CodeIgniter 3 development experience without changing the framework's core architecture.
 
-```bash
-php index.php app rollback --to=1
-```
-
----
-
-## Generate Seeder From Existing Table
-
-Example:
-
-```bash
-php index.php app seed users --limit=10
-```
-
-Options:
-
-- `--limit=10` → Limit generated rows
-
----
-
-## Generate Migration File
-
-Example:
-
-```bash
-php index.php app migration users --soft-delete
-```
-
-Options:
-
-- `--soft-delete` → Add soft delete fields
-
----
-
-## Generate Controller
-
-Example:
-
-```bash
-php index.php app controller Admin/Dashboard/Table --r
-```
-
-Options:
-
-- `--r` → Generate resource methods
-
----
-
-## Generate Model
-
-Example:
-
-```bash
-php index.php app model Admin/Users --r --c --m --soft-delete
-```
-
-Options:
-
-- `--r` → Generate resource methods
-- `--c` → Generate controller
-- `--m` → Generate migration
-- `--soft-delete` → Enable soft delete support
-
----
-
-# PostgreSQL Helper: storeOrUpdate()
-
-When using generated resource models with PostgreSQL, Seeder CI3 includes helper methods such as:
-
-```php
-storeOrUpdate()
-```
-
-This helper simplifies conditional insert/update workflows.
-
----
-
-## Example With Explicit Conditions
-
-```php
-$param = [
-    'name' => 'myname',
-    'username' => 'myusername',
-    'password' => password_hash('password1', PASSWORD_BCRYPT),
-];
-
-$conditions = [
-    'name' => 'myname',
-    'username' => 'myusername',
-];
-
-$res = $this->mymodel->storeOrUpdate($param, $conditions);
-```
-
-This will:
-
-- Insert a row if no matching record exists
-- Update the existing row otherwise
-
----
-
-## Example Using Automatic Conditions
-
-```php
-$param = [
-    'name' => 'myname',
-    'username' => 'myusername',
-    'password' => password_hash('password1', PASSWORD_BCRYPT),
-];
-
-$res = $this->mymodel->storeOrUpdate($param);
-```
-
-If no explicit conditions are provided:
-
-- The library automatically derives conditions from `$param`
-- Exception fields are excluded automatically
-
----
-
-# Upgrade Guide: 1.x → 2.x
-
-Version 2.x introduces lifecycle hooks for migration execution.
-
-Your command controller should extend:
-
-```php
-MY_AppController
-```
-
-and optionally implement migration hooks through:
-
-```php
-__destruct()
-```
-
-Example:
-
-```php
-public function __destruct()
-    if ($this->migrateCalled) {
-        // Post-migration callbacks
-    }
-}
-```
-
-This enables:
-
-- Automatic privilege grants
-- Logging hooks
-- Custom deployment logic
-- Post-migration automation
-
----
-
-# Recommended Use Cases
-
-Seeder CI3 works especially well for:
-
-- Legacy CodeIgniter 3 projects
-- Enterprise internal systems
-- PostgreSQL-backed CI3 applications
-- Development environment replication
-- Database snapshot seeding
-- Rapid CRUD scaffolding
-- Long-term maintenance projects
-
----
-
-# Notes
-
-This library focuses on improving developer experience for CodeIgniter 3 without fundamentally changing the framework architecture.
-
-The goal is to provide modern development conveniences while remaining compatible with traditional CI3 application structures.
+The goal is to provide practical developer tooling for long-term maintenance projects, enterprise systems, and legacy applications that still require fast and efficient workflows.

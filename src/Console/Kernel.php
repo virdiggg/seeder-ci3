@@ -43,13 +43,13 @@ class Kernel
       'deprecated' => false,
       'deprecated_message' => '',
     ],
-    'publish' => [
-      'class' => InitCommand::class,
-      'description' => 'Alias for init command (deprecated)',
-      'example' => 'php ci3 publish',
-      'deprecated' => true,
-      'deprecated_message' => 'Please use "php ci3 init" instead',
-    ],
+    // 'publish' => [
+    //   'class' => InitCommand::class,
+    //   'description' => 'Alias for init command (deprecated)',
+    //   'example' => 'php ci3 publish',
+    //   'deprecated' => true,
+    //   'deprecated_message' => 'Please use "php ci3 init" instead',
+    // ],
     'tidy' => [
       'class' => TidyCommand::class,
       'description' => 'Move all migration files inside "migrated" folder',

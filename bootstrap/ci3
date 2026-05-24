@@ -4,6 +4,6 @@
 define('STDIN', fopen('php://stdin', 'r'));
 
 array_splice($_SERVER['argv'], 1, 0, ['index']);
-array_splice($_SERVER['argv'], 1, 0, ['app']);
+array_splice($_SERVER['argv'], 1, 0, ['app_ci3']);
 
 require __DIR__ . '/index.php';

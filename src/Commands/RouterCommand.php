@@ -45,6 +45,8 @@ class RouterCommand extends Command
 
   private $routeParsed = [];
 
+  private $storagePath = APPPATH . 'storage' . DIRECTORY_SEPARATOR;
+
   public function __construct($input, $env, $e)
   {
     $this->input = $input;
@@ -62,6 +64,8 @@ class RouterCommand extends Command
   public function handle()
   {
     try {
+      $this->fl->ensureDirectoryExists($this->storagePath);
+
       if ($this->input->option('postman')) {
         $this->export();
       } else {
@@ -106,12 +110,8 @@ class RouterCommand extends Command
       $this->parser();
     }
 
-    $storagePath = APPPATH . 'storage' . DIRECTORY_SEPARATOR;
-
-    $this->fl->ensureDirectoryExists($storagePath);
-
-    $collectionFile = $this->exportCollection($storagePath);
-    $environmentFile = $this->exportEnv($storagePath);
+    $collectionFile = $this->exportCollection();
+    $environmentFile = $this->exportEnv();
 
     // Console output
     echo PHP_EOL;
@@ -125,11 +125,11 @@ class RouterCommand extends Command
     echo PHP_EOL;
   }
 
-  private function exportCollection($storagePath)
+  private function exportCollection()
   {
     $collection = $this->exporter->export($this->routeParsed);
 
-    $file = $storagePath . 'postman_collection.json';
+    $file = $this->storagePath . 'postman_collection.json';
 
     file_put_contents(
       $file,
@@ -144,10 +144,10 @@ class RouterCommand extends Command
     return $file;
   }
 
-  private function exportEnv($storagePath)
+  private function exportEnv()
   {
     $environment = $this->exporter->exportEnvironment($this->config->baseUrl);
-    $file = $storagePath . 'postman_environment.json';
+    $file = $this->storagePath . 'postman_environment.json';
 
     file_put_contents(
       $file,

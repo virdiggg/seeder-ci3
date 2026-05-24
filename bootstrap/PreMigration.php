@@ -1,0 +1,14 @@
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+
+class PreMigration
+{
+    public function handle()
+    {
+        $CI = &get_instance();
+
+        // example
+        // $CI->db->query("GRANT SELECT ON ALL TABLES IN SCHEMA public TO myrole");
+
+        log_message('info', 'Migrate will be executed');
+    }
+}

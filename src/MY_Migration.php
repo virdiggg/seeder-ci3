@@ -2,7 +2,7 @@
 
 namespace Virdiggg\SeederCi3;
 
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
+use Virdiggg\SeederCi3\Utils\Str;
 
 class MY_Migration extends \CI_Migration
 {
@@ -43,7 +43,7 @@ class MY_Migration extends \CI_Migration
   public function up()
   {
     if (empty($this->name) || empty($this->fields)) {
-      print("MIGRATION ERROR: " . $this->str->redText('table and fields should not be empty'));
+      echo 'Migration error: ' . $this->str->redText('table name and fields should not be empty');
       return;
     }
 
@@ -66,7 +66,7 @@ class MY_Migration extends \CI_Migration
   public function down()
   {
     if (empty($this->name)) {
-      print("MIGRATION ERROR: " . $this->str->redText('table should not be empty'));
+      echo 'Migration error: ' . $this->str->redText('table name should not be empty');
       return;
     }
 

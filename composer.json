@@ -3,7 +3,7 @@
     "description": "Library Seeder from Existing Database for CodeIgniter 3",
     "type": "library",
     "license": "MIT",
-    "version": "2.5.0",
+    "version": "3.0.0",
     "autoload": {
         "psr-4": {
             "Virdiggg\\SeederCi3\\": "src/"

@@ -1,22 +1,19 @@
 <?php
 
-namespace Virdiggg\SeederCi3;
+namespace Virdiggg\SeederCi3\Commands;
 
-use Virdiggg\SeederCi3\Parsers\RouteParser;
-use Virdiggg\SeederCi3\Parsers\ControllerParser;
-use Virdiggg\SeederCi3\Parsers\InputParser;
+use Virdiggg\SeederCi3\Console\Command;
+use Virdiggg\SeederCi3\Utils\{File, Str};
+use Virdiggg\SeederCi3\Parsers\{RouteParser, ControllerParser, InputParser};
 use Virdiggg\SeederCi3\Exporters\PostmanExporter;
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
-use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
 
-class Router
+class RouterCommand extends Command
 {
-  /**
-   * Instance CI.
-   *
-   * @param object
-   */
-  private $CI;
+  protected $input;
+  protected $env;
+  protected $fl;
+  protected $str;
+  protected $config;
 
   /**
    * Route parser.
@@ -47,38 +44,49 @@ class Router
   private $exporter;
 
   private $routeParsed = [];
-  private $str;
-  private $env;
 
-  public function __construct()
+  private $storagePath = APPPATH . 'storage' . DIRECTORY_SEPARATOR;
+
+  public function __construct($input, $env, $e)
   {
-    $this->CI = &get_instance();
+    $this->input = $input;
+    $this->env = $env;
+    $this->fl = new File();
     $this->str = new Str();
-    $this->env = new Ev();
+    $this->config = $env->getConfig();
+
     $this->routeParser = new RouteParser();
     $this->controllerParser = new ControllerParser();
     $this->inputParser = new InputParser();
     $this->exporter = new PostmanExporter();
   }
 
-  public function parse()
+  public function handle()
   {
-    $routes = $this->routeParser->parse($this->env->loadConfig('routes'));
+    try {
+      $this->fl->ensureDirectoryExists($this->storagePath);
+
+      if ($this->input->option('postman')) {
+        $this->export();
+      } else {
+        $this->parser();
+      }
+    } catch (\Throwable $th) {
+      echo $this->str->redText('Failed to retrieve route list: ' . $th->getMessage());
+      return;
+    }
+  }
+
+  private function parser()
+  {
+    $routes = $this->routeParser->parse($this->env->loadConfig('routes')['file_path']);
     $parsed = [];
 
     foreach ($routes as $route) {
-      /*
-            |--------------------------------------------------------------------------
-            | Parse controller method body
-            |--------------------------------------------------------------------------
-            */
+      // Parse controller method body
       $content = $this->controllerParser->parseMethodContent($route['target']);
-
-      /*
-            |--------------------------------------------------------------------------
-            | Parse GET/POST params
-            |--------------------------------------------------------------------------
-            */
+      // Parse GET/POST params
+      $params = $this->inputParser->parse($content);
       $params = $this->inputParser->parse($content);
 
       $parsed[] = [
@@ -93,45 +101,35 @@ class Router
     }
 
     $this->routeParsed = $parsed;
-    return $parsed;
+    $this->str->renderTable($this->routeParsed);
   }
 
-  public function export()
+  private function export()
   {
     if (count($this->routeParsed) === 0) {
-      $this->parse();
+      $this->parser();
     }
 
-    $storagePath = APPPATH . 'storage' . DIRECTORY_SEPARATOR;
+    $collectionFile = $this->exportCollection();
+    $environmentFile = $this->exportEnv();
 
-    if (!is_dir($storagePath)) {
-      mkdir($storagePath, 0777, true);
-    }
-
-    $collectionFile = $this->exportCollection($storagePath);
-    $environmentFile = $this->exportEnv($storagePath);
-
-    /*
-        |--------------------------------------------------------------------------
-        | Console output
-        |--------------------------------------------------------------------------
-        */
+    // Console output
     echo PHP_EOL;
     echo '======================================' . PHP_EOL;
     echo ' POSTMAN COLLECTION GENERATED ' . PHP_EOL;
     echo '======================================' . PHP_EOL;
     echo PHP_EOL;
-    echo 'FILE: ' . $this->str->greenText($collectionFile);
-    echo 'ENV: ' . $this->str->greenText($environmentFile);
+    echo 'Postman Collection File : ' . $this->str->greenText($collectionFile);
+    echo 'Environment File        : ' . $this->str->greenText($environmentFile);
     echo 'TOTAL ROUTES: ' . $this->str->greenText(count($this->routeParsed), false);
     echo PHP_EOL;
   }
 
-  private function exportCollection($storagePath)
+  private function exportCollection()
   {
     $collection = $this->exporter->export($this->routeParsed);
 
-    $file = $storagePath . 'postman_collection.json';
+    $file = $this->storagePath . 'postman_collection.json';
 
     file_put_contents(
       $file,
@@ -146,11 +144,10 @@ class Router
     return $file;
   }
 
-  private function exportEnv($storagePath)
+  private function exportEnv()
   {
-    $baseUrl = $this->env->getBaseUrl();
-    $environment = $this->exporter->exportEnvironment($baseUrl);
-    $file = $storagePath . 'postman_environment.json';
+    $environment = $this->exporter->exportEnvironment($this->config->baseUrl);
+    $file = $this->storagePath . 'postman_environment.json';
 
     file_put_contents(
       $file,

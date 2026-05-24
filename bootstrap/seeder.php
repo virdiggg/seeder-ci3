@@ -3,7 +3,12 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
- * Type of migration, sequential or timestamp. Default to 'timestamp'.
+ * Can we use 'rollback' command in production environment? Default to false.
+ */
+$config['allow_rollback'] = ENVIRONMENT !== 'production';
+
+/**
+ * Type of migration, 'sequential' or 'timestamp'. Default to 'timestamp'.
  * 
  * Optional, we will take the value from migration.php if not present
  */
@@ -19,7 +24,7 @@ $config['migration_path'] = APPPATH . 'migrations' . DIRECTORY_SEPARATOR;
 /**
  * List of additional table rows with datetime data type.
  * 
- * Default to "['created_at', 'updated_at', 'approved_at', 'deleted_at']".
+ * Default to ['created_at', 'updated_at', 'approved_at', 'deleted_at'].
  */
 $config['date_time'] = [];
 
@@ -27,6 +32,11 @@ $config['date_time'] = [];
  * Name of database connection. Default to 'default'.
  */
 $config['db_conn'] = 'default';
+
+/**
+ * Limit of rows to be fetched from database or faker generated rows for seeding. Default to 10.
+ */
+$config['limit_seed'] = 10;
 
 /**
  * List of additional function to be called in constructor. Default to [].

@@ -138,7 +138,7 @@ Currently optimized for:
 application/controllers/api/*
 ```
 
-Generated files are stored in
+Generated files are stored in:
 
 ```bash
 application/storage/

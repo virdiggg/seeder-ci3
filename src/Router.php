@@ -145,7 +145,7 @@ class Router
 
   private function exportEnv($storagePath)
   {
-    $baseUrl = $this->env->getConfig("baseUrl");
+    $baseUrl = $this->env->getConfig()['baseUrl'];
     $environment = $this->exporter->exportEnvironment($baseUrl);
     $file = $storagePath . 'postman_environment.json';
 

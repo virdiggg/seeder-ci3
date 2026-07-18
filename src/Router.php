@@ -2,12 +2,9 @@
 
 namespace Virdiggg\SeederCi3;
 
-use Virdiggg\SeederCi3\Parsers\RouteParser;
-use Virdiggg\SeederCi3\Parsers\ControllerParser;
-use Virdiggg\SeederCi3\Parsers\InputParser;
+use Virdiggg\SeederCi3\Parsers\{RouteParser, ControllerParser, InputParser};
 use Virdiggg\SeederCi3\Exporters\PostmanExporter;
-use Virdiggg\SeederCi3\Helpers\StrHelper as Str;
-use Virdiggg\SeederCi3\Helpers\EnvHelper as Ev;
+use Virdiggg\SeederCi3\Utils\{Env, Str};
 
 class Router
 {
@@ -54,7 +51,7 @@ class Router
   {
     $this->CI = &get_instance();
     $this->str = new Str();
-    $this->env = new Ev();
+    $this->env = new Env();
     $this->routeParser = new RouteParser();
     $this->controllerParser = new ControllerParser();
     $this->inputParser = new InputParser();
@@ -148,7 +145,7 @@ class Router
 
   private function exportEnv($storagePath)
   {
-    $baseUrl = $this->env->getBaseUrl();
+    $baseUrl = $this->env->getConfig("baseUrl");
     $environment = $this->exporter->exportEnvironment($baseUrl);
     $file = $storagePath . 'postman_environment.json';
 

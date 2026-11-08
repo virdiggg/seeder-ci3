@@ -2,7 +2,7 @@
 
 Seeder CI3 is a modern CLI-style development toolkit for CodeIgniter 3 inspired by Laravel Artisan and `orangehill/iseed`.
 
-It provides migration management, database seeding, CRUD scaffolding, faker generation, route inspection, and development helpers while remaining fully compatible with traditional CodeIgniter 3 applications.
+It provides migration management, database seeding, CRUD scaffolding, faker generation, route inspection, blade-like templating and development helpers while remaining fully compatible with traditional CodeIgniter 3 applications.
 
 Seeder CI3 is designed for developers maintaining legacy systems who still want modern development workflows without migrating away from CodeIgniter 3.
 
@@ -163,6 +163,22 @@ A lightweight wrapper controller designed to simplify:
 * Blade-like template rendering
 
 Example:
+
+```php
+class Orders extends MY_Controller
+{
+    public function index()
+    {
+        return $this
+            ->asTemplate('orders/edit', [
+                'user' => 'asd123',
+                'message' => 'Success'
+            ]);
+    }
+}
+```
+
+---
 
 ```php
 class Api extends MY_Controller

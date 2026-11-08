@@ -9,9 +9,9 @@ use Virdiggg\SeederCi3\Utils\{Env, Str};
 class Router
 {
   /**
-   * Instance CI.
+   * CodeIgniter super object.
    *
-   * @param object
+   * @param \CI_Controller
    */
   private $CI;
 

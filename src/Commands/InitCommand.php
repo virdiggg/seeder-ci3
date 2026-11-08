@@ -28,11 +28,53 @@ class InitCommand extends Command
       $this->publishCli();
       $this->publishConfig();
       $this->publishMigrationHooks();
+      $this->publishTemplates();
 
       echo $this->str->greenText("Seeder CI3 initialized");
     } catch (\Throwable $th) {
       echo $this->str->redText('Seeder CI3 initialization failed: ' . $th->getMessage());
       return;
+    }
+  }
+
+  private function publishTemplates()
+  {
+    $viewPath = APPPATH . 'views';
+    $this->fl->ensureDirectoryExists($viewPath . DIRECTORY_SEPARATOR . 'layouts');
+
+    $templateWrapperPath = $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'wrapper.php';
+    $templateExamplePath = $viewPath . DIRECTORY_SEPARATOR . 'example.php';
+    $templateHelperPath = APPPATH . 'helpers' . DIRECTORY_SEPARATOR . 'template_helper.php';
+
+    $sourceWrapper = APPPATH . 'vendor' . DIRECTORY_SEPARATOR . 'virdiggg' . DIRECTORY_SEPARATOR
+      . 'seeder-ci3' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'wrapper.php';
+    $sourceExample = APPPATH . 'vendor' . DIRECTORY_SEPARATOR . 'virdiggg' . DIRECTORY_SEPARATOR
+      . 'seeder-ci3' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'example.php';
+    $sourceHelper = APPPATH . 'vendor' . DIRECTORY_SEPARATOR . 'virdiggg' . DIRECTORY_SEPARATOR
+      . 'seeder-ci3' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'template_helper.php';
+
+    if (!file_exists($templateWrapperPath)) {
+      copy($sourceWrapper, $templateWrapperPath);
+      @chmod($sourceWrapper, 0755);
+      echo $this->str->greenText("Successfully created: " . $sourceWrapper);
+    } else {
+      echo $this->str->yellowText("Template file already exists");
+    }
+
+    if (!file_exists($templateExamplePath)) {
+      copy($sourceExample, $templateExamplePath);
+      @chmod($sourceExample, 0755);
+      echo $this->str->greenText("Successfully created: " . $sourceExample);
+    } else {
+      echo $this->str->yellowText("Example file already exists");
+    }
+
+    if (!file_exists($templateHelperPath)) {
+      copy($sourceHelper, $templateHelperPath);
+      @chmod($sourceHelper, 0755);
+      echo $this->str->greenText("Successfully created: " . $sourceHelper);
+    } else {
+      echo $this->str->yellowText("Template helper file already exists");
     }
   }
 
@@ -152,9 +194,9 @@ class InitCommand extends Command
 
     if (!file_exists($postMigrationPath)) {
       copy($postMigration, $postMigrationPath);
-      echo "Post Migration hooks created\n";
+      echo $this->str->greenText("Successfully created: " . $postMigration);
     } else {
-      echo "Post Migration hooks already exists\n";
+      echo $this->str->yellowText("Post Migration hooks already exists");
     }
 
     $preMigrationPath = $hooksPath . 'PreMigration.php';
@@ -162,9 +204,9 @@ class InitCommand extends Command
 
     if (!file_exists($preMigrationPath)) {
       copy($preMigration, $preMigrationPath);
-      echo "Pre Migration hooks created\n";
+      echo $this->str->greenText("Successfully created: " . $preMigration);
     } else {
-      echo "Pre Migration hooks already exists\n";
+      echo $this->str->yellowText("Pre Migration hooks already exists");
     }
 
     $this->migrateLegacyHooks($postMigrationPath);

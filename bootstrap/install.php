@@ -31,6 +31,45 @@ if (!file_exists($configPath)) {
   echo "Seeder config already exists\n";
 }
 
+$viewPath = APPPATH . 'views';
+if (!is_dir($viewPath . DIRECTORY_SEPARATOR . 'layouts')) {
+  $old = umask(0);
+  mkdir($viewPath . DIRECTORY_SEPARATOR . 'layouts', 0755, true);
+  umask($old);
+} else {
+  $old = umask(0);
+  @chmod($viewPath . DIRECTORY_SEPARATOR . 'layouts', 0755);
+  umask($old);
+}
+
+$templateWrapperPath = $viewPath . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . 'wrapper.php';
+$templateExamplePath = $viewPath . DIRECTORY_SEPARATOR . 'example.php';
+$templateHelperPath = APPPATH . 'helpers' . DIRECTORY_SEPARATOR . 'template_helper.php';
+$wrapperPath = __DIR__ . DIRECTORY_SEPARATOR . 'wrapper.php';
+$examplePath = __DIR__ . DIRECTORY_SEPARATOR . 'example.php';
+$helperPath = __DIR__ . DIRECTORY_SEPARATOR . 'template_helper.php';
+
+if (!file_exists($templateWrapperPath)) {
+  copy($wrapperPath, $templateWrapperPath);
+  echo "Template file created\n";
+} else {
+  echo "Template file already exists\n";
+}
+
+if (!file_exists($templateExamplePath)) {
+  copy($examplePath, $templateExamplePath);
+  echo "Example file created\n";
+} else {
+  echo "Example file already exists\n";
+}
+
+if (!file_exists($templateHelperPath)) {
+  copy($helperPath, $templateHelperPath);
+  echo "Template helper file created\n";
+} else {
+  echo "Template helper file already exists\n";
+}
+
 $postMigrationPath = APPPATH . 'hooks' . DIRECTORY_SEPARATOR . 'PostMigration.php';
 $preMigrationPath = APPPATH . 'hooks' . DIRECTORY_SEPARATOR . 'PreMigration.php';
 $postMigration = __DIR__ . DIRECTORY_SEPARATOR . 'PostMigration.php';

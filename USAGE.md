@@ -44,6 +44,7 @@ This command automatically:
 * Creates CLI bootstrap file `ci3`
 * Publishes Seeder configuration
 * Publishes migration hooks
+* Publishes templating engine (layout wrapper, example view, helper file)
 * Migrates legacy migration hooks
 
 ---

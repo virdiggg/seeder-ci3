@@ -27,6 +27,7 @@ Seeder CI3 includes:
 * PostgreSQL-friendly helpers
 * Lightweight response wrapper controller
 * CLI-style development workflow for CodeIgniter 3
+* Blade-like templating
 
 ---
 
@@ -70,6 +71,7 @@ The initialization command will automatically:
 * Create CLI bootstrap file `ci3`
 * Publish Seeder CI3 configuration
 * Publish migration hooks
+* Publishes templating engine (layout wrapper, example view, helper file)
 * Migrate legacy migration hooks automatically
 
 ---
@@ -83,6 +85,9 @@ application/controllers/App_ci3.php
 application/config/seeder.php
 application/hooks/PostMigration.php
 application/hooks/PreMigration.php
+application/views/example.php
+application/views/layouts/wrapper.php
+application/helpers/template_helper.php
 ci3
 ```
 
@@ -155,6 +160,7 @@ A lightweight wrapper controller designed to simplify:
 * Shared view data
 * HTML rendering
 * View rendering
+* Blade-like template rendering
 
 Example:
 

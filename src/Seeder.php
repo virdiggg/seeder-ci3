@@ -15,9 +15,9 @@ defined('CI3_CONFIG_PATH') or define('CI3_CONFIG_PATH', APPPATH . 'config' . DIR
 class Seeder
 {
   /**
-   * Instance CI.
+   * CodeIgniter super object.
    *
-   * @param object
+   * @param \CI_Controller
    */
   private $CI;
 

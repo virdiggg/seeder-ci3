@@ -44,6 +44,7 @@ This command automatically:
 * Creates CLI bootstrap file `ci3`
 * Publishes Seeder configuration
 * Publishes migration hooks
+* Publishes templating engine (layout wrapper, example view, helper file)
 * Migrates legacy migration hooks
 
 ---
@@ -356,6 +357,22 @@ class Api extends MY_Controller
 }
 ```
 
+## Laravel-like Template Example
+
+```php
+class Orders extends MY_Controller
+{
+    public function index()
+    {
+        return $this
+            ->asTemplate('orders/edit', [
+                'user' => 'asd123',
+                'message' => 'Success'
+            ]);
+    }
+}
+```
+
 ---
 
 ## Available Helper Methods
@@ -400,6 +417,16 @@ Render normal CI3 view.
 
 ```php
 $this->asView('dashboard/index');
+```
+
+---
+
+### asTemplate()
+
+Render normal CI3 view with blade-like templating.
+
+```php
+$this->asTemplate('dashboard/index');
 ```
 
 ---

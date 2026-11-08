@@ -2,9 +2,11 @@
 
 namespace Virdiggg\SeederCi3;
 
+use Virdiggg\SeederCi3\Template;
+
 class MY_Controller extends \CI_Controller
 {
-  protected bool  $jsonPretty = false;
+  protected bool $jsonPretty = false;
   protected array $data = [];
 
   public function __construct()
@@ -50,5 +52,14 @@ class MY_Controller extends \CI_Controller
       $data = array_merge($data, $this->data);
     }
     return $this->load->view($view, $data, true);
+  }
+
+  protected function asTemplate($view, $data = [], $return = false)
+  {
+    if (!empty($this->data)) {
+      $data = array_merge($data, $this->data);
+    }
+
+    return Template::instance()->render($view, $data, $return);
   }
 }

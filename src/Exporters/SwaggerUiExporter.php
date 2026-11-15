@@ -29,7 +29,6 @@ class SwaggerUiExporter
      */
     public function render($title = 'API Docs')
     {
-        $assets = addcslashes('vendor/swagger-ui-' . self::UI_VERSION, "'\\");
         $cdn = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@' . self::UI_VERSION;
         $css = $cdn . '/swagger-ui.css';
         $js = $cdn . '/swagger-ui-bundle.min.js';

@@ -64,63 +64,65 @@ class SeederTemplate
   public function seederTable($name, $tableName, $results, $param, $constructors = [])
   {
     $res = $this->parse($results);
+
     $keys = $res['keys'];
     $results = $res['results'];
 
-    $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-    $print .= 'use Virdiggg\SeederCi3\MY_Seeder;' . PHP_EOL . PHP_EOL;
-    $print .= 'Class Migration_' . $name . ' extends MY_Seeder {' . PHP_EOL;
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * DB Connection.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @param object ${{conn}}' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    private ${{conn}};' . PHP_EOL . PHP_EOL;
-    $print .= '    public function __construct() {' . PHP_EOL;
-    $print .= '        parent::__construct();' . PHP_EOL;
-    foreach ($constructors as $constructor) {
-      $print .= '        ' . $constructor . PHP_EOL;
-    }
-    $print .= '        $this->tableName = \'' . $tableName . '\';' . PHP_EOL;
-    $print .= '        $this->{{conn}} = $this->load->database(\'{{conn}}\', TRUE);' . PHP_EOL;
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Run migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function up() {' . PHP_EOL;
-    $print .= '        parent::up();' . PHP_EOL;
-    $print .= '        $param = [];' . PHP_EOL . PHP_EOL;
-    foreach ($results as $res) {
-      $print .= $this->row($res, $keys);
-    }
-    $print .= PHP_EOL;
-    if (count($results) > 10000) {
-      $print .= '        $chunk = array_chunk($param, 10000);' . PHP_EOL;
-      $print .= '        foreach ($chunk as $c) {' . PHP_EOL;
-      $print .= '            $this->{{conn}}->insert_batch($this->tableName, $c);' . PHP_EOL;
-      $print .= '        }' . PHP_EOL;
-    } else {
-      $print .= '        $this->{{conn}}->insert_batch($this->tableName, $param);' . PHP_EOL;
-    }
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Rollback migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function down() {' . PHP_EOL;
-    $print .= '        parent::down();' . PHP_EOL;
-    if ($this->driver === 'postgre') {
-      $print .= '        $this->{{conn}}->query("TRUNCATE TABLE " . $this->tableName . " RESTART IDENTITY");' . PHP_EOL;
-    } else {
-      $print .= '        $this->{{conn}}->truncate($this->tableName);' . PHP_EOL;
-    }
-    $print .= '    }' . PHP_EOL; // end public function down()
-    $print .= '}'; // end class
+    // Generate constructor statements.
+    $constructorCode = '';
 
-    return str_replace('{{conn}}', $this->conn, $print);
+    foreach ($constructors as $constructor) {
+      $constructorCode .= '        ' . $constructor . PHP_EOL;
+    }
+
+    // Generate row data.
+    $rows = '';
+
+    foreach ($results as $result) {
+      $rows .= $this->row($result, $keys);
+    }
+
+    // Generate batch insert statement.
+    if (count($results) > 10000) {
+      $insertBatch = <<<'PHP'
+        $chunk = array_chunk($param, 10000);
+
+        foreach ($chunk as $c) {
+            $this->@@CONN@@->insert_batch($this->tableName, $c);
+        }
+PHP;
+    } else {
+      $insertBatch = <<<'PHP'
+        $this->@@CONN@@->insert_batch($this->tableName, $param);
+PHP;
+    }
+
+    // Generate rollback statement.
+    $truncate = $this->truncateStatement();
+
+    return str_replace(
+      '@@CONN@@',
+      $this->conn,
+      str_replace(
+        [
+          '@@NAME@@',
+          '@@TABLE_NAME@@',
+          '@@CONSTRUCTORS@@',
+          '@@ROWS@@',
+          '@@INSERT_BATCH@@',
+          '@@TRUNCATE@@',
+        ],
+        [
+          $name,
+          $tableName,
+          $constructorCode,
+          $rows,
+          $insertBatch,
+          $truncate,
+        ],
+        self::SEEDER_TEMPLATE
+      )
+    );
   }
 
   /**
@@ -136,77 +138,82 @@ class SeederTemplate
    */
   public function fakerTable($name, $tableName, $fields, $param, $constructors = [])
   {
-    $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-    $print .= 'use Faker\Factory as FakerFactory;' . PHP_EOL;
-    $print .= 'use Virdiggg\SeederCi3\MY_Seeder;' . PHP_EOL . PHP_EOL;
-    $print .= 'Class Migration_' . $name . ' extends MY_Seeder {' . PHP_EOL;
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * DB Connection.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @param object ${{conn}}' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    private ${{conn}};' . PHP_EOL . PHP_EOL;
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Faker instance.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @param object $faker' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    private $faker;' . PHP_EOL . PHP_EOL;
-    $print .= '    public function __construct() {' . PHP_EOL;
-    $print .= '        parent::__construct();' . PHP_EOL;
+    // Generate constructor statements.
+    $constructorCode = '';
+
     foreach ($constructors as $constructor) {
-      $print .= '        ' . $constructor . PHP_EOL;
+      $constructorCode .= '        ' . $constructor . PHP_EOL;
     }
-    $print .= '        $this->tableName = \'' . $tableName . '\';' . PHP_EOL;
-    $print .= '        $this->{{conn}} = $this->load->database(\'{{conn}}\', TRUE);' . PHP_EOL;
-    $print .= '        $this->faker = FakerFactory::create();' . PHP_EOL;
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Run migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function up() {' . PHP_EOL;
-    $print .= '        parent::up();' . PHP_EOL;
-    $print .= '        $param = [];' . PHP_EOL;
-    $print .= '        for ($i = 0; $i < ' . $param['limit'] . '; $i++) {' . PHP_EOL;
-    $print .= '            $param[] = [' . PHP_EOL;
+
+    // Generate faker fields.
+    $fieldCode = '';
+
     foreach ($fields as $field) {
       if ($this->shouldSkipField($field)) {
         continue;
       }
 
-      $print .= "                '" . $field->name . "' => "
+      $fieldCode .= "                '" . $field->name . "' => "
         . $this->fakeExpression($field)
-        . "," . PHP_EOL;
+        . ',' . PHP_EOL;
     }
-    $print .= '            ];' . PHP_EOL;
-    $print .= '        }' . PHP_EOL;
-    if ($param['limit'] > 10000) {
-      $print .= '        $chunk = array_chunk($param, 10000);' . PHP_EOL;
-      $print .= '        foreach ($chunk as $c) {' . PHP_EOL;
-      $print .= '            $this->{{conn}}->insert_batch($this->tableName, $c);' . PHP_EOL;
-      $print .= '        }' . PHP_EOL;
-    } else {
-      $print .= '        $this->{{conn}}->insert_batch($this->tableName, $param);' . PHP_EOL;
-    }
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Rollback migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function down() {' . PHP_EOL;
-    $print .= '        parent::down();' . PHP_EOL;
-    if ($this->driver === 'postgre') {
-      $print .= '        $this->{{conn}}->query("TRUNCATE TABLE " . $this->tableName . " RESTART IDENTITY");' . PHP_EOL;
-    } else {
-      $print .= '        $this->{{conn}}->truncate($this->tableName);' . PHP_EOL;
-    }
-    $print .= '    }' . PHP_EOL; // end public function down()
-    $print .= '}'; // end class
 
-    return str_replace('{{conn}}', $this->conn, $print);
+    // Generate batch insert statement.
+    if ($param['limit'] > 10000) {
+      $insertBatch = <<<'PHP'
+        $chunk = array_chunk($param, 10000);
+
+        foreach ($chunk as $c) {
+            $this->@@CONN@@->insert_batch($this->tableName, $c);
+        }
+PHP;
+    } else {
+      $insertBatch = <<<'PHP'
+        $this->@@CONN@@->insert_batch($this->tableName, $param);
+PHP;
+    }
+
+    // Generate rollback statement.
+    $truncate = $this->truncateStatement();
+
+    return str_replace(
+      '@@CONN@@',
+      $this->conn,
+      str_replace(
+        [
+          '@@NAME@@',
+          '@@TABLE_NAME@@',
+          '@@CONSTRUCTORS@@',
+          '@@LIMIT@@',
+          '@@FIELDS@@',
+          '@@INSERT_BATCH@@',
+          '@@TRUNCATE@@',
+        ],
+        [
+          $name,
+          $tableName,
+          $constructorCode,
+          $param['limit'],
+          $fieldCode,
+          $insertBatch,
+          $truncate,
+        ],
+        self::FAKER_TEMPLATE
+      )
+    );
+  }
+
+  private function truncateStatement()
+  {
+    if (in_array($this->driver, ['postgre', 'pgasync'])) {
+      return <<<'PHP'
+        $this->@@CONN@@->query("TRUNCATE TABLE " . $this->tableName . " RESTART IDENTITY");
+PHP;
+    }
+
+    return <<<'PHP'
+        $this->@@CONN@@->truncate($this->tableName);
+PHP;
   }
 
   /**
@@ -290,19 +297,19 @@ class SeederTemplate
     $name = strtolower($field->name);
 
     /*
-        |--------------------------------------------------------------------------
-        | Primary Key
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | Primary Key
+    |--------------------------------------------------------------------------
+    */
     if (!empty($field->primary_key)) {
       return true;
     }
 
     /*
-        |--------------------------------------------------------------------------
-        | Common Auto Columns
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | Common Auto Columns
+    |--------------------------------------------------------------------------
+    */
     $skip = [
       'id',
       'created_at',
@@ -315,28 +322,28 @@ class SeederTemplate
     }
 
     /*
-        |--------------------------------------------------------------------------
-        | Common Limited Constraint Columns
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | Common Limited Constraint Columns
+    |--------------------------------------------------------------------------
+    */
     if (strpos($name, 'otp') !== false || strpos($name, 'pin') !== false) {
       return true;
     }
 
     /*
-        |--------------------------------------------------------------------------
-        | UUID columns
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | UUID columns
+    |--------------------------------------------------------------------------
+    */
     if (strpos($name, 'uuid') !== false || $field->type == 'uuid') {
       return true;
     }
 
     /*
-        |--------------------------------------------------------------------------
-        | PostgreSQL generated UUID
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | PostgreSQL generated UUID
+    |--------------------------------------------------------------------------
+    */
     if (!empty($field->default)) {
       $default = strtolower($field->default);
 
@@ -417,4 +424,121 @@ class SeederTemplate
         return '$this->faker->word';
     }
   }
+
+  const SEEDER_TEMPLATE = <<<'PHP'
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
+use Virdiggg\SeederCi3\MY_Seeder;
+
+class Migration_@@NAME@@ extends MY_Seeder
+{
+    /**
+     * DB Connection.
+     *
+     * @var object
+     */
+    private $@@CONN@@;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+@@CONSTRUCTORS@@
+        $this->tableName = '@@TABLE_NAME@@';
+        $this->@@CONN@@ = $this->load->database('@@CONN@@', TRUE);
+    }
+
+    /**
+     * Run migration.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        parent::up();
+
+        $param = [];
+
+@@ROWS@@
+@@INSERT_BATCH@@
+    }
+
+    /**
+     * Rollback migration.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        parent::down();
+
+@@TRUNCATE@@
+    }
+}
+PHP;
+  const FAKER_TEMPLATE = <<<'PHP'
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
+use Faker\Factory as FakerFactory;
+use Virdiggg\SeederCi3\MY_Seeder;
+
+class Migration_@@NAME@@ extends MY_Seeder
+{
+    /**
+     * DB Connection.
+     *
+     * @var object
+     */
+    private $@@CONN@@;
+
+    /**
+     * Faker instance.
+     *
+     * @var object
+     */
+    private $faker;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+@@CONSTRUCTORS@@
+        $this->tableName = '@@TABLE_NAME@@';
+        $this->@@CONN@@ = $this->load->database('@@CONN@@', TRUE);
+        $this->faker = FakerFactory::create();
+    }
+
+    /**
+     * Run migration.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        parent::up();
+
+        $param = [];
+
+        for ($i = 0; $i < @@LIMIT@@; $i++) {
+            $param[] = [
+@@FIELDS@@
+            ];
+        }
+
+@@INSERT_BATCH@@
+    }
+
+    /**
+     * Rollback migration.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        parent::down();
+
+@@TRUNCATE@@
+    }
+}
+PHP;
 }

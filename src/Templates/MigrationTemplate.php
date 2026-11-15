@@ -45,82 +45,40 @@ class MigrationTemplate
   public function createTable($name, $tableName, $param, $constructors = [])
   {
     $softDelete = $this->softDelete($param);
-    $print = "<?php defined('BASEPATH') OR exit('No direct script access allowed');" . PHP_EOL . PHP_EOL;
-    $print .= 'use Virdiggg\SeederCi3\MY_Migration;' . PHP_EOL . PHP_EOL;
-    $print .= 'Class Migration_' . $name . ' extends MY_Migration {' . PHP_EOL;
-    $print .= '    public function __construct() {' . PHP_EOL;
-    $print .= '        parent::__construct();' . PHP_EOL . PHP_EOL;
-    $print .= '        /**' . PHP_EOL;
-    $print .= '         * Table name.' . PHP_EOL;
-    $print .= '         * ' . PHP_EOL;
-    $print .= '         * @param string $name' . PHP_EOL;
-    $print .= '         */' . PHP_EOL;
-    $print .= '        $this->name = "' . $tableName . '";' . PHP_EOL . PHP_EOL;
-    $print .= '        /**' . PHP_EOL;
-    $print .= '         * Primary key.' . PHP_EOL;
-    $print .= '         * ' . PHP_EOL;
-    $print .= '         * @param string $primary' . PHP_EOL;
-    $print .= '         */' . PHP_EOL;
-    $print .= '        $this->primary = "id";' . PHP_EOL . PHP_EOL;
-    $print .= '        /**' . PHP_EOL;
-    $print .= '         * Array table fields.' . PHP_EOL;
-    $print .= '         * ' . PHP_EOL;
-    $print .= '         * @param array $fields' . PHP_EOL;
-    $print .= '         */' . PHP_EOL;
-    $print .= '        $this->fields = [' . PHP_EOL;
-    $print .= '            $this->primary => [' . PHP_EOL;
-    $print .= "                'type' => 'BIGINT'," . PHP_EOL;
-    $print .= "                'unsigned' => TRUE," . PHP_EOL;
-    $print .= "                'auto_increment' => TRUE," . PHP_EOL;
-    $print .= '            ],' . PHP_EOL;
-    $print .= "            'created_by' => [" . PHP_EOL;
-    $print .= "                'type' => 'VARCHAR'," . PHP_EOL;
-    $print .= "                'constraint' => 50," . PHP_EOL;
-    $print .= "                'null' => TRUE," . PHP_EOL;
-    $print .= '            ],' . PHP_EOL;
-    $print .= "            'created_at' => [" . PHP_EOL;
-    $print .= "                'type' => 'TIMESTAMP'," . PHP_EOL;
-    $print .= "                'null' => TRUE," . PHP_EOL;
-    $print .= '            ],' . PHP_EOL;
-    $print .= "            'updated_by' => [" . PHP_EOL;
-    $print .= "                'type' => 'VARCHAR'," . PHP_EOL;
-    $print .= "                'constraint' => 50," . PHP_EOL;
-    $print .= "                'null' => TRUE," . PHP_EOL;
-    $print .= '            ],' . PHP_EOL;
-    $print .= "            'updated_at' => [" . PHP_EOL;
-    $print .= "                'type' => 'TIMESTAMP'," . PHP_EOL;
-    $print .= "                'null' => TRUE," . PHP_EOL;
-    $print .= '            ],' . PHP_EOL;
-    $print .= $softDelete;
-    $print .= '        ];' . PHP_EOL . PHP_EOL; // end public $this->fields
-    foreach ($constructors as $constructor) {
-      $print .= '        ' . $constructor . PHP_EOL;
-    }
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function up() {' . PHP_EOL;
-    $print .= '        parent::up();' . PHP_EOL;
-    if ($this->driver === 'postgre') {
-      $print .= '        // Uncomment if you want to create index for this table.' . PHP_EOL;
-      $print .= '        // Recommended if this table doesn\'t have UPDATE and DELETE operations. PostgreSQL only.' . PHP_EOL;
-      $print .= '        // $this->db->query(\'CREATE INDEX CONCURRENTLY ON "\'.$this->name.\'" ("\'.join(\'", "\', array_keys($this->fields)).\'")\');' . PHP_EOL;
-    }
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Rollback migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function down() {' . PHP_EOL;
-    $print .= '        parent::down();' . PHP_EOL;
-    $print .= '    }' . PHP_EOL; // end public function down()
-    $print .= '}'; // end class
 
-    return $print;
+    $constructorCode = '';
+
+    foreach ($constructors as $constructor) {
+      $constructorCode .= '        ' . $constructor . PHP_EOL;
+    }
+
+    $postgresIndex = '';
+
+    if (in_array($this->driver, ['postgre', 'pgasync'])) {
+      $postgresIndex = <<<'PHP'
+      // Uncomment if you want to create index for this table.
+      // Recommended if this table doesn't have UPDATE and DELETE operations. PostgreSQL only.
+      // $this->db->query('CREATE INDEX CONCURRENTLY ON "'.$this->name.'" ("'.join('", "', array_keys($this->fields)).'")');
+PHP;
+    }
+
+    return str_replace(
+      [
+        '@@NAME@@',
+        '@@TABLE_NAME@@',
+        '@@SOFT_DELETE@@',
+        '@@CONSTRUCTORS@@',
+        '@@POSTGRES_INDEX@@',
+      ],
+      [
+        $name,
+        $tableName,
+        $softDelete,
+        $constructorCode,
+        $postgresIndex,
+      ],
+      self::CREATE_TEMPLATE
+    );
   }
 
   /**
@@ -136,86 +94,30 @@ class MigrationTemplate
   public function alterTable($name, $tableName, $param, $constructors = [])
   {
     $softDelete = $this->softDelete($param);
-    $print = '<?php' . PHP_EOL . PHP_EOL;
-    $print .= 'use Virdiggg\SeederCi3\MY_Alter;' . PHP_EOL . PHP_EOL;
-    $print .= 'Class Migration_' . $name . ' extends MY_Alter {' . PHP_EOL;
-    $print .= '    public function __construct() {' . PHP_EOL;
-    $print .= '        parent::__construct();' . PHP_EOL . PHP_EOL;
-    $print .= '        /**' . PHP_EOL;
-    $print .= '         * Table name.' . PHP_EOL;
-    $print .= '         * ' . PHP_EOL;
-    $print .= '         * @param string $name' . PHP_EOL;
-    $print .= '         */' . PHP_EOL;
-    $print .= '        $this->name = "' . $tableName . '";' . PHP_EOL . PHP_EOL;
-    $print .= '        /**' . PHP_EOL;
-    $print .= '         * Array table fields.' . PHP_EOL;
-    $print .= '         * ' . PHP_EOL;
-    $print .= '         * @param array $fields' . PHP_EOL;
-    $print .= '         */' . PHP_EOL;
-    $print .= '        $this->fields = [' . PHP_EOL;
-    $print .= "            // 'old_name' => [" . PHP_EOL;
-    $print .= "            //     'name' => 'new_name', // if you want to modify its name" . PHP_EOL;
-    $print .= "            //     'type' => 'VARCHAR'," . PHP_EOL;
-    $print .= "            //     'constraint' => 150," . PHP_EOL;
-    $print .= "            //     'null' => TRUE," . PHP_EOL;
-    $print .= '            // ],' . PHP_EOL;
-    $print .= "            // 'old_name' => [" . PHP_EOL;
-    $print .= "            //     'name' => 'new_name', // if you want to modify its name" . PHP_EOL;
-    $print .= "            //     'type' => 'VARCHAR'," . PHP_EOL;
-    $print .= "            //     'constraint' => 150," . PHP_EOL;
-    $print .= "            //     'null' => TRUE," . PHP_EOL;
-    $print .= '            // ],' . PHP_EOL;
-    $print .= $softDelete;
-    $print .= '        ];' . PHP_EOL . PHP_EOL; // end public $this->fields
-    $print .= '        /**' . PHP_EOL;
-    $print .= '         * Array table old fields. For the purpose of rolling back a migration.' . PHP_EOL;
-    $print .= '         * ' . PHP_EOL;
-    $print .= '         * @param array $oldFields' . PHP_EOL;
-    $print .= '         */' . PHP_EOL;
-    $print .= '        $this->oldFields = [' . PHP_EOL;
-    $print .= $softDelete;
-    $print .= "            // 'new_name' => [" . PHP_EOL;
-    $print .= "            //     'name' => 'old_name'," . PHP_EOL;
-    $print .= "            //     'type' => 'VARCHAR'," . PHP_EOL;
-    $print .= "            //     'constraint' => 150," . PHP_EOL;
-    $print .= "            //     'null' => TRUE," . PHP_EOL;
-    $print .= '            // ],' . PHP_EOL;
-    $print .= "            // 'new_name' => [" . PHP_EOL;
-    $print .= "            //     'name' => 'old_name'," . PHP_EOL;
-    $print .= "            //     'type' => 'VARCHAR'," . PHP_EOL;
-    $print .= "            //     'constraint' => 150," . PHP_EOL;
-    $print .= "            //     'null' => TRUE," . PHP_EOL;
-    $print .= '            // ],' . PHP_EOL;
-    $print .= '        ];' . PHP_EOL . PHP_EOL; // end public $this->oldFields
-    foreach ($constructors as $constructor) {
-      $print .= '        ' . $constructor . PHP_EOL;
-    }
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function __construct()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function up() {' . PHP_EOL;
-    $print .= '        parent::up();' . PHP_EOL;
-    $print .= '        $this->dbforge->add_column($this->name, $this->fields);' . PHP_EOL;
-    $print .= '        // $this->dbforge->modify_column($this->name, $this->fields);' . PHP_EOL;
-    $print .= '    }' . PHP_EOL . PHP_EOL; // end public function up()
-    $print .= '    /**' . PHP_EOL;
-    $print .= '     * Rollback migration.' . PHP_EOL;
-    $print .= '     * ' . PHP_EOL;
-    $print .= '     * @return void' . PHP_EOL;
-    $print .= '     */' . PHP_EOL;
-    $print .= '    public function down() {' . PHP_EOL;
-    $print .= '        parent::down();' . PHP_EOL;
-    $print .= '        foreach ($this->fields as $index => $name) {' . PHP_EOL;
-    $print .= '            $this->dbforge->drop_column($this->name, $index);' . PHP_EOL;
-    $print .= '        }' . PHP_EOL;
-    $print .= '        // $this->dbforge->modify_column($this->name, $this->oldFields);' . PHP_EOL;
-    $print .= '    }' . PHP_EOL; // end public function down()
-    $print .= '}'; // end class
 
-    return $print;
+    $constructorCode = '';
+
+    foreach ($constructors as $constructor) {
+      $constructorCode .= '        ' . $constructor . PHP_EOL;
+    }
+
+    return str_replace(
+      [
+        '@@NAME@@',
+        '@@TABLE_NAME@@',
+        '@@SOFT_DELETE@@',
+        '@@SOFT_DELETE_OLD@@',
+        '@@CONSTRUCTORS@@',
+      ],
+      [
+        $name,
+        $tableName,
+        $softDelete,
+        $softDelete,
+        $constructorCode,
+      ],
+      self::ALTER_TEMPLATE
+    );
   }
 
   /**
@@ -227,24 +129,197 @@ class MigrationTemplate
    */
   private function softDelete($param)
   {
-    if (count($param) === 0) {
+    if (empty($param) || !isset($param['soft-delete'])) {
       return '';
     }
 
-    if (!isset($param['soft-delete'])) {
-      return '';
-    }
-
-    $softDelete = "            'deleted_by' => [" . PHP_EOL;
-    $softDelete .= "                'type' => 'VARCHAR'," . PHP_EOL;
-    $softDelete .= "                'constraint' => 50," . PHP_EOL;
-    $softDelete .= "                'null' => TRUE," . PHP_EOL;
-    $softDelete .= '            ],' . PHP_EOL;
-    $softDelete .= "            'deleted_at' => [" . PHP_EOL;
-    $softDelete .= "                'type' => 'TIMESTAMP'," . PHP_EOL;
-    $softDelete .= "                'null' => TRUE," . PHP_EOL;
-    $softDelete .= '            ],' . PHP_EOL;
-
-    return $softDelete;
+    return <<<'PHP'
+            'deleted_by' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+                'null' => TRUE,
+            ],
+            'deleted_at' => [
+                'type' => 'TIMESTAMP',
+                'null' => TRUE,
+            ],
+PHP;
   }
+
+  const CREATE_TEMPLATE = <<<'PHP'
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
+use Virdiggg\SeederCi3\MY_Migration;
+
+class Migration_@@NAME@@ extends MY_Migration
+{
+    public function __construct()
+    {
+        parent::__construct();
+
+        /**
+         * Table name.
+         *
+         * @var string
+         */
+        $this->name = "@@TABLE_NAME@@";
+
+        /**
+         * Primary key.
+         *
+         * @var string
+         */
+        $this->primary = "id";
+
+        /**
+         * Array table fields.
+         *
+         * @var array
+         */
+        $this->fields = [
+            $this->primary => [
+                'type' => 'BIGINT',
+                'unsigned' => TRUE,
+                'auto_increment' => TRUE,
+            ],
+            'created_by' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+                'null' => TRUE,
+            ],
+            'created_at' => [
+                'type' => 'TIMESTAMP',
+                'null' => TRUE,
+            ],
+            'updated_by' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+                'null' => TRUE,
+            ],
+            'updated_at' => [
+                'type' => 'TIMESTAMP',
+                'null' => TRUE,
+            ],
+@@SOFT_DELETE@@
+        ];
+
+@@CONSTRUCTORS@@
+    }
+
+    /**
+     * Migration.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        parent::up();
+@@POSTGRES_INDEX@@
+    }
+
+    /**
+     * Rollback migration.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        parent::down();
+    }
+}
+PHP;
+
+  const ALTER_TEMPLATE = <<<'PHP'
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
+use Virdiggg\SeederCi3\MY_Alter;
+
+class Migration_@@NAME@@ extends MY_Alter
+{
+    public function __construct()
+    {
+        parent::__construct();
+
+        /**
+         * Table name.
+         *
+         * @var string
+         */
+        $this->name = "@@TABLE_NAME@@";
+
+        /**
+         * Array table fields.
+         *
+         * @var array
+         */
+        $this->fields = [
+            // 'old_name' => [
+            //     'name' => 'new_name', // if you want to modify its name
+            //     'type' => 'VARCHAR',
+            //     'constraint' => 150,
+            //     'null' => TRUE,
+            // ],
+            // 'old_name' => [
+            //     'name' => 'new_name',
+            //     'type' => 'VARCHAR',
+            //     'constraint' => 150,
+            //     'null' => TRUE,
+            // ],
+@@SOFT_DELETE@@
+        ];
+
+        /**
+         * Array table old fields. For the purpose of rolling back a migration.
+         *
+         * @var array
+         */
+        $this->oldFields = [
+@@SOFT_DELETE_OLD@@
+            // 'new_name' => [
+            //     'name' => 'old_name',
+            //     'type' => 'VARCHAR',
+            //     'constraint' => 150,
+            //     'null' => TRUE,
+            // ],
+            // 'new_name' => [
+            //     'name' => 'old_name',
+            //     'type' => 'VARCHAR',
+            //     'constraint' => 150,
+            //     'null' => TRUE,
+            // ],
+        ];
+
+@@CONSTRUCTORS@@
+    }
+
+    /**
+     * Migration.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        parent::up();
+
+        $this->dbforge->add_column($this->name, $this->fields);
+        // $this->dbforge->modify_column($this->name, $this->fields);
+    }
+
+    /**
+     * Rollback migration.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        parent::down();
+
+        foreach ($this->fields as $index => $name) {
+            $this->dbforge->drop_column($this->name, $index);
+        }
+
+        // $this->dbforge->modify_column($this->name, $this->oldFields);
+    }
+}
+PHP;
 }

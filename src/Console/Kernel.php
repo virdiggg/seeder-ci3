@@ -73,8 +73,8 @@ class Kernel
     ],
     'router:list' => [
       'class' => RouterCommand::class,
-      'description' => 'Generate router files',
-      'example' => 'php ci3 router:list [--postman]',
+      'description' => 'List routes and generate swagger-api.json (Swagger UI and Postman optional)',
+      'example' => 'php ci3 router:list [--postman] [--swagger] [--out=dir] [--server=url] [--title=] [--api-version=] [--auth=bearer|basic|apikey]',
       'deprecated' => false,
       'deprecated_message' => '',
     ],

@@ -139,6 +139,100 @@ Currently optimized for:
 application/controllers/api/*
 ```
 
+---
+
+## Swagger / OpenAPI
+
+Every `router:list` run (with or without options) also writes `swagger-api.json` (OpenAPI 3.0.3)
+next to the Postman files in `application/storage`.
+
+```bash
+php ci3 router:list                        # table + swagger-api.json
+php ci3 router:list --swagger --out=docs   # + docs/swagger.php (Swagger UI)
+php ci3 router:list --postman              # + Postman files
+```
+
+`swagger.php` is a small static page that loads `swagger-api.json` from its own directory,
+so re-running `router:list` refreshes the docs without regenerating the page. It has to be
+served over HTTP (browsers block `fetch()` from `file://`) and loads Swagger UI from a CDN.
+
+| Option | Description |
+| --- | --- |
+| `--swagger` | Also write `swagger.php` |
+| `--out=dir` | Output directory, relative to the project root or absolute. Default `application/storage` |
+| `--server=URL` | Put this URL in the spec's `servers` |
+| `--title="My API"` | `info.title` |
+| `--api-version=1.2.0` | `info.version` (default `1.0.0`) |
+| `--auth=bearer\|basic\|apikey` | Declare a global security scheme |
+
+### Server URL
+
+The CLI cannot know the port you published or the sub folder you deploy to, so the spec
+only gets a `servers` entry when you state one, in this order:
+
+1. `--server=https://api.example.com`
+2. `APP_URL` or `BASE_URL` environment variable (e.g. `environment:` in compose.yml)
+3. `base_url` from `config.php`, unless it is the bare `http://localhost` placeholder
+
+Otherwise `servers` is left out and `swagger.php` works it out from the address you opened
+it at (`http://localhost:8074/swagger` calls `http://localhost:8074`, and
+`https://host/myapp/swagger` calls `https://host/myapp`), so the same files work in
+a container, behind a proxy or in a sub folder. Add `?server=https://host/app` to the page URL
+to override it for one session.
+
+### What is detected automatically
+
+* Path parameters: `users/(:num)` becomes `/users/{id}`. The name comes from the controller
+  method argument that the route target maps with `$1`, `$2`, ...
+* Query / body fields from `$this->input->get/post/input_stream/get_post()`, `$_GET`, `$_POST`
+* Uploads from `$_FILES['x']` or `$this->upload->do_upload('x')` (`multipart/form-data`)
+* JSON bodies from `php://input` / `raw_input_stream`
+* Validation from `form_validation->set_rules()`: `required`, `integer`, `numeric`,
+  `valid_email`, `valid_url`, `min_length`, `max_length`, `exact_length`, `greater_than`,
+  `less_than`, `in_list`, `alpha*`, `is_natural*`. Fields that only appear in `set_rules()` are included.
+* Status codes from `set_status_header()`, `http_response_code()`, `show_error()`, `show_404()`
+* Routes without an HTTP verb that read request bodies are documented as `POST`
+
+Commented-out code is ignored.
+
+### Annotations
+
+Add a docblock above the controller method:
+
+```php
+/**
+ * Create a user.
+ *
+ * Longer description (optional).
+ *
+ * @tag Users
+ * @query int page Page number
+ * @body string email required Email address
+ * @body file[] photos Profile photos
+ * @param int $id The user id
+ * @response 201 Created
+ * @response 422 Validation failed
+ * @auth bearer
+ * @deprecated
+ */
+public function create() { ... }
+```
+
+| Tag | Meaning |
+| --- | --- |
+| first line | Summary |
+| `@tag Name[, Name2]` | Group (default: controller name) |
+| `@query type name [required] description` | Query parameter |
+| `@body type name [required] description` | Request body field (`type`: `int`, `float`, `bool`, `string`, `file`, `type[]`) |
+| `@param type $arg description` | Describe a path parameter (by method argument name) |
+| `@response code description` | Response status |
+| `@auth bearer\|basic\|apikey\|none` | Security for this endpoint (`none` removes the global one) |
+| `@summary text` | Override summary |
+| `@deprecated` | Mark deprecated |
+| `@hidden` | Leave the endpoint out |
+
+Annotations override anything inferred from the code.
+
 Generated files are stored in:
 
 ```bash
